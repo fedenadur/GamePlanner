@@ -1,0 +1,238 @@
+<div class="stats-page">
+
+  <div class="stats-header">
+    <h1>Stats Dashboard</h1>
+    <span class="stats-subtitle">Your gaming life, at a glance</span>
+  </div>
+
+  <!-- Skeleton -->
+  <div *ngIf="loading" class="skeleton-wrap">
+    <div class="skeleton-cards">
+      <div class="skeleton-card" *ngFor="let i of [1,2,3,4,5,6,7,8]"></div>
+    </div>
+    <div class="skeleton-charts">
+      <div class="skeleton-chart"></div>
+      <div class="skeleton-chart"></div>
+      <div class="skeleton-chart"></div>
+    </div>
+  </div>
+
+  <div *ngIf="error" class="stats-error">
+    <span class="error-icon">⚠️</span>
+    <span>Could not load stats. Make sure you have games in your library.</span>
+  </div>
+
+  <ng-container *ngIf="data && !loading">
+
+    <!-- ── Summary Cards ─────────────────────────────────────────────────── -->
+    <section class="summary-cards">
+
+      <div class="stat-card card-total">
+        <div class="card-icon">🎮</div>
+        <div class="card-body">
+          <div class="card-value">{{ data.library.totalOwned }}</div>
+          <div class="card-label">Total Games</div>
+        </div>
+      </div>
+
+      <div class="stat-card card-playing">
+        <div class="card-icon">▶️</div>
+        <div class="card-body">
+          <div class="card-value">{{ data.library.currentlyPlaying }}</div>
+          <div class="card-label">Playing Now</div>
+        </div>
+      </div>
+
+      <div class="stat-card card-finished">
+        <div class="card-icon">🏆</div>
+        <div class="card-body">
+          <div class="card-value">{{ data.library.finished }}</div>
+          <div class="card-label">Finished</div>
+        </div>
+      </div>
+
+      <div class="stat-card card-backlog">
+        <div class="card-icon">📋</div>
+        <div class="card-body">
+          <div class="card-value">{{ data.library.backlog }}</div>
+          <div class="card-label">Backlog</div>
+        </div>
+      </div>
+
+      <div class="stat-card card-hours">
+        <div class="card-icon">⏱️</div>
+        <div class="card-body">
+          <div class="card-value">{{ data.time.totalPlaytimeHours | number:'1.0-0' }}h</div>
+          <div class="card-label">Hours Played</div>
+        </div>
+      </div>
+
+      <div class="stat-card card-completion">
+        <div class="card-icon">📊</div>
+        <div class="card-body">
+          <div class="card-value">{{ completionPercent }}%</div>
+          <div class="card-label">Completion Rate</div>
+        </div>
+      </div>
+
+      <div class="stat-card card-rating" *ngIf="data.ratings.averageUserRating">
+        <div class="card-icon">⭐</div>
+        <div class="card-body">
+          <div class="card-value">{{ data.ratings.averageUserRating | number:'1.1-1' }}</div>
+          <div class="card-label">Avg Rating</div>
+        </div>
+      </div>
+
+      <div class="stat-card card-unplayed">
+        <div class="card-icon">💤</div>
+        <div class="card-body">
+          <div class="card-value">{{ data.library.neverPlayed }}</div>
+          <div class="card-label">Never Played</div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ── Charts ────────────────────────────────────────────────────────── -->
+    <div class="section-label">Charts</div>
+    <section class="charts-row">
+
+      <div class="chart-card completion-ring-card">
+        <div class="chart-title">Completion Rate</div>
+        <div class="ring-wrap">
+          <svg viewBox="0 0 100 100" class="ring-svg">
+            <circle cx="50" cy="50" r="44" class="ring-track"/>
+            <circle cx="50" cy="50" r="44" class="ring-fill"
+              [style.stroke-dasharray]="circumference"
+              [style.stroke-dashoffset]="dashOffset"/>
+          </svg>
+          <div class="ring-label">
+            <span class="ring-value">{{ completionPercent }}%</span>
+            <span class="ring-sub">finished</span>
+          </div>
+        </div>
+        <div class="ring-detail" *ngIf="data.completion.averageCompletionDays">
+          avg {{ data.completion.averageCompletionDays | number:'1.0-0' }} days to finish
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-title">Top Genres <span class="chart-sub">· by games</span></div>
+        <div *ngIf="!data.genres.topByCount.length" class="chart-empty">No genre data yet</div>
+        <div class="bar-list" *ngIf="data.genres.topByCount.length">
+          <div class="bar-row" *ngFor="let g of data.genres.topByCount">
+            <span class="bar-name">{{ g.genre }}</span>
+            <div class="bar-track">
+              <div class="bar-fill bar-fill-accent"
+                   [style.width]="barWidth(g.count, maxGenreCount())"></div>
+            </div>
+            <span class="bar-val">{{ g.count }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-title">Top Genres <span class="chart-sub">· by hours</span></div>
+        <div *ngIf="!data.genres.topByHours.length" class="chart-empty">No playtime data yet</div>
+        <div class="bar-list" *ngIf="data.genres.topByHours.length">
+          <div class="bar-row" *ngFor="let g of data.genres.topByHours">
+            <span class="bar-name">{{ g.genre }}</span>
+            <div class="bar-track">
+              <div class="bar-fill bar-fill-blue"
+                   [style.width]="barWidth(g.hours, maxGenreHours())"></div>
+            </div>
+            <span class="bar-val">{{ g.hours | number:'1.0-0' }}h</span>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <section class="chart-card year-card" *ngIf="data.byYear.length">
+      <div class="year-card-header">
+        <div class="chart-title">Library by Release Year</div>
+        <span class="year-card-total">{{ data.library.totalOwned }} games · {{ data.byYear.length }} years</span>
+      </div>
+      <div class="year-chart">
+        <div class="year-gridlines">
+          <div class="year-gridline" *ngFor="let l of [1,2,3,4]"></div>
+        </div>
+        <div class="year-bars">
+          <div class="year-col" *ngFor="let y of data.byYear"
+               [attr.data-count]="y.count">
+            <div class="year-bar-wrap">
+              <div class="year-bar"
+                   [style.height]="barWidth(y.count, maxYearCount())"
+                   [class.year-bar-tall]="y.count === maxYearCount()">
+              </div>
+            </div>
+            <span class="year-label">{{ y.year }}</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Highlights ─────────────────────────────────────────────────────── -->
+    <div class="section-label">Highlights</div>
+    <section class="highlights-row">
+
+      <div class="highlight-card hl-most-played" *ngIf="data.highlights.mostPlayedGame">
+        <div class="hl-icon">🕹️</div>
+        <div class="hl-body">
+          <div class="hl-label">Most Played</div>
+          <div class="hl-value">{{ data.highlights.mostPlayedGame }}</div>
+          <div class="hl-detail">{{ data.time.mostPlayedGameHours | number:'1.0-0' }}h logged</div>
+        </div>
+      </div>
+
+      <div class="highlight-card hl-genre" *ngIf="data.highlights.favoriteGenre">
+        <div class="hl-icon">🎯</div>
+        <div class="hl-body">
+          <div class="hl-label">Favorite Genre</div>
+          <div class="hl-value">{{ data.highlights.favoriteGenre }}</div>
+          <div class="hl-detail">most games owned</div>
+        </div>
+      </div>
+
+      <div class="highlight-card hl-gem" *ngIf="data.highlights.hiddenGem">
+        <div class="hl-icon">💎</div>
+        <div class="hl-body">
+          <div class="hl-label">Hidden Gem</div>
+          <div class="hl-value">{{ data.highlights.hiddenGem }}</div>
+          <div class="hl-detail">high rating · short playtime</div>
+        </div>
+      </div>
+
+      <div class="highlight-card hl-oldest" *ngIf="data.highlights.oldestUnplayedGame">
+        <div class="hl-icon">🕰️</div>
+        <div class="hl-body">
+          <div class="hl-label">Oldest Unplayed</div>
+          <div class="hl-value">{{ data.highlights.oldestUnplayedGame }}</div>
+          <div class="hl-detail" *ngIf="data.highlights.oldestUnplayedYear">
+            from {{ data.highlights.oldestUnplayedYear }}
+          </div>
+        </div>
+      </div>
+
+      <div class="highlight-card hl-best-rated" *ngIf="data.ratings.highestRatedFinishedGame">
+        <div class="hl-icon">🌟</div>
+        <div class="hl-body">
+          <div class="hl-label">Highest Rated</div>
+          <div class="hl-value">{{ data.ratings.highestRatedFinishedGame }}</div>
+          <div class="hl-detail">rated {{ data.ratings.highestRating }}/10</div>
+        </div>
+      </div>
+
+      <div class="highlight-card hl-empty" *ngIf="!data.highlights.mostPlayedGame && !data.highlights.favoriteGenre">
+        <div class="hl-icon">🌱</div>
+        <div class="hl-body">
+          <div class="hl-label">Getting Started</div>
+          <div class="hl-value">Play more games</div>
+          <div class="hl-detail">Highlights will appear as your library grows</div>
+        </div>
+      </div>
+
+    </section>
+
+  </ng-container>
+</div>

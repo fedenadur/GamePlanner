@@ -1,0 +1,6 @@
+@GamePlanner.API_HostAddress = http://localhost:5127
+
+GET {{GamePlanner.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

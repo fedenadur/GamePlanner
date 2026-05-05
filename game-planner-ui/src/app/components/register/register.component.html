@@ -1,0 +1,33 @@
+<div class="auth-page">
+  <div class="auth-card card">
+    <div class="auth-logo">🎮 GamePlanner</div>
+    <h1>Create account</h1>
+
+    <div class="form-group">
+      <input type="text" placeholder="Username (optional)" [(ngModel)]="username" />
+    </div>
+    <div class="form-group">
+      <input type="email" placeholder="Email" [(ngModel)]="email" />
+    </div>
+    <div class="form-group pw-wrap">
+      <input [type]="showPassword ? 'text' : 'password'" placeholder="Password (min. 8 characters)" [(ngModel)]="password" (keyup.enter)="register()" />
+      <button type="button" class="pw-toggle" (click)="showPassword = !showPassword" tabindex="-1">
+        <svg *ngIf="!showPassword" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+        </svg>
+        <svg *ngIf="showPassword" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/>
+          <line x1="1" y1="1" x2="23" y2="23"/>
+        </svg>
+      </button>
+    </div>
+
+    <p class="error-msg" *ngIf="error">{{ error }}</p>
+
+    <button class="btn-primary full-btn" [disabled]="loading || !email || !password" (click)="register()">
+      {{ loading ? 'Creating account...' : 'Create account' }}
+    </button>
+
+    <p class="auth-link">Already have an account? <a routerLink="/login">Sign in</a></p>
+  </div>
+</div>

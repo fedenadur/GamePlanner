@@ -1,0 +1,159 @@
+/* ── Page ────────────────────────────────────────────────────────────────── */
+.profile-page {
+  max-width: 560px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* ── Banner ──────────────────────────────────────────────────────────────── */
+.profile-banner {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.avatar-img {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  position: relative;
+  z-index: 1;
+}
+
+.avatar-initials {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--accent), var(--accent-h));
+  color: #fff;
+  font-size: 2rem;
+  font-weight: 800;
+  border: 3px solid rgba(124,58,237,0.35);
+}
+
+.avatar-ring {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  opacity: 0.4;
+  z-index: 0;
+}
+
+.banner-info { display: flex; flex-direction: column; gap: 0.4rem; }
+
+.banner-name {
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+  margin: 0;
+  color: var(--text);
+}
+
+.steam-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #66c0f4;
+  background: rgba(27,40,56,0.8);
+  border: 1px solid #2a475e;
+  border-radius: 999px;
+  padding: 2px 9px;
+  width: fit-content;
+}
+
+/* ── Form card ───────────────────────────────────────────────────────────── */
+.profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.profile-form h2 {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-bottom: 0;
+}
+
+/* ── Fields ──────────────────────────────────────────────────────────────── */
+.fields { display: flex; flex-direction: column; gap: 1.1rem; }
+
+.field-group { display: flex; flex-direction: column; gap: 0.4rem; }
+
+.field-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.field-opt {
+  font-size: 0.65rem;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--muted);
+  opacity: 0.55;
+  background: var(--surface2);
+  padding: 1px 7px;
+  border-radius: 999px;
+  border: 1px solid var(--border-soft);
+}
+
+.steam-tag {
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: #66c0f4;
+  background: rgba(27,40,56,0.7);
+  border: 1px solid #2a475e;
+  border-radius: 999px;
+  padding: 1px 7px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.field-hint {
+  font-size: 0.72rem;
+  color: var(--muted);
+  opacity: 0.65;
+}
+
+input.input-disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* ── Footer ──────────────────────────────────────────────────────────────── */
+.form-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border-soft);
+}
+
+.status-msgs { flex: 1; }
+.success-msg { color: var(--success); font-size: 0.85rem; font-weight: 500; }
+.error-msg   { color: var(--danger);  font-size: 0.85rem; }
+
+.save-btn { padding: 0.55rem 1.75rem; flex-shrink: 0; }

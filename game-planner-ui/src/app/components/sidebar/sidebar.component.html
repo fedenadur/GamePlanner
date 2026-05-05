@@ -1,0 +1,44 @@
+<div class="sidebar-backdrop" [class.visible]="isOpen" (click)="close()"></div>
+
+<aside class="sidebar" [class.open]="isOpen">
+  <div class="sidebar-header">
+    <span class="sidebar-logo">🎮 GamePlanner</span>
+    <button class="close-btn" (click)="close()" aria-label="Close menu">✕</button>
+  </div>
+
+  <nav class="sidebar-nav">
+    <span class="nav-section-label">Menu</span>
+    <a *ngFor="let item of mainNavItems"
+       [routerLink]="item.route"
+       routerLinkActive="active"
+       class="nav-item"
+       (click)="close()">
+      <span class="nav-icon">{{ item.icon }}</span>
+      <span class="nav-label">{{ item.label }}</span>
+    </a>
+
+    <div class="nav-divider"></div>
+
+    <span class="nav-section-label">Tools</span>
+    <a *ngFor="let item of utilNavItems"
+       [routerLink]="item.route"
+       routerLinkActive="active"
+       class="nav-item"
+       (click)="close()">
+      <span class="nav-icon">{{ item.icon }}</span>
+      <span class="nav-label">{{ item.label }}</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <a routerLink="/profile" class="user-info" (click)="close()">
+      <img *ngIf="avatarUrl" [src]="avatarUrl" class="avatar" [alt]="displayName" />
+      <div *ngIf="!avatarUrl" class="avatar avatar-placeholder">{{ displayName[0]?.toUpperCase() }}</div>
+      <div class="user-text">
+        <span class="display-name">{{ displayName }}</span>
+        <span class="profile-hint">View profile</span>
+      </div>
+    </a>
+    <button class="logout-btn" (click)="logout()">Sign out</button>
+  </div>
+</aside>

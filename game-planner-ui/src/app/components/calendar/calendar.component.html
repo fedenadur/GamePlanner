@@ -1,0 +1,240 @@
+<div class="page-header">
+  <div class="header-row">
+    <h1>Upcoming Releases</h1>
+    <div class="header-controls">
+      <button class="filter-toggle" [class.active]="showFilters" (click)="showFilters = !showFilters">
+        ⚙ Filters
+      </button>
+      <div class="toggle-group">
+        <button [class.active]="mode === 'month'" (click)="setMode('month')">Month</button>
+        <button [class.active]="mode === 'week'"  (click)="setMode('week')">Week</button>
+      </div>
+    </div>
+  </div>
+  <p class="page-sub">Game releases for the next 3 months, powered by IGDB.</p>
+</div>
+
+<div class="nav-row">
+  <button class="btn-icon" (click)="prev()">&#8249;</button>
+  <span class="nav-label">{{ label }}</span>
+  <button class="btn-icon" (click)="next()">&#8250;</button>
+  <button class="btn-today"
+          [class.active]="!isViewingToday"
+          (click)="goToday()"
+          title="Go to current {{ mode === 'week' ? 'week' : 'month' }}">
+    Today
+  </button>
+</div>
+
+<div class="filters-bar" *ngIf="showFilters">
+  <div class="filters-row-main">
+    <div class="filter-search-wrap">
+      <span class="filter-search-icon">🔍</span>
+      <input class="filter-input" type="text" placeholder="Search title..." [(ngModel)]="titleFilter" />
+    </div>
+    <select class="filter-select" [(ngModel)]="genreFilter" (ngModelChange)="onServerFilterChange()">
+      <option value="">All Genres</option>
+      <option *ngFor="let g of availableGenres" [value]="g">{{ g }}</option>
+    </select>
+    <select class="filter-select" [(ngModel)]="hypeMinFilter" (ngModelChange)="onServerFilterChange()">
+      <option *ngFor="let o of HYPE_OPTIONS" [ngValue]="o.value">{{ o.label }}</option>
+    </select>
+  </div>
+  <div class="filters-row-pills">
+    <button class="filter-toggle" [class.active]="favoriteGenresOnly"
+            (click)="favoriteGenresOnly = !favoriteGenresOnly; onServerFilterChange()">
+      ★ My Genres
+    </button>
+    <button class="filter-toggle" [class.active]="ownedOnly"
+            (click)="ownedOnly = !ownedOnly; onServerFilterChange()">
+      ✓ Owned
+    </button>
+  </div>
+</div>
+
+<p class="error-msg" *ngIf="error">{{ error }}</p>
+
+<div class="spinner-wrap" *ngIf="loading">
+  <span class="spinner"></span>
+</div>
+
+<!-- Smart Sections -->
+<div class="smart-sections" *ngIf="!loading">
+
+  <!-- Most Anticipated -->
+  <div class="smart-section" *ngIf="topAnticipated.length">
+    <div class="smart-section-header" (click)="collapsed.anticipated = !collapsed.anticipated">
+      <span class="smart-section-title">🔥 Most Anticipated This {{ mode === 'week' ? 'Week' : 'Month' }}</span>
+      <span class="section-chevron" [class.collapsed]="collapsed.anticipated">&#8964;</span>
+    </div>
+    <div class="smart-strip" *ngIf="!collapsed.anticipated">
+      <div class="smart-card" *ngFor="let e of topAnticipated" (click)="onGameClick($event, e.game, e.date)">
+        <div class="smart-card-cover-wrap">
+          <img [src]="e.game.coverUrl || 'assets/no-cover.png'" class="smart-card-cover" [alt]="e.game.name" />
+          <span class="smart-card-owned" *ngIf="e.game.localGameId">✓</span>
+        </div>
+        <div class="smart-card-info">
+          <div class="smart-card-name">{{ e.game.name }}</div>
+          <div class="smart-card-date">{{ e.date | date:'MMM d' }}</div>
+          <div class="smart-card-hypes" *ngIf="e.game.hypes">🔥 {{ e.game.hypes | number }}</div>
+          <span class="badge badge-genre" *ngIf="e.game.genreMatch && !e.game.localGameId">★ Match</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Matching Your Taste -->
+  <div class="smart-section" *ngIf="genreMatches.length">
+    <div class="smart-section-header" (click)="collapsed.taste = !collapsed.taste">
+      <span class="smart-section-title">★ Matching Your Taste</span>
+      <span class="section-chevron" [class.collapsed]="collapsed.taste">&#8964;</span>
+    </div>
+    <div class="smart-strip" *ngIf="!collapsed.taste">
+      <div class="smart-card" *ngFor="let e of genreMatches" (click)="onGameClick($event, e.game, e.date)">
+        <div class="smart-card-cover-wrap">
+          <img [src]="e.game.coverUrl || 'assets/no-cover.png'" class="smart-card-cover" [alt]="e.game.name" />
+          <span class="smart-card-owned" *ngIf="e.game.localGameId">✓</span>
+        </div>
+        <div class="smart-card-info">
+          <div class="smart-card-name">{{ e.game.name }}</div>
+          <div class="smart-card-date">{{ e.date | date:'MMM d' }}</div>
+          <div class="smart-card-hypes" *ngIf="e.game.hypes">🔥 {{ e.game.hypes | number }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Releasing This Week -->
+  <div class="smart-section" *ngIf="thisWeekGames.length">
+    <div class="smart-section-header" (click)="collapsed.thisWeek = !collapsed.thisWeek">
+      <span class="smart-section-title">📅 Releasing This Week</span>
+      <span class="section-chevron" [class.collapsed]="collapsed.thisWeek">&#8964;</span>
+    </div>
+    <ng-container *ngIf="!collapsed.thisWeek">
+      <div class="smart-strip">
+        <div class="smart-card"
+             *ngFor="let e of (showAllThisWeek ? thisWeekGames : thisWeekGames.slice(0, 10))"
+             (click)="onGameClick($event, e.game, e.date)">
+          <div class="smart-card-cover-wrap">
+            <img [src]="e.game.coverUrl || 'assets/no-cover.png'" class="smart-card-cover" [alt]="e.game.name" />
+            <span class="smart-card-owned" *ngIf="e.game.localGameId">✓</span>
+          </div>
+          <div class="smart-card-info">
+            <div class="smart-card-name">{{ e.game.name }}</div>
+            <div class="smart-card-date">{{ e.date | date:'EEE MMM d' }}</div>
+            <div class="smart-card-hypes" *ngIf="e.game.hypes">🔥 {{ e.game.hypes | number }}</div>
+            <span class="badge badge-genre" *ngIf="e.game.genreMatch && !e.game.localGameId">★ Match</span>
+          </div>
+        </div>
+      </div>
+      <button class="show-more-btn"
+              *ngIf="thisWeekGames.length > 10"
+              (click)="showAllThisWeek = !showAllThisWeek">
+        {{ showAllThisWeek ? 'Show less' : 'Show ' + (thisWeekGames.length - 10) + ' more' }}
+      </button>
+    </ng-container>
+  </div>
+
+</div>
+
+<div class="calendar-grid" [class.week-mode]="mode === 'week'" *ngIf="!loading">
+  <div class="day-label" *ngFor="let d of DAY_LABELS">{{ d }}</div>
+
+  <div class="day-cell"
+       *ngFor="let cell of cells"
+       [class.empty]="!cell.date"
+       [class.today]="cell.date && cell.date.toDateString() === today.toDateString()">
+
+    <div class="day-number" *ngIf="cell.date">{{ cell.date.getDate() }}</div>
+
+    <!-- Month view: 2x2 hype-sized grid -->
+    <div class="covers" *ngIf="visibleGames(cell.games).length && mode === 'month'">
+      <div class="thumb-wrap"
+           *ngFor="let e of monthSlottedGames(cell.games)"
+           [class.size-full]="e.size === 'full'"
+           [class.size-half]="e.size === 'half'"
+           [class.size-small]="e.size === 'small'"
+           [class.in-library]="e.game.localGameId"
+           [class.genre-match]="e.game.genreMatch && !e.game.localGameId"
+           [title]="e.game.name"
+           (click)="onGameClick($event, e.game, cell.date)">
+        <img [src]="e.game.coverUrl || 'assets/no-cover.png'"
+             [alt]="e.game.name"
+             class="cover-thumb" />
+        <div class="thumb-overlay">
+          <div class="thumb-name">{{ e.game.name }}</div>
+          <div class="thumb-hypes" *ngIf="e.size !== 'small' && e.game.hypes">🔥 {{ e.game.hypes | number }}</div>
+        </div>
+        <span class="cover-pip pip-library" *ngIf="e.game.localGameId" title="In your library">✓</span>
+        <span class="cover-pip pip-genre" *ngIf="e.game.genreMatch && !e.game.localGameId" title="Genre match">★</span>
+      </div>
+      <span class="overflow-badge"
+            *ngIf="visibleGames(cell.games).length > monthSlottedGames(cell.games).length">
+        +{{ visibleGames(cell.games).length - monthSlottedGames(cell.games).length }}
+      </span>
+    </div>
+
+    <!-- Week view: Steam-style portrait cards -->
+    <div class="week-games" *ngIf="mode === 'week' && cell.date">
+      <ng-container *ngIf="visibleGames(cell.games).length; else noReleases">
+        <div class="week-game"
+             *ngFor="let e of weekSlottedGames(cell.games)"
+             [class.week-game-featured]="e.featured"
+             [class.in-library]="e.game.localGameId"
+             [class.week-game-genre]="e.game.genreMatch && !e.game.localGameId"
+             (click)="onGameClick($event, e.game, cell.date)">
+          <img [src]="e.game.coverUrl || 'assets/no-cover.png'" [alt]="e.game.name" class="week-cover" />
+          <div class="week-game-overlay">
+            <div class="week-name">{{ e.game.name }}</div>
+            <div class="week-meta" *ngIf="e.featured && e.game.hypes">🔥 {{ e.game.hypes | number }}</div>
+          </div>
+          <span class="week-library-badge" *ngIf="e.game.localGameId">✓</span>
+          <span class="week-genre-badge" *ngIf="e.game.genreMatch && !e.game.localGameId">★</span>
+        </div>
+        <div class="week-overflow"
+             *ngIf="visibleGames(cell.games).length > weekSlottedGames(cell.games).length">
+          +{{ visibleGames(cell.games).length - weekSlottedGames(cell.games).length }} more
+        </div>
+      </ng-container>
+      <ng-template #noReleases>
+        <div class="no-releases">—</div>
+      </ng-template>
+    </div>
+  </div>
+</div>
+
+<!-- Game Modal -->
+<div class="modal-backdrop" *ngIf="modal" (click)="closeModal()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="closeModal()">✕</button>
+    <div class="modal-body">
+      <img [src]="modal.game.coverUrl || 'assets/no-cover.png'" class="modal-cover" [alt]="modal.game.name" />
+      <div class="modal-info">
+        <div class="modal-name">{{ modal.game.name }}</div>
+        <div class="modal-meta">
+          <span *ngIf="modal.date">📅 {{ modal.date | date:'MMMM d, yyyy' }}</span>
+          <span *ngIf="modal.game.hypes" [class.modal-hypes-hot]="isHot(modal.game)">🔥 {{ modal.game.hypes | number }} hypes</span>
+        </div>
+        <div class="modal-genres" *ngIf="modal.game.genres.length">
+          <span class="genre-chip" *ngFor="let g of modal.game.genres">{{ g }}</span>
+        </div>
+        <div class="modal-badges">
+          <span class="badge badge-genre" *ngIf="modal.game.genreMatch">★ Matches Your Taste</span>
+          <span class="badge badge-hot"   *ngIf="isHot(modal.game)">Highly Hyped</span>
+        </div>
+        <div class="modal-actions">
+          <a class="modal-btn modal-btn-steam"
+             [href]="steamUrl(modal.game.name)"
+             target="_blank" rel="noopener noreferrer">
+            Find on Steam
+          </a>
+          <a class="modal-btn modal-btn-search"
+             [href]="googleUrl(modal.game.name)"
+             target="_blank" rel="noopener noreferrer">
+            Search Web
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,163 @@
+<div class="dash-page">
+
+  <!-- ── Hero ─────────────────────────────────────────────────────────────── -->
+  <section class="hero">
+    <div class="hero-text">
+      <h1 class="hero-title">
+        Welcome back<span *ngIf="data?.username">, {{ data?.username }}</span>
+      </h1>
+      <p class="hero-sub">Ready to play?</p>
+    </div>
+    <div class="hero-actions">
+      <a routerLink="/planner" class="btn btn-primary">Session Planner</a>
+      <a routerLink="/games"   class="btn btn-ghost">Backlog</a>
+      <a routerLink="/steam"   class="btn btn-ghost">Import Steam</a>
+    </div>
+  </section>
+
+  <!-- Error -->
+  <div *ngIf="error" class="dash-error">
+    <span>⚠️</span>
+    <span>Could not load dashboard.</span>
+  </div>
+
+  <!-- Skeleton -->
+  <section class="grid" *ngIf="loading">
+    <div class="card skeleton card-continue"></div>
+    <div class="card skeleton card-tonight"></div>
+    <div class="card skeleton card-upcoming"></div>
+    <div class="card skeleton card-backlog"></div>
+    <div class="card skeleton card-stats"></div>
+  </section>
+
+  <!-- ── Card grid ────────────────────────────────────────────────────────── -->
+  <section class="grid" *ngIf="data && !loading">
+
+    <!-- Row 1: Continue Playing | Quick Stats | Upcoming -->
+    <article class="card card-continue">
+      <header class="card-head">
+        <h2>▶ Continue Playing</h2>
+      </header>
+      <div class="card-body">
+        <div *ngIf="!data.continuePlaying.length" class="empty-mini">Nothing in progress yet.</div>
+        <div class="continue-list" *ngIf="data.continuePlaying.length">
+          <a class="continue-item-compact"
+             *ngFor="let g of data.continuePlaying"
+             [routerLink]="['/games', g.id]">
+            <div class="cover cover-sm">
+              <img *ngIf="g.coverImageUrl" [src]="g.coverImageUrl" [alt]="g.name">
+              <div *ngIf="!g.coverImageUrl" class="cover-fallback">{{ g.name[0] }}</div>
+            </div>
+            <div class="continue-info-compact">
+              <div class="continue-name">{{ g.name }}</div>
+              <div class="continue-detail">{{ g.playtimeHours | number:'1.0-1' }}h</div>
+            </div>
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <!-- Quick Stats -->
+    <article class="card card-stats">
+      <header class="card-head">
+        <h2>Quick Stats</h2>
+      </header>
+      <div class="card-body quick-body-large">
+        <div class="stat-box">
+          <div class="stat-number">{{ data.quickStats.totalOwned }}</div>
+          <div class="stat-label">Owned</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-number">{{ data.quickStats.totalPlaytimeHours | number:'1.0-0' }}</div>
+          <div class="stat-label">Hours</div>
+        </div>
+        <div class="stat-box full-width" *ngIf="data.quickStats.favoriteGenre">
+          <div class="stat-label">Favorite Genre</div>
+          <div class="stat-number-sm">{{ data.quickStats.favoriteGenre }}</div>
+        </div>
+        <div class="stat-box full-width" *ngIf="data.quickStats.mostPlayedGame">
+          <div class="stat-label">Top Game</div>
+          <div class="stat-number-sm">{{ data.quickStats.mostPlayedGame }}</div>
+        </div>
+      </div>
+    </article>
+
+    <!-- Upcoming This Week -->
+    <article class="card card-upcoming">
+      <header class="card-head">
+        <h2>Upcoming This Week</h2>
+      </header>
+      <div class="card-body upcoming-body">
+        <div *ngIf="!data.upcomingThisWeek.length" class="empty-mini">No releases in the next 7 days.</div>
+        <div class="upcoming-grouped" *ngIf="data.upcomingThisWeek.length">
+          <div class="week-group" *ngFor="let group of groupUpcomingByDay(data.upcomingThisWeek)">
+            <div class="day-header">{{ group.date | date:'MMM d' }}</div>
+            <div class="upcoming-item-inline" *ngFor="let u of group.games">
+              <span class="bullet">•</span>
+              <span class="game-name">{{ u.name }}</span>
+              <span class="days-until">(in {{ daysUntil(u.releaseDate) }}d)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- Tonight Pick (Full Width) -->
+    <article class="card card-tonight-full">
+      <header class="card-head">
+        <h2>Tonight's Pick</h2>
+        <a routerLink="/backlog-prioritizer" class="card-link">More →</a>
+      </header>
+      <div class="card-body tonight-full-body">
+        <div *ngIf="!data.tonightRecommendation" class="empty-mini">No recommendation yet.</div>
+        <a *ngIf="data.tonightRecommendation as t" class="tonight-full"
+           [routerLink]="['/games', t.gameId]">
+          <div class="tonight-cover-lg">
+            <img *ngIf="t.coverImageUrl" [src]="t.coverImageUrl" [alt]="t.name">
+            <div *ngIf="!t.coverImageUrl" class="cover-fallback">{{ t.name[0] }}</div>
+          </div>
+          <div class="tonight-details">
+            <h3>{{ t.name }}</h3>
+            <p class="tonight-reason" *ngIf="t.reason">{{ t.reason }}</p>
+            <p class="tonight-meta">
+              <span *ngIf="t.mainStoryHours">{{ t.mainStoryHours | number:'1.0-0' }}h main</span>
+              <span *ngIf="t.aggregatedRating">★ {{ t.aggregatedRating | number:'1.0-0' }}</span>
+            </p>
+            <div class="action-buttons">
+              <button class="btn btn-primary">Add to Session</button>
+              <button class="btn btn-ghost">View Details</button>
+            </div>
+          </div>
+        </a>
+      </div>
+    </article>
+
+    <!-- Backlog Progress (Full Width) -->
+    <article class="card card-backlog-full">
+      <header class="card-head">
+        <h2>Backlog ({{ data.backlogSummary.unplayed }} unplayed)</h2>
+      </header>
+      <div class="card-body backlog-full-body">
+        <div class="backlog-completion">
+          <strong>{{ data.backlogSummary.completionRate | number:'1.0-1' }}% Complete</strong>
+          <span class="backlog-breakdown">
+            {{ data.backlogSummary.completed }} finished •
+            {{ data.backlogSummary.totalBacklog }} in backlog •
+            {{ data.backlogSummary.unplayed }} unplayed
+          </span>
+        </div>
+        <div class="backlog-bar-full">
+          <div class="backlog-bar-fill"
+               [style.width]="data.backlogSummary.completionRate + '%'"></div>
+        </div>
+        <div class="backlog-actions">
+          <button class="btn btn-ghost">Browse by Genre</button>
+          <a routerLink="/planner" class="btn btn-primary">Start New Session</a>
+          <a routerLink="/steam" class="btn btn-ghost">Import More</a>
+        </div>
+      </div>
+    </article>
+
+  </section>
+
+</div>

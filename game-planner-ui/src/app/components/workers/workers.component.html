@@ -1,0 +1,37 @@
+<div class="page-header">
+  <h1>Workers</h1>
+  <p class="page-sub">Monitor and manually trigger background workers.</p>
+</div>
+
+<p class="error-msg" *ngIf="error">{{ error }}</p>
+
+<div class="workers-list">
+  <div class="worker-card card" *ngFor="let w of workers">
+    <div class="worker-header">
+      <div class="worker-name">{{ w.name }}</div>
+      <span class="badge" [class]="'badge-' + w.status.toLowerCase()">{{ w.status }}</span>
+    </div>
+
+    <div class="worker-meta">
+      <div class="meta-row">
+        <span class="meta-label">Last run</span>
+        <span>{{ formatDate(w.lastRunAt) }}</span>
+      </div>
+      <div class="meta-row">
+        <span class="meta-label">Last success</span>
+        <span class="success-text">{{ formatDate(w.lastSuccessAt) }}</span>
+      </div>
+      <div class="meta-row" *ngIf="w.lastError">
+        <span class="meta-label">Last error</span>
+        <span class="error-text">{{ w.lastError }}</span>
+      </div>
+    </div>
+
+    <button class="btn-primary run-btn"
+            [disabled]="w.status === 'Running' || triggering.has(w.name)"
+            (click)="run(w.name)">
+      <span *ngIf="w.status === 'Running' || triggering.has(w.name)" class="spinner"></span>
+      {{ w.status === 'Running' || triggering.has(w.name) ? 'Running...' : '▶ Run now' }}
+    </button>
+  </div>
+</div>

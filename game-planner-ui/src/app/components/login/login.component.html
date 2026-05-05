@@ -1,0 +1,41 @@
+<div class="auth-page">
+  <div class="auth-card card">
+    <div class="auth-logo">🎮 GamePlanner</div>
+    <h1>Sign in</h1>
+
+    <div class="form-group">
+      <input type="email" placeholder="Email" [(ngModel)]="email" (keyup.enter)="login()" />
+    </div>
+    <div class="form-group pw-wrap">
+      <input [type]="showPassword ? 'text' : 'password'" placeholder="Password" [(ngModel)]="password" (keyup.enter)="login()" />
+      <button type="button" class="pw-toggle" (click)="showPassword = !showPassword" tabindex="-1">
+        <svg *ngIf="!showPassword" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+        </svg>
+        <svg *ngIf="showPassword" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/>
+          <line x1="1" y1="1" x2="23" y2="23"/>
+        </svg>
+      </button>
+    </div>
+
+    <p class="error-msg" *ngIf="error">{{ error }}</p>
+
+    <button class="btn-primary full-btn" [disabled]="loading || !email || !password" (click)="login()">
+      {{ loading ? 'Signing in...' : 'Sign in' }}
+    </button>
+
+    <div class="divider"><span>or</span></div>
+
+    <button class="btn-steam full-btn" (click)="steamLogin()">
+      <svg class="steam-icon" viewBox="0 0 233 233" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+        <path d="M116.5 0C52.1 0 0 52.1 0 116.5c0 54.4 37.2 100.3 87.6 113.4l31.5-76.2c-1.7.1-3.4.2-5.1.2-28.4 0-51.5-23.1-51.5-51.5S85.6 51 114 51s51.5 23.1 51.5 51.5c0 24.7-17.4 45.4-40.6 50.5l-30.1 72.8c1.9.1 3.8.2 5.7.2 64.4 0 116.5-52.1 116.5-116.5S180.9 0 116.5 0z"/>
+        <path d="M114 77c-14 0-25.5 11.5-25.5 25.5S100 128 114 128s25.5-11.5 25.5-25.5S128 77 114 77z"/>
+        <path d="M37.8 150.8l-14.5 35.1c10.9 8.6 23.2 15.4 36.5 19.9l19.2-46.5c-8.4-1.4-16.2-4.6-23-9.3l-18.2.8z"/>
+      </svg>
+      Sign in with Steam
+    </button>
+
+    <p class="auth-link">No account? <a routerLink="/register">Create one</a></p>
+  </div>
+</div>

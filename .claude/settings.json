@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs grep *)",
+      "Bash(npx ng *)",
+      "Bash(grep -i \"\\\\.cs$\")",
+      "Bash(Get-ChildItem -Path 'e:\\\\PROYECTO NO WORK\\\\GamePlanner\\\\game-planner-ui\\\\src\\\\app\\\\components' -Recurse)",
+      "Bash(Select-Object Name)",
+      "PowerShell(\\(Get-ChildItem -Path 'e:\\\\PROYECTO NO WORK\\\\GamePlanner\\\\game-planner-ui\\\\src\\\\app\\\\components'\\).Name)",
+      "PowerShell(\\(Get-ChildItem -Path 'e:\\\\PROYECTO NO WORK\\\\GamePlanner\\\\game-planner-ui\\\\src\\\\app\\\\components\\\\game-detail'\\).Name)"
+    ],
+    "additionalDirectories": [
+      "e:\\PROYECTO NO WORK\\GamePlanner\\game-planner-ui\\src\\app\\components"
+    ]
+  }
+}

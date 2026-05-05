@@ -1,0 +1,171 @@
+<div class="journal-page">
+
+  <!-- Header -->
+  <div class="journal-header">
+    <div class="header-left">
+      <h1>My Journal</h1>
+      <span class="entry-count" *ngIf="!loading">{{ entries.length }} games</span>
+    </div>
+    <button class="btn-add-entry" (click)="openPicker()">+ Add Entry</button>
+    <div class="stats-row" *ngIf="!loading && entries.length > 0">
+      <span class="stat-chip stat-green">{{ playing }} playing</span>
+      <span class="stat-chip stat-purple">{{ finished }} finished</span>
+      <span class="stat-chip stat-muted">{{ backlog }} backlog</span>
+      <span class="stat-chip stat-red">{{ dropped }} dropped</span>
+    </div>
+  </div>
+
+  <!-- Filter bar -->
+  <div class="filter-bar" *ngIf="!loading && entries.length > 0">
+    <input
+      type="text"
+      class="search-input"
+      placeholder="Search games…"
+      [(ngModel)]="filterQuery"
+    />
+    <div class="status-chips">
+      <button
+        *ngFor="let s of statuses"
+        class="chip"
+        [class.chip-active]="filterStatus === s"
+        (click)="filterStatus = s"
+      >{{ s }}</button>
+    </div>
+  </div>
+
+  <!-- States -->
+  <div class="journal-loading" *ngIf="loading">Loading…</div>
+  <p class="journal-error" *ngIf="error">{{ error }}</p>
+
+  <div class="journal-empty" *ngIf="!loading && entries.length === 0">
+    <span class="empty-icon">📖</span>
+    <p>No entries yet. Open a game and log it!</p>
+    <a routerLink="/games" class="btn-go">Browse Games</a>
+  </div>
+
+  <div class="no-results" *ngIf="!loading && entries.length > 0 && filtered.length === 0">
+    No games match your filter.
+  </div>
+
+  <!-- Grid -->
+  <div class="games-grid" *ngIf="!loading && filtered.length > 0">
+    <div
+      *ngFor="let e of filtered"
+      class="game-tile"
+      [class.tile-selected]="selected?.gameId === e.gameId"
+      (click)="openEdit(e)"
+    >
+      <div class="tile-cover">
+        <img *ngIf="e.coverImageUrl" [src]="e.coverImageUrl" [alt]="e.gameName" />
+        <div *ngIf="!e.coverImageUrl" class="tile-placeholder">🎮</div>
+        <span class="tile-status status-{{ statusColor(e.status) }}">{{ e.status }}</span>
+        <span *ngIf="e.replayCount > 0" class="tile-replay">↺{{ e.replayCount }}</span>
+      </div>
+      <div class="tile-info">
+        <span class="tile-name">{{ e.gameName }}</span>
+        <span *ngIf="e.userRating" class="tile-rating">★ {{ displayRating(e.userRating) }}</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Picker Modal -->
+<div class="modal-backdrop" *ngIf="pickerOpen" (click)="closePicker()"></div>
+<div class="picker-panel" *ngIf="pickerOpen">
+  <div class="picker-header">
+    <span class="picker-title">Add Journal Entry</span>
+    <button class="btn-close" (click)="closePicker()">✕</button>
+  </div>
+  <input
+    class="search-input picker-search"
+    placeholder="Search your library…"
+    [(ngModel)]="pickerQuery"
+    autofocus
+  />
+  <div class="picker-loading" *ngIf="pickerLoading">Loading…</div>
+  <div class="picker-empty" *ngIf="!pickerLoading && pickerFiltered.length === 0">
+    No games available.
+    <a routerLink="/games" (click)="closePicker()">Browse your library</a>.
+  </div>
+  <div class="picker-list" *ngIf="!pickerLoading && pickerFiltered.length > 0">
+    <div *ngFor="let g of pickerFiltered" class="picker-item" (click)="pickGame(g)">
+      <img *ngIf="g.coverImageUrl" [src]="g.coverImageUrl" class="picker-cover" [alt]="g.name" />
+      <div *ngIf="!g.coverImageUrl" class="picker-cover picker-cover--ph">🎮</div>
+      <span class="picker-name">{{ g.name }}</span>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal-backdrop" *ngIf="selected" (click)="closeEdit()"></div>
+<div class="edit-panel" *ngIf="selected">
+  <div class="edit-header">
+    <div class="edit-title-row">
+      <img *ngIf="selected.coverImageUrl" [src]="selected.coverImageUrl" class="edit-cover" />
+      <span class="edit-game-name">{{ selected.gameName }}</span>
+    </div>
+    <button class="btn-close" (click)="closeEdit()">✕</button>
+  </div>
+
+  <div class="edit-grid">
+    <div class="edit-field">
+      <label>Status</label>
+      <select [(ngModel)]="editForm.status">
+        <option *ngFor="let s of statuses.slice(1)" [value]="s">{{ s }}</option>
+      </select>
+    </div>
+    <div class="edit-field">
+      <label>Rating</label>
+      <div class="star-picker" (mouseleave)="hoverRating = null">
+        <div *ngFor="let star of starPositions" class="star-wrap">
+          <span class="star-half star-left"
+                (mouseenter)="hoverRating = star*2-1"
+                (click)="setRating(star*2-1)"></span>
+          <span class="star-half star-right"
+                (mouseenter)="hoverRating = star*2"
+                (click)="setRating(star*2)"></span>
+          <span class="star-bg">☆</span>
+          <span class="star-fg" [style.width.%]="starFill(star)">★</span>
+        </div>
+        <span class="star-label" *ngIf="editForm.userRating">{{ displayRating(editForm.userRating) }}</span>
+        <span class="star-label star-label--clear" *ngIf="editForm.userRating" (click)="setRating(editForm.userRating)">✕</span>
+      </div>
+    </div>
+    <div class="edit-field">
+      <label>Started</label>
+      <input type="date" [(ngModel)]="editForm.startedAt" />
+    </div>
+    <div class="edit-field">
+      <label>Finished</label>
+      <input type="date" [(ngModel)]="editForm.finishedAt" />
+    </div>
+    <div class="edit-field">
+      <label>Last Played</label>
+      <input type="date" [(ngModel)]="editForm.lastPlayedAt" />
+    </div>
+    <div class="edit-field">
+      <label>Replays</label>
+      <input type="number" min="0" [(ngModel)]="editForm.replayCount" />
+    </div>
+    <div class="edit-field edit-field--full">
+      <label>Notes</label>
+      <textarea [(ngModel)]="editForm.notes" placeholder="Your thoughts…" rows="3"></textarea>
+    </div>
+    <div class="edit-field edit-field--full">
+      <label>Favorite Moment</label>
+      <textarea [(ngModel)]="editForm.favoriteMoment" placeholder="That moment when…" rows="2"></textarea>
+    </div>
+  </div>
+
+  <div class="edit-footer">
+    <button class="btn-primary" (click)="saveEdit()" [disabled]="editSaving">
+      {{ editSaving ? 'Saving…' : 'Save' }}
+    </button>
+    <span class="save-ok" *ngIf="editSaved">Saved!</span>
+    <span class="days-badge" *ngIf="daysToFinish != null">{{ daysToFinish }}d to finish</span>
+    <button class="btn-delete" (click)="deleteEdit()" [disabled]="editDeleting">
+      {{ editDeleting ? '…' : 'Remove' }}
+    </button>
+  </div>
+</div>

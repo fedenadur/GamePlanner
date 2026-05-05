@@ -1,0 +1,114 @@
+<!-- Header -->
+<div class="page-header">
+  <h1>Smart Backlog Prioritizer</h1>
+  <p class="page-sub">Find the best next game to play from your library.</p>
+</div>
+
+<!-- Mode selector -->
+<div class="mode-bar">
+  <button
+    *ngFor="let m of modes"
+    class="mode-btn"
+    [class.selected]="selectedMode === m.value"
+    (click)="selectMode(m.value)"
+    [title]="m.hint">
+    <span class="mode-icon">{{ m.icon }}</span>
+    <span class="mode-label">{{ m.label }}</span>
+  </button>
+
+  <button class="btn-ghost refresh-btn" (click)="load()" [disabled]="loading">
+    <span *ngIf="loading" class="btn-spinner"></span>
+    <span *ngIf="!loading">↺</span>
+    Recalculate
+  </button>
+</div>
+
+<!-- Mode description -->
+<p class="mode-hint-bar" *ngIf="!loading">
+  {{ activeMode.icon }} <strong>{{ activeMode.label }}</strong> — {{ activeMode.hint }}
+</p>
+
+<!-- Error -->
+<p class="error-msg" *ngIf="error">{{ error }}</p>
+
+<!-- Skeletons -->
+<div *ngIf="loading" class="skeleton-area">
+  <div class="skeleton-top-card"></div>
+  <div class="skeleton-grid">
+    <div class="skeleton-card" *ngFor="let i of [1,2,3,4,5,6]"></div>
+  </div>
+</div>
+
+<!-- Empty state -->
+<div class="empty-state" *ngIf="loaded && !loading && games.length === 0">
+  <div class="empty-state-icon">🎮</div>
+  <p>No eligible backlog games found.</p>
+  <p class="text-muted" style="font-size:0.85rem;margin-top:0.25rem">Add games to your library or try a different mode.</p>
+</div>
+
+<!-- Results -->
+<div *ngIf="!loading && games.length > 0">
+
+  <!-- Results summary -->
+  <p class="results-summary">
+    Showing <strong>{{ games.length }}</strong> recommendation{{ games.length !== 1 ? 's' : '' }}
+    &nbsp;·&nbsp; {{ activeMode.icon }} {{ activeMode.label }}
+  </p>
+
+  <!-- Top Pick -->
+  <div class="top-pick-card" *ngIf="topPick">
+    <div class="top-pick-badge">Best Next Choice</div>
+    <div class="top-pick-inner">
+      <div class="top-pick-cover">
+        <img *ngIf="topPick.coverImageUrl" [src]="topPick.coverImageUrl" [alt]="topPick.name" />
+        <div *ngIf="!topPick.coverImageUrl" class="cover-placeholder large">🎮</div>
+      </div>
+      <div class="top-pick-info">
+        <div class="pick-rank">#1</div>
+        <h2 class="pick-title">{{ topPick.name }}</h2>
+        <div class="pick-meta">
+          <span class="score-badge" [ngClass]="scoreColor(topPick.score)">{{ topPick.score }}</span>
+          <span class="meta-pill" *ngIf="topPick.mainStoryHours != null">⏱ {{ formatHours(topPick.mainStoryHours) }}</span>
+          <span class="meta-pill" *ngIf="topPick.aggregatedRating != null">⭐ {{ topPick.aggregatedRating | number:'1.0-0' }}</span>
+        </div>
+        <div class="score-bar-wrap">
+          <div class="score-bar-fill" [ngClass]="scoreColor(topPick.score)" [style.width.%]="topPick.score"></div>
+        </div>
+        <div class="reason-list">
+          <span class="reason-tag" *ngFor="let r of topPick.reasons">{{ reasonIcon(r) }} {{ r }}</span>
+        </div>
+        <div class="genre-list">
+          <span class="genre-pill" *ngFor="let g of topPick.genres">{{ g }}</span>
+        </div>
+        <button class="btn-primary view-btn" (click)="viewDetail(topPick.gameId)">View Details</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rest of picks -->
+  <div class="results-grid" *ngIf="restPicks.length > 0">
+    <div class="pick-card" *ngFor="let game of restPicks; let i = index">
+      <div class="pick-cover">
+        <img *ngIf="game.coverImageUrl" [src]="game.coverImageUrl" [alt]="game.name" loading="lazy" />
+        <div *ngIf="!game.coverImageUrl" class="cover-placeholder">🎮</div>
+        <span class="rank-badge">#{{ i + 2 }}</span>
+      </div>
+      <div class="pick-body">
+        <div class="pick-head">
+          <span class="pick-name">{{ game.name }}</span>
+          <span class="score-badge" [ngClass]="scoreColor(game.score)">{{ game.score }}</span>
+        </div>
+        <div class="pick-meta">
+          <span class="meta-pill" *ngIf="game.mainStoryHours != null">⏱ {{ formatHours(game.mainStoryHours) }}</span>
+          <span class="meta-pill" *ngIf="game.aggregatedRating != null">⭐ {{ game.aggregatedRating | number:'1.0-0' }}</span>
+          <span class="meta-pill muted" *ngIf="game.playtimeHours === 0">Not played</span>
+        </div>
+        <div class="reason-list">
+          <span class="reason-tag" *ngFor="let r of game.reasons">{{ reasonIcon(r) }} {{ r }}</span>
+        </div>
+        <button class="btn-ghost small-btn" (click)="viewDetail(game.gameId)">View Details</button>
+      </div>
+    </div>
+  </div>
+
+</div>

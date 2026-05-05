@@ -1,0 +1,132 @@
+<div class="detail-loading" *ngIf="loading">Loading...</div>
+<p class="error-msg" *ngIf="error">{{ error }}</p>
+
+<div class="detail-page" *ngIf="game && !loading">
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-cover">
+      <img *ngIf="game.coverImageUrl" [src]="game.coverImageUrl" [alt]="game.name" />
+      <div *ngIf="!game.coverImageUrl" class="cover-placeholder">🎮</div>
+    </div>
+    <div class="hero-info">
+      <h1 class="game-title">{{ game.name }}</h1>
+      <span class="playtime-badge" [class.played]="game.playtimeHours > 0">{{ playedLabel }}</span>
+
+      <!-- Rating -->
+      <div class="rating-block" *ngIf="ratingScore !== null; else noRating">
+        <div class="rating-badge" [class]="'badge-' + ratingColor">
+          <span class="rating-number">{{ ratingScore }}</span>
+        </div>
+        <div class="rating-meta">
+          <span class="rating-sentiment" [class]="'sentiment-' + ratingColor">{{ ratingSentiment }}</span>
+          <span class="rating-count">{{ ratingCountLabel }}</span>
+        </div>
+      </div>
+      <ng-template #noRating>
+        <span class="rating-none">No rating available</span>
+      </ng-template>
+
+      <div class="hero-actions">
+        <a *ngIf="game.steamUrl" [href]="game.steamUrl" target="_blank" rel="noopener" class="btn-steam">
+          <svg viewBox="0 0 233 233" fill="currentColor" width="16" height="16">
+            <path d="M116.5 0C52.1 0 0 52.1 0 116.5c0 54.4 37.2 100.3 87.6 113.4l31.5-76.2c-1.7.1-3.4.2-5.1.2-28.4 0-51.5-23.1-51.5-51.5S85.6 51 114 51s51.5 23.1 51.5 51.5c0 24.7-17.4 45.4-40.6 50.5l-30.1 72.8c1.9.1 3.8.2 5.7.2 64.4 0 116.5-52.1 116.5-116.5S180.9 0 116.5 0z"/>
+          </svg>
+          View on Steam
+        </a>
+        <a routerLink="/games" class="btn-back">← Back to library</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="detail-body">
+
+    <!-- Metadata -->
+    <div class="card detail-card" *ngIf="game.genres.length || game.tags.length || game.themes.length || game.playerPerspectives.length || game.gameModes.length">
+      <h2>Details</h2>
+      <div class="meta-rows">
+        <div class="meta-row" *ngIf="game.genres.length">
+          <span class="meta-label">Genres</span>
+          <div class="pills">
+            <span class="pill genre-default" *ngFor="let g of game.genres">{{ g }}</span>
+          </div>
+        </div>
+        <div class="meta-row" *ngIf="game.tags.length">
+          <span class="meta-label">Tags</span>
+          <div class="pills">
+            <span class="pill tag-pill" *ngFor="let t of game.tags">{{ t }}</span>
+          </div>
+        </div>
+        <div class="meta-row" *ngIf="game.themes.length">
+          <span class="meta-label">Themes</span>
+          <div class="pills">
+            <span class="pill tag-pill" *ngFor="let t of game.themes">{{ t }}</span>
+          </div>
+        </div>
+        <div class="meta-row" *ngIf="game.playerPerspectives.length">
+          <span class="meta-label">Perspective</span>
+          <div class="pills">
+            <span class="pill tag-pill" *ngFor="let p of game.playerPerspectives">{{ p }}</span>
+          </div>
+        </div>
+        <div class="meta-row" *ngIf="game.gameModes.length">
+          <span class="meta-label">Modes</span>
+          <div class="pills">
+            <span class="pill tag-pill" *ngFor="let m of game.gameModes">{{ m }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HLTB -->
+    <div class="card detail-card hltb-card">
+      <h2>How Long to Beat</h2>
+      <div class="hltb-grid">
+        <div class="hltb-stat">
+          <span class="hltb-label">Main Story</span>
+          <span class="hltb-value" [class.no-data]="!game.hltbMainStory">{{ formatHours(game.hltbMainStory) }}</span>
+        </div>
+        <div class="hltb-stat">
+          <span class="hltb-label">Main + Extras</span>
+          <span class="hltb-value" [class.no-data]="!game.hltbMainPlus">{{ formatHours(game.hltbMainPlus) }}</span>
+        </div>
+        <div class="hltb-stat">
+          <span class="hltb-label">Completionist</span>
+          <span class="hltb-value" [class.no-data]="!game.hltbCompletionist">{{ formatHours(game.hltbCompletionist) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- My Journal (quick log) -->
+    <div class="card detail-card journal-card">
+      <h2>My Journal</h2>
+      <div class="quick-log-row">
+        <div class="quick-field">
+          <label>Status</label>
+          <select [(ngModel)]="journal.status" class="journal-select">
+            <option *ngFor="let s of journalStatuses" [value]="s">{{ s }}</option>
+          </select>
+        </div>
+        <div class="quick-field">
+          <label>Rating</label>
+          <div class="star-picker" (mouseleave)="hoverRating = null">
+            <div *ngFor="let star of starPositions" class="star-wrap">
+              <span class="star-half star-left"  (mouseenter)="hoverRating = star*2-1" (click)="setRating(star*2-1)"></span>
+              <span class="star-half star-right" (mouseenter)="hoverRating = star*2"   (click)="setRating(star*2)"></span>
+              <span class="star-bg">☆</span>
+              <span class="star-fg" [style.width.%]="starFill(star)">★</span>
+            </div>
+            <span class="star-label" *ngIf="journal.userRating">{{ displayRating(journal.userRating) }}</span>
+            <span class="star-label star-label--clear" *ngIf="journal.userRating" (click)="setRating(journal.userRating!)">✕</span>
+          </div>
+        </div>
+        <button class="btn-save" (click)="saveJournal()" [disabled]="journalSaving">
+          {{ journalSaving ? '…' : 'Save' }}
+        </button>
+        <span class="save-confirm" *ngIf="journalSaved">Saved!</span>
+      </div>
+      <a routerLink="/journal" class="journal-link">Open full journal →</a>
+    </div>
+
+  </div>
+</div>

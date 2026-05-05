@@ -1,0 +1,113 @@
+<div class="page">
+
+  <div class="page-header">
+    <div>
+      <h1>Now Playing</h1>
+      <p class="subtitle">Track up to 3 games you're currently playing</p>
+    </div>
+    <span class="slot-count" *ngIf="!loadingSlots">{{ filledCount }} / {{ MAX_SLOTS }}</span>
+  </div>
+
+  <div *ngIf="error" class="error-msg">{{ error }}</div>
+
+  <!-- Shelf skeleton -->
+  <div class="shelf-wrapper" *ngIf="loadingSlots">
+    <div class="shelf-slots">
+      <div class="shelf-slot empty skeleton-slot" *ngFor="let _ of [0,1,2]"></div>
+    </div>
+    <div class="shelf-board"></div>
+  </div>
+
+  <!-- Shelf -->
+  <div class="shelf-wrapper" *ngIf="!loadingSlots">
+    <div class="shelf-slots">
+
+      <div
+        *ngFor="let game of nowPlaying; let i = index"
+        class="shelf-slot"
+        [class.filled]="game !== null"
+        [class.empty]="game === null"
+      >
+        <!-- Filled slot -->
+        <ng-container *ngIf="game !== null">
+          <button class="remove-btn" (click)="removeGame(i)" title="Remove">
+            <svg class="remove-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6l-1 14H6L5 6"/>
+              <path d="M10 11v6M14 11v6"/>
+              <path d="M9 6V4h6v2"/>
+            </svg>
+          </button>
+
+          <div class="game-spine"></div>
+
+          <div class="game-case">
+            <img
+              *ngIf="game.coverImageUrl"
+              [src]="game.coverImageUrl"
+              [alt]="game.name"
+              class="cover-img"
+            />
+            <div *ngIf="!game.coverImageUrl" class="cover-placeholder">
+              <span class="cover-icon">🎮</span>
+            </div>
+          </div>
+
+          <div class="game-info">
+            <span class="game-name">{{ game.name }}</span>
+            <span class="game-genres" *ngIf="game.genres?.length">{{ game.genres[0] }}</span>
+          </div>
+        </ng-container>
+
+        <!-- Empty slot -->
+        <ng-container *ngIf="game === null">
+          <button class="add-slot-btn" (click)="openPicker(i)" [disabled]="saving">
+            <span class="add-icon">+</span>
+            <span class="add-label">Add game</span>
+          </button>
+        </ng-container>
+      </div>
+
+    </div>
+    <div class="shelf-board"></div>
+  </div>
+
+  <!-- Picker modal -->
+  <div class="picker-backdrop" *ngIf="pickerOpenForSlot !== null" (click)="closePicker()">
+    <div class="picker-modal" (click)="$event.stopPropagation()">
+      <div class="picker-header">
+        <span class="picker-title">Pick a game</span>
+        <button class="picker-close" (click)="closePicker()">✕</button>
+      </div>
+
+      <input
+        class="picker-search"
+        type="text"
+        placeholder="Search your library…"
+        [(ngModel)]="pickerSearch"
+        autofocus
+      />
+
+      <div class="picker-list" *ngIf="!loadingGames">
+        <div *ngIf="pickerGames.length === 0" class="picker-empty">
+          {{ pickerSearch ? 'No games match your search.' : 'No more games available.' }}
+        </div>
+        <button
+          *ngFor="let g of pickerGames; trackBy: trackById"
+          class="picker-item"
+          (click)="pickGame(g)"
+        >
+          <img *ngIf="g.coverImageUrl" [src]="g.coverImageUrl" [alt]="g.name" class="picker-thumb" />
+          <div *ngIf="!g.coverImageUrl" class="picker-thumb picker-thumb-placeholder">🎮</div>
+          <div class="picker-item-info">
+            <span class="picker-item-name">{{ g.name }}</span>
+            <span class="picker-item-genre" *ngIf="g.genres?.length">{{ g.genres.join(', ') }}</span>
+          </div>
+        </button>
+      </div>
+
+      <div class="picker-loading" *ngIf="loadingGames">Loading library…</div>
+    </div>
+  </div>
+
+</div>

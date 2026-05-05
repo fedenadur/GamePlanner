@@ -1,0 +1,106 @@
+using System.Text;
+using System.Threading.RateLimiting;
+using GamePlanner.API.Context;
+using GamePlanner.API.Managers;
+using GamePlanner.API.Services;
+using GamePlanner.API.Workers;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+builder.Services.AddDbContext<GamePlannerDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddScoped<GameManager>();
+builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<SteamAuthService>();
+builder.Services.AddSingleton<SteamTokenStore>();
+builder.Services.AddScoped<SessionManager>();
+builder.Services.AddScoped<SessionPlannerManager>();
+builder.Services.AddHttpClient();
+builder.Services.AddSingleton<IgdbService>();
+builder.Services.AddSingleton<SteamService>();
+builder.Services.AddScoped<GameSyncManager>();
+builder.Services.AddScoped<GameImportManager>();
+builder.Services.AddScoped<ImportJobManager>();
+builder.Services.AddScoped<GameEnrichmentManager>();
+builder.Services.AddScoped<GameImageManager>();
+builder.Services.AddScoped<WorkerStatusManager>();
+builder.Services.AddSingleton<CsvGameService>();
+builder.Services.AddScoped<GameHLTBManager>();
+builder.Services.AddScoped<UpcomingGamesManager>();
+builder.Services.AddScoped<NowPlayingManager>();
+builder.Services.AddScoped<TrackedGamesManager>();
+builder.Services.AddScoped<BacklogPrioritizerManager>();
+builder.Services.AddScoped<GameJournalManager>();
+builder.Services.AddScoped<StatsDashboardManager>();
+builder.Services.AddScoped<DashboardManager>();
+builder.Services.AddScoped<SteamPlaytimeSyncManager>();
+builder.Services.AddHostedService<GameSyncWorker>();
+builder.Services.AddHostedService<GameImageSyncWorker>();
+builder.Services.AddHostedService<SteamImportWorker>();
+builder.Services.AddHostedService<GameHLTBSyncWorker>();
+builder.Services.AddHostedService<UpcomingGamesSyncWorker>();
+builder.Services.AddHostedService<SteamPlaytimeSyncWorker>();
+
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        var jwt = builder.Configuration.GetSection("Jwt");
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer           = true,
+            ValidateAudience         = true,
+            ValidateLifetime         = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer              = jwt["Issuer"],
+            ValidAudience            = jwt["Audience"],
+            IssuerSigningKey         = new SymmetricSecurityKey(
+                                           Encoding.UTF8.GetBytes(jwt["Secret"]!))
+        };
+    });
+
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddFixedWindowLimiter("auth", o =>
+    {
+        o.PermitLimit         = 10;
+        o.Window              = TimeSpan.FromMinutes(1);
+        o.QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst;
+        o.QueueLimit          = 0;
+    });
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+});
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAngular", policy =>
+        policy.WithOrigins("http://localhost:4200")
+              .AllowAnyHeader()
+              .AllowAnyMethod());
+});
+
+var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+app.UseHttpsRedirection();
+app.UseCors("AllowAngular");
+app.UseRateLimiter();
+app.UseAuthentication();
+app.UseAuthorization();
+app.MapControllers();
+
+app.Run();

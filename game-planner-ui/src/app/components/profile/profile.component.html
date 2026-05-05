@@ -1,0 +1,65 @@
+<div class="profile-page">
+
+  <!-- Header banner -->
+  <div class="profile-banner">
+    <div class="avatar-wrap">
+      <img *ngIf="avatarPreview" [src]="avatarPreview" class="avatar-img" [alt]="displayName" />
+      <div *ngIf="!avatarPreview" class="avatar-img avatar-initials">{{ initials }}</div>
+      <div class="avatar-ring"></div>
+    </div>
+    <div class="banner-info">
+      <h1 class="banner-name">{{ displayName || 'Your Profile' }}</h1>
+      <span class="steam-badge" *ngIf="isSteamUser">
+        <svg viewBox="0 0 233 233" fill="currentColor" width="12" height="12">
+          <path d="M116.5 0C52.1 0 0 52.1 0 116.5c0 54.4 37.2 100.3 87.6 113.4l31.5-76.2c-1.7.1-3.4.2-5.1.2-28.4 0-51.5-23.1-51.5-51.5S85.6 51 114 51s51.5 23.1 51.5 51.5c0 24.7-17.4 45.4-40.6 50.5l-30.1 72.8c1.9.1 3.8.2 5.7.2 64.4 0 116.5-52.1 116.5-116.5S180.9 0 116.5 0z"/>
+        </svg>
+        Steam account
+      </span>
+    </div>
+  </div>
+
+  <!-- Form card -->
+  <div class="card profile-form">
+    <h2>Account details</h2>
+
+    <div class="fields">
+      <div class="field-group">
+        <label class="field-label">Display Name</label>
+        <input type="text" [(ngModel)]="displayName" placeholder="Your display name" maxlength="100" />
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">
+          Email
+          <span class="steam-tag" *ngIf="isSteamUser">Steam — read only</span>
+        </label>
+        <input type="email" [(ngModel)]="email"
+               [disabled]="isSteamUser"
+               [class.input-disabled]="isSteamUser"
+               placeholder="your@email.com" />
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">
+          Avatar URL
+          <span class="field-opt">optional</span>
+        </label>
+        <input type="url" [(ngModel)]="profileImageUrl" placeholder="https://example.com/avatar.jpg" />
+        <span class="field-hint" *ngIf="isSteamUser">Automatically synced from Steam on login.</span>
+      </div>
+    </div>
+
+    <div class="form-footer">
+      <div class="status-msgs">
+        <p class="success-msg" *ngIf="success">✅ Saved successfully.</p>
+        <p class="error-msg"   *ngIf="error">{{ error }}</p>
+      </div>
+      <button class="btn-primary save-btn"
+              [disabled]="loading || !displayName.trim()"
+              (click)="save()">
+        {{ loading ? 'Saving...' : 'Save changes' }}
+      </button>
+    </div>
+  </div>
+
+</div>

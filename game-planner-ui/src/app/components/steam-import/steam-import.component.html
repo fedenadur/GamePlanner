@@ -1,0 +1,61 @@
+<h1>Steam Import</h1>
+
+<div class="card">
+  <h2>Enter your Steam Profile</h2>
+  <p class="hint" *ngIf="!steamLocked">Accepts: SteamID64, vanity name, or full profile URL. Profile must be public.</p>
+  <p class="hint locked-hint" *ngIf="steamLocked">
+    Signed in via Steam — your Steam ID has been filled in automatically.
+  </p>
+
+  <div class="input-row">
+    <div class="input-wrap">
+      <input [(ngModel)]="steamId"
+             [disabled]="steamLocked || isRunning"
+             [class.locked]="steamLocked || isRunning"
+             placeholder="e.g. 76561198000000000 or myusername" />
+      <span class="lock-icon" *ngIf="steamLocked" title="Filled from your Steam login">🔒</span>
+    </div>
+    <button class="btn-primary"
+            [disabled]="!steamId.trim() || isRunning"
+            (click)="import()">
+      {{ isRunning ? 'Importing...' : 'Import Games' }}
+    </button>
+  </div>
+
+  <p class="error" *ngIf="error">{{ error }}</p>
+</div>
+
+<!-- Progress panel -->
+<div class="card progress-card" *ngIf="isRunning || isDone">
+
+  <!-- Running -->
+  <div *ngIf="isRunning">
+    <div class="progress-header">
+      <span class="progress-label">
+        <span class="spinner"></span>
+        Import running in background…
+      </span>
+      <span class="progress-pct">{{ progress }}%</span>
+    </div>
+    <div class="progress-bar-track">
+      <div class="progress-bar-fill" [style.width.%]="progress"></div>
+    </div>
+    <p class="progress-sub" *ngIf="total > 0">
+      Processing {{ processed }} / {{ total }} games
+    </p>
+    <p class="progress-sub" *ngIf="total === 0">
+      Fetching your Steam library…
+    </p>
+  </div>
+
+  <!-- Completed -->
+  <div class="done-msg success" *ngIf="status === 'Completed'">
+    ✅ Import completed — {{ processed }} games processed successfully.
+  </div>
+
+  <!-- Failed -->
+  <div class="done-msg failed" *ngIf="status === 'Failed'">
+    ❌ Import failed. {{ error }}
+  </div>
+
+</div>

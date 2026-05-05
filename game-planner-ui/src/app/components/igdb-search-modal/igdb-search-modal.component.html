@@ -1,0 +1,72 @@
+<div class="modal-backdrop" (click)="close()">
+  <div class="modal-panel" (click)="$event.stopPropagation()">
+
+    <div class="modal-header">
+      <h2>Add Game</h2>
+      <button class="btn-ghost close-btn" (click)="close()">✕</button>
+    </div>
+
+    <!-- Search row -->
+    <div class="search-row">
+      <div class="search-wrap">
+        <span class="search-icon">⌕</span>
+        <input class="search-input"
+               placeholder="Search IGDB by title..."
+               [(ngModel)]="query"
+               (keyup.enter)="search()"
+               autofocus />
+      </div>
+      <button class="btn-primary search-btn" (click)="search()" [disabled]="searching || !query.trim()">
+        {{ searching ? '…' : 'Search' }}
+      </button>
+    </div>
+
+    <p class="modal-error" *ngIf="error">{{ error }}</p>
+
+    <!-- Results -->
+    <div class="results-list" *ngIf="results.length > 0">
+      <div *ngFor="let r of results"
+           class="result-row"
+           [class.selected]="selected?.igdbId === r.igdbId"
+           (click)="select(r)">
+        <div class="result-cover-wrap">
+          <img *ngIf="r.coverUrl" [src]="r.coverUrl" class="result-cover" [alt]="r.name" />
+          <div *ngIf="!r.coverUrl" class="result-cover result-cover-empty">🎮</div>
+        </div>
+        <div class="result-info">
+          <div class="result-name">{{ r.name }}</div>
+          <div class="result-meta">
+            <span *ngIf="r.releaseYear" class="result-year">{{ r.releaseYear }}</span>
+            <span *ngIf="r.genres.length" class="result-genres">{{ r.genres.slice(0, 3).join(' · ') }}</span>
+          </div>
+        </div>
+        <span class="result-check" *ngIf="selected?.igdbId === r.igdbId">✓</span>
+      </div>
+    </div>
+
+    <div class="empty-results" *ngIf="searched && results.length === 0">
+      No results found for "{{ query }}".
+    </div>
+
+    <!-- Footer -->
+    <div class="modal-footer">
+      <div class="session-group">
+        <span class="field-label">Session length</span>
+        <div class="toggle-group">
+          <button *ngFor="let t of timeOptions"
+                  class="btn-toggle"
+                  [class.selected]="estimatedMinutes === t"
+                  (click)="estimatedMinutes = t">
+            {{ t === 30 ? '30 min' : t === 60 ? '1 hour' : '2 hours' }}
+          </button>
+        </div>
+      </div>
+      <button class="btn-primary"
+              [disabled]="!selected || saving"
+              (click)="addGame()">
+        {{ saving ? 'Adding…' : 'Add to Library' }}
+      </button>
+    </div>
+
+  </div>
+</div>

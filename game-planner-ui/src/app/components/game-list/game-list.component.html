@@ -1,0 +1,94 @@
+<!-- Header -->
+<div class="list-header">
+  <div class="list-title">
+    <h1>My Games</h1>
+    <span class="library-count" *ngIf="!loading">{{ games.length }} titles</span>
+  </div>
+  <button class="btn-primary add-btn" (click)="showForm = true">+ Add Game</button>
+</div>
+
+<app-igdb-search-modal
+  *ngIf="showForm"
+  (closed)="showForm = false"
+  (gameAdded)="loadGames()">
+</app-igdb-search-modal>
+
+<!-- Filters -->
+<div class="filters-panel card">
+  <div class="filter-row">
+    <div class="search-wrap">
+      <span class="search-icon">⌕</span>
+      <input class="filter-search" placeholder="Search by title..." [(ngModel)]="filterTitle" (ngModelChange)="onFilterChange()" />
+    </div>
+    <button class="btn-ghost clear-btn" (click)="clearFilters()" *ngIf="hasActiveFilters">Clear all</button>
+  </div>
+
+  <div class="filter-group" *ngIf="allGenres.length">
+    <span class="filter-label">Genre</span>
+    <div class="pill-select">
+      <button *ngFor="let g of allGenres"
+              class="filter-pill genre-filter {{ genreMeta(g).cls }}"
+              [class.active]="selectedGenres.has(g)"
+              (click)="toggleGenre(g)">{{ genreMeta(g).icon }} {{ g }}</button>
+    </div>
+  </div>
+
+  <div class="filter-group" *ngIf="allTags.length">
+    <span class="filter-label">Tags</span>
+    <div class="pill-select">
+      <button *ngFor="let t of allTags"
+              class="filter-pill tag"
+              [class.active]="selectedTags.has(t)"
+              (click)="toggleTag(t)">{{ t }}</button>
+    </div>
+  </div>
+</div>
+
+<!-- Playtime tabs -->
+<div class="tab-bar">
+  <button class="tab" [class.active]="playtimeFilter === 'all'" (click)="setPlaytimeFilter('all')">
+    All <span class="tab-count">{{ allCount }}</span>
+  </button>
+  <button class="tab" [class.active]="playtimeFilter === 'played'" (click)="setPlaytimeFilter('played')">
+    ▶ Played <span class="tab-count">{{ playedCount }}</span>
+  </button>
+  <button class="tab" [class.active]="playtimeFilter === 'notPlayed'" (click)="setPlaytimeFilter('notPlayed')">
+    ☐ Backlog <span class="tab-count">{{ notPlayedCount }}</span>
+  </button>
+</div>
+
+<!-- Results bar -->
+<div class="results-bar" *ngIf="!loading">
+  <span class="results-count">{{ filtered.length }} game{{ filtered.length !== 1 ? 's' : '' }}</span>
+</div>
+
+<p class="error-msg" *ngIf="error">{{ error }}</p>
+
+<!-- Loading skeletons -->
+<div class="games-grid" *ngIf="loading">
+  <div class="skeleton-card" *ngFor="let i of [1,2,3,4,5,6,7,8,9,10,11,12,13,14]"></div>
+</div>
+
+<!-- Grid -->
+<div class="games-grid" *ngIf="!loading">
+  <app-game-card
+    *ngFor="let game of paginated; trackBy: trackById"
+    [game]="game"
+    (delete)="deleteGame($event)">
+  </app-game-card>
+
+  <div class="empty-state" *ngIf="filtered.length === 0">
+    <div class="empty-state-icon">🎮</div>
+    <p>No games match your filters.</p>
+  </div>
+</div>
+
+<!-- Pagination -->
+<div class="pagination" *ngIf="!loading && totalPages > 1">
+  <button class="btn-page" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1">‹</button>
+  <button class="btn-page"
+          *ngFor="let p of pages"
+          [class.active]="p === currentPage"
+          (click)="currentPage = p">{{ p }}</button>
+  <button class="btn-page" [disabled]="currentPage === totalPages" (click)="currentPage = currentPage + 1">›</button>
+</div>

@@ -1,0 +1,157 @@
+<div class="page-header">
+  <h1>Session Planner</h1>
+  <p class="page-sub">Tell us your mood and we'll pick the perfect game for tonight.</p>
+</div>
+
+<div class="planner-panel card">
+
+  <!-- Situation row -->
+  <div class="filter-section">
+    <span class="filter-label">What's the situation? <span class="filter-opt">optional</span></span>
+    <div class="situation-group">
+      <button *ngFor="let s of situationOptions"
+              class="situation-btn"
+              [class.selected]="selectedSituation === s.value"
+              (click)="selectSituation(s)">
+        <span class="situation-icon">{{ s.icon }}</span>
+        <span class="situation-body">
+          <span class="situation-label">{{ s.label }}</span>
+          <span class="situation-hint">{{ s.hint }}</span>
+        </span>
+      </button>
+    </div>
+  </div>
+
+  <div class="panel-divider"></div>
+
+  <!-- Row 1: Status + Duration side by side -->
+  <div class="panel-row two-col">
+    <div class="filter-section">
+      <span class="filter-label">Library</span>
+      <div class="toggle-group">
+        <button *ngFor="let s of statusOptions"
+                class="btn-toggle"
+                [class.selected]="selectedStatus === s.value"
+                (click)="selectedStatus = s.value">
+          {{ s.label }}
+        </button>
+      </div>
+    </div>
+
+    <div class="filter-section">
+      <span class="filter-label">Session length</span>
+      <div class="toggle-group">
+        <button *ngFor="let d of durationOptions"
+                class="btn-toggle"
+                [class.selected]="selectedDuration === d.value"
+                (click)="selectedDuration = selectedDuration === d.value ? '' : d.value">
+          {{ d.label }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel-divider"></div>
+
+  <!-- Row 2: Mood + Game Length side by side -->
+  <div class="panel-row two-col">
+    <div class="filter-section">
+      <span class="filter-label">What's your mood?</span>
+      <div class="mood-group">
+        <button *ngFor="let m of moodOptions"
+                class="mood-btn"
+                [class.selected]="selectedMood === m.value"
+                (click)="selectedMood = selectedMood === m.value ? '' : m.value">
+          <span class="mood-icon">{{ m.icon }}</span>
+          <span class="mood-label">{{ m.label }}</span>
+          <span class="mood-hint">{{ m.hint }}</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="filter-section">
+      <span class="filter-label">Game length <span class="filter-opt">HLTB data</span></span>
+      <div class="mood-group">
+        <button *ngFor="let l of gameLengthOptions"
+                class="btn-toggle"
+                [class.selected]="selectedGameLength === l.value"
+                (click)="selectedGameLength = selectedGameLength === l.value ? '' : l.value">
+          {{ l.label }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel-divider"></div>
+
+  <!-- Row 3: Perspective + Mode -->
+  <div class="panel-row two-col">
+    <div class="filter-section">
+      <span class="filter-label">Perspective <span class="filter-opt">optional</span></span>
+      <div class="toggle-group">
+        <button *ngFor="let p of perspectiveOptions"
+                class="btn-toggle"
+                [class.selected]="selectedPerspective === p.value"
+                (click)="selectedPerspective = selectedPerspective === p.value ? '' : p.value">
+          {{ p.label }}
+        </button>
+      </div>
+    </div>
+
+    <div class="filter-section">
+      <span class="filter-label">Game mode <span class="filter-opt">multi-select</span></span>
+      <div class="toggle-group">
+        <button *ngFor="let m of gameModeOptions"
+                class="btn-toggle"
+                [class.selected]="selectedModes.has(m.value)"
+                (click)="toggleMode(m.value)">
+          {{ m.label }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel-divider"></div>
+
+  <!-- Actions -->
+  <div class="actions-row">
+    <button class="btn-primary suggest-btn" [disabled]="loading" (click)="suggest()">
+      <span *ngIf="loading" class="btn-spinner"></span>
+      {{ loading ? 'Finding your game...' : '🎮 Suggest Games' }}
+    </button>
+    <button class="btn-ghost clear-btn" *ngIf="hasFilters" (click)="clearFilters()">
+      ↺ Reset
+    </button>
+  </div>
+
+</div>
+
+<p class="error-msg" *ngIf="error">{{ error }}</p>
+
+<!-- Skeletons -->
+<div class="results-section" *ngIf="loading">
+  <div class="results-grid skeleton-grid">
+    <div class="skeleton-card" *ngFor="let i of [1,2,3,4,5]"></div>
+  </div>
+</div>
+
+<!-- Results -->
+<div class="results-section" *ngIf="result && !loading">
+  <div class="result-header">
+    <div class="result-meta">
+      <span class="result-count">{{ result.games.length }} game{{ result.games.length !== 1 ? 's' : '' }} found</span>
+      <span class="result-message">{{ result.message }}</span>
+    </div>
+    <button class="btn-ghost retry-btn" (click)="tryAgain()" [disabled]="loading">↺ Try again</button>
+  </div>
+
+  <div class="empty-state" *ngIf="result.games.length === 0">
+    <div class="empty-state-icon">🎮</div>
+    <p>No games match your filters.</p>
+    <p class="text-muted" style="font-size:0.85rem;margin-top:0.25rem">Try removing a filter or two.</p>
+  </div>
+
+  <div class="results-grid" *ngIf="result.games.length > 0">
+    <app-game-card *ngFor="let game of result.games" [game]="game"></app-game-card>
+  </div>
+</div>

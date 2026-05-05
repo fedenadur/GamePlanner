@@ -1,0 +1,60 @@
+<div class="app-shell">
+  <ng-container *ngIf="auth.isLoggedIn()">
+    <app-sidebar [isOpen]="sidebarOpen" (closed)="sidebarOpen = false"></app-sidebar>
+
+    <header class="navbar">
+      <div class="navbar-left">
+        <button class="hamburger" (click)="sidebarOpen = true" aria-label="Open menu" [attr.aria-expanded]="sidebarOpen">
+          <span></span><span></span><span></span>
+        </button>
+        <a routerLink="/" class="logo" aria-label="Go to dashboard">🎮 GamePlanner</a>
+      </div>
+
+      <div class="navbar-center" (clickOutside)="closeSearch()">
+        <div class="search-wrap">
+          <svg class="search-icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="8.5" cy="8.5" r="5.5" stroke="currentColor" stroke-width="1.6"/>
+            <path d="M13 13l3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+          </svg>
+          <input
+            class="search-input"
+            type="text"
+            placeholder="Search your games…"
+            [(ngModel)]="searchQuery"
+            (input)="onSearchInput()"
+            (focus)="onSearchInput()"
+            autocomplete="off"
+          />
+          <div class="search-results" *ngIf="searchOpen">
+            <button
+              *ngFor="let g of searchResults"
+              class="search-result-item"
+              (click)="goToGame(g.id)"
+            >
+              <img *ngIf="g.coverImageUrl" [src]="g.coverImageUrl" class="result-cover" alt="" />
+              <div *ngIf="!g.coverImageUrl" class="result-cover result-cover-placeholder"></div>
+              <span class="result-name">{{ g.name }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="user-menu" (click)="dropdownOpen = !dropdownOpen" (clickOutside)="dropdownOpen = false">
+        <img *ngIf="avatarUrl" [src]="avatarUrl" class="avatar" [alt]="displayName" />
+        <div *ngIf="!avatarUrl" class="avatar avatar-placeholder">{{ displayName[0]?.toUpperCase() }}</div>
+        <span class="display-name">{{ displayName }}</span>
+        <span class="chevron">▾</span>
+
+        <div class="dropdown" *ngIf="dropdownOpen">
+          <a routerLink="/profile" class="dropdown-item" (click)="dropdownOpen = false">👤 Profile</a>
+          <div class="dropdown-divider"></div>
+          <button class="dropdown-item danger" (click)="logout()">Sign out</button>
+        </div>
+      </div>
+    </header>
+  </ng-container>
+
+  <main [class.content]="auth.isLoggedIn()">
+    <router-outlet></router-outlet>
+  </main>
+</div>

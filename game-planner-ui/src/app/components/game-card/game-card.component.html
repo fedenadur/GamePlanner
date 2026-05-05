@@ -1,0 +1,24 @@
+<div class="game-card card">
+  <div class="cover-wrap" [routerLink]="['/games', game.id]" style="cursor:pointer">
+    <img *ngIf="game.coverImageUrl" [src]="game.coverImageUrl" [alt]="game.name" class="cover-img" loading="lazy" />
+    <div *ngIf="!game.coverImageUrl" class="cover-placeholder">🎮</div>
+    <div class="cover-overlay"><span class="overlay-label">View Details</span></div>
+  </div>
+
+  <div class="card-body">
+    <div class="card-header">
+      <span class="game-name" [title]="game.name">{{ game.name }}</span>
+      <button class="btn-danger delete-btn" *ngIf="game.source === 'Manual'" (click)="delete.emit(game.id)">✕</button>
+    </div>
+
+    <div class="playtime" [class.played]="played">{{ playtimeLabel }}</div>
+
+    <div class="pills-row">
+      <span class="pill genre-pill {{ genreMeta(g).cls }}" [title]="g" *ngFor="let g of game.genres">{{ genreMeta(g).icon }}</span>
+    </div>
+
+    <div class="pills-row">
+      <span class="pill tag-pill" *ngFor="let t of game.tags">{{ t }}</span>
+    </div>
+  </div>
+</div>

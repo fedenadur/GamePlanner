@@ -1,0 +1,216 @@
+/* ── Page header ─────────────────────────────────────────────────────────── */
+.page-header { margin-bottom: 1.5rem; }
+.page-sub { color: var(--muted); font-size: 0.875rem; margin-top: 0.3rem; }
+
+/* ── Panel card ──────────────────────────────────────────────────────────── */
+.planner-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.5rem 1.75rem;
+}
+
+.panel-row { display: flex; gap: 2rem; flex-wrap: wrap; }
+.two-col > .filter-section { flex: 1; min-width: 200px; }
+
+/* Mood row: mood left, game-length right — separated by a vertical rule */
+.mood-row {
+  align-items: stretch;
+  gap: 0;
+}
+.mood-row > .filter-section:first-child {
+  flex: 1;
+  padding-right: 2rem;
+  border-right: 1px solid var(--border-soft);
+}
+.game-length-section {
+  flex-shrink: 0;
+  min-width: 180px;
+  padding-left: 2rem;
+  justify-content: flex-start;
+}
+
+.panel-divider {
+  height: 1px;
+  background: var(--border-soft);
+  margin: 0 -1.75rem;
+}
+
+/* ── Filter sections ─────────────────────────────────────────────────────── */
+.filter-section { display: flex; flex-direction: column; gap: 0.55rem; }
+
+.filter-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.filter-opt {
+  font-size: 0.65rem;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--muted);
+  opacity: 0.55;
+  background: var(--surface2);
+  padding: 1px 7px;
+  border-radius: 999px;
+  border: 1px solid var(--border-soft);
+}
+
+.filter-hint { text-transform: none; letter-spacing: 0; font-size: 0.72rem; opacity: 0.55; font-weight: 400; }
+
+.toggle-group { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.length-group { flex-direction: column; gap: 0.4rem; }
+
+/* ── Situation buttons ───────────────────────────────────────────────────── */
+.situation-group {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.situation-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.6rem 1rem 0.6rem 0.85rem;
+  background: var(--surface2);
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  text-align: left;
+  transition: color var(--t-base), background var(--t-base),
+              border-color var(--t-base), transform var(--t-fast), box-shadow var(--t-base);
+}
+.situation-btn:hover {
+  color: var(--text-soft);
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+.situation-btn.selected {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+  box-shadow: 0 0 16px var(--accent-glow);
+  transform: translateY(-1px);
+}
+
+.situation-icon { font-size: 1.25rem; line-height: 1; flex-shrink: 0; }
+.situation-body { display: flex; flex-direction: column; gap: 0.1rem; }
+.situation-label { font-size: 0.83rem; font-weight: 700; line-height: 1.1; color: var(--text); }
+.situation-btn.selected .situation-label { color: #fff; }
+.situation-hint  { font-size: 0.62rem; opacity: 0.6; white-space: nowrap; }
+.situation-btn.selected .situation-hint { opacity: 0.75; }
+
+/* ── Mood buttons ────────────────────────────────────────────────────────── */
+.mood-group {
+  display: flex;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.mood-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.75rem 1.25rem;
+  min-width: 96px;
+  background: var(--surface2);
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: color var(--t-base), background var(--t-base),
+              border-color var(--t-base), transform var(--t-fast), box-shadow var(--t-base);
+}
+.mood-btn:hover {
+  color: var(--text-soft);
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+.mood-btn.selected {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+  box-shadow: 0 0 18px var(--accent-glow);
+  transform: translateY(-2px);
+}
+
+.mood-icon  { font-size: 1.5rem; line-height: 1; }
+.mood-label { font-size: 0.85rem; font-weight: 700; }
+.mood-hint  { font-size: 0.62rem; color: var(--muted); white-space: nowrap; }
+.mood-btn.selected .mood-hint { color: rgba(255,255,255,0.65); }
+
+/* ── Actions ─────────────────────────────────────────────────────────────── */
+.actions-row { display: flex; align-items: center; gap: 0.75rem; }
+
+.suggest-btn {
+  padding: 0.65rem 2.25rem;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.clear-btn { font-size: 0.82rem; }
+
+.btn-spinner {
+  display: inline-block;
+  width: 14px; height: 14px;
+  border: 2px solid rgba(255,255,255,0.25);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Results section ─────────────────────────────────────────────────────── */
+.results-section { margin-top: 1.75rem; }
+
+.result-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+  gap: 1rem;
+}
+.result-meta { display: flex; flex-direction: column; gap: 0.2rem; }
+.result-count   { font-size: 0.875rem; font-weight: 700; color: var(--text); }
+.result-message { font-size: 0.8rem; color: var(--muted); font-style: italic; }
+.retry-btn { font-size: 0.82rem; padding: 0.35rem 0.9rem; white-space: nowrap; flex-shrink: 0; }
+
+/* ── Results grid ────────────────────────────────────────────────────────── */
+.results-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(185px, 1fr));
+  gap: 1.25rem;
+  animation: fadeUp 0.28s ease;
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Skeletons ───────────────────────────────────────────────────────────── */
+.skeleton-grid { margin-top: 0; }
+.skeleton-card {
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  aspect-ratio: 3 / 5;
+  animation: skeleton-pulse 1.6s ease-in-out infinite;
+}
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 0.35; }
+  50%       { opacity: 0.6; }
+}
+
+.error-msg { color: var(--danger); margin-top: 1rem; font-size: 0.875rem; }

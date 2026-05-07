@@ -17,6 +17,7 @@ public class GameDto
 
 public class GameDetailDto : GameDto
 {
+    public long?   IGDBId             { get; set; }
     public int?    SteamAppId         { get; set; }
     public string? SteamUrl           { get; set; }
     public double? HltbMainStory           { get; set; }

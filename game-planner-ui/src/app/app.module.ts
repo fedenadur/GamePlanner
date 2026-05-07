@@ -24,6 +24,7 @@ import { JournalComponent } from './components/journal/journal.component';
 import { StatsDashboardComponent } from './components/stats-dashboard/stats-dashboard.component';
 import { DashboardComponent } from './components/dashboard/dashboard.component';
 import { SidebarComponent } from './components/sidebar/sidebar.component';
+import { TrackedGamesComponent } from './components/tracked-games/tracked-games.component';
 
 @NgModule({
   declarations: [
@@ -45,7 +46,8 @@ import { SidebarComponent } from './components/sidebar/sidebar.component';
     IgdbSearchModalComponent,
     JournalComponent,
     StatsDashboardComponent,
-    DashboardComponent
+    DashboardComponent,
+    TrackedGamesComponent
   ],
   imports: [
     BrowserModule,

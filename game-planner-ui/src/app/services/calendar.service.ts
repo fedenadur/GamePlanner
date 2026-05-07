@@ -10,6 +10,7 @@ export interface CalendarGame {
   hypes:       number;
   localGameId: number | null;
   genreMatch:  boolean;
+  isTracked:   boolean;
   genres:      string[];
 }
 

@@ -14,6 +14,7 @@ import { BacklogPrioritizerComponent } from './components/backlog-prioritizer/ba
 import { JournalComponent } from './components/journal/journal.component';
 import { StatsDashboardComponent } from './components/stats-dashboard/stats-dashboard.component';
 import { DashboardComponent } from './components/dashboard/dashboard.component';
+import { TrackedGamesComponent } from './components/tracked-games/tracked-games.component';
 import { AuthGuard } from './guards/auth.guard';
 
 const routes: Routes = [
@@ -32,6 +33,7 @@ const routes: Routes = [
   { path: 'backlog-prioritizer',  component: BacklogPrioritizerComponent,  canActivate: [AuthGuard] },
   { path: 'journal',              component: JournalComponent,             canActivate: [AuthGuard] },
   { path: 'stats',                component: StatsDashboardComponent,      canActivate: [AuthGuard] },
+  { path: 'tracked-games',       component: TrackedGamesComponent,        canActivate: [AuthGuard] },
 ];
 
 @NgModule({

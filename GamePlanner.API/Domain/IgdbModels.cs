@@ -86,6 +86,27 @@ public class IgdbCover
     public string Url { get; set; } = string.Empty;
 }
 
+public class IgdbImage
+{
+    [JsonPropertyName("id")]
+    public int Id { get; set; }
+
+    [JsonPropertyName("image_id")]
+    public string ImageId { get; set; } = string.Empty;
+
+    [JsonPropertyName("url")]
+    public string Url { get; set; } = string.Empty;
+
+    [JsonPropertyName("width")]
+    public int? Width { get; set; }
+
+    [JsonPropertyName("height")]
+    public int? Height { get; set; }
+
+    [JsonPropertyName("game")]
+    public long Game { get; set; }
+}
+
 public class IgdbTokenResponse
 {
     [JsonPropertyName("access_token")]

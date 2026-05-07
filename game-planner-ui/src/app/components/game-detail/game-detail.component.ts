@@ -1,8 +1,9 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { GameService, GameDetail } from '../../services/game.service';
+import { GameService, GameDetail, GameImage } from '../../services/game.service';
 import { JournalService, JournalEntry, UpsertJournalRequest } from '../../services/journal.service';
+import { genreIcon } from '../../shared/genre-meta';
 
 @Component({
   selector: 'app-game-detail',
@@ -10,7 +11,11 @@ import { JournalService, JournalEntry, UpsertJournalRequest } from '../../servic
   styleUrls: ['./game-detail.component.css']
 })
 export class GameDetailComponent implements OnInit, OnDestroy {
+  @ViewChild('carouselTrack') carouselTrack!: ElementRef<HTMLElement>;
+
   game: GameDetail | null = null;
+  screenshots: GameImage[] = [];
+  lightboxImage: GameImage | null = null;
   loading = true;
   error   = '';
 
@@ -40,7 +45,7 @@ export class GameDetailComponent implements OnInit, OnDestroy {
       this.journalSaved = false;
       this.hoverRating = null;
       this.gameService.getGameDetail(id).subscribe({
-        next:  (g) => { this.game = g; this.loading = false; this.loadJournal(id); },
+        next:  (g) => { this.game = g; this.loading = false; this.loadJournal(id); this.loadScreenshots(g.igdbId); },
         error: ()  => { this.error = 'Game not found.'; this.loading = false; }
       });
     });
@@ -48,6 +53,26 @@ export class GameDetailComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.routeSub?.unsubscribe();
+  }
+
+  private loadScreenshots(igdbId: number | null) {
+    this.screenshots = [];
+    if (!igdbId) return;
+    this.gameService.getGameImages('screenshot', igdbId).subscribe({
+      next: (imgs) => { this.screenshots = imgs; }
+    });
+  }
+
+  carouselScroll(dir: 1 | -1) {
+    const el = this.carouselTrack?.nativeElement;
+    if (el) el.scrollBy({ left: dir * 480, behavior: 'smooth' });
+  }
+
+  openLightbox(img: GameImage)  { this.lightboxImage = img; }
+  closeLightbox()               { this.lightboxImage = null; }
+
+  lightboxUrl(url: string): string {
+    return url.replace('t_screenshot_big', 't_1080p');
   }
 
   private loadJournal(gameId: number) {
@@ -127,6 +152,8 @@ export class GameDetailComponent implements OnInit, OnDestroy {
     const stars = rating / 2;
     return stars % 1 === 0 ? `${stars}` : stars.toFixed(1);
   }
+
+  genreIcon = genreIcon;
 
   private emptyJournal(): UpsertJournalRequest {
     return { status: 'Backlog', startedAt: null, finishedAt: null, lastPlayedAt: null, userRating: null, notes: null, favoriteMoment: null, replayCount: 0 };

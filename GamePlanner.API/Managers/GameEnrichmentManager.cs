@@ -69,6 +69,8 @@ public class GameEnrichmentManager(
                         game.Tags.Add(tag);
                 }
 
+                game.IGDBId ??= result.Id;
+
                 await db.SaveChangesAsync(ct);
                 logger.LogDebug("Enriched '{Name}'.", item.Name);
             }

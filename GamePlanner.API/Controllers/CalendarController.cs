@@ -64,6 +64,12 @@ public class CalendarController(GamePlannerDbContext db) : ControllerBase
             .ToListAsync(ct))
             .ToDictionary(g => g.IGDBId!.Value, g => g.Id);
 
+        var trackedSet = (await db.TrackedGames
+            .Where(t => t.UserId == userId && igdbIds.Contains(t.IGDBId))
+            .Select(t => t.IGDBId)
+            .ToListAsync(ct))
+            .ToHashSet();
+
         var userGenreSet = new HashSet<string>(
             await db.Games
                 .Where(g => g.UserId == userId && g.IsActive && g.Genres.Any())
@@ -95,7 +101,8 @@ public class CalendarController(GamePlannerDbContext db) : ControllerBase
                         Hypes       = x.Hypes,
                         LocalGameId = localMap.TryGetValue(x.IGDBId, out var id) ? id : null,
                         Genres      = genres,
-                        GenreMatch  = userGenreSet.Count > 0 && genres.Any(g => userGenreSet.Contains(g))
+                        GenreMatch  = userGenreSet.Count > 0 && genres.Any(g => userGenreSet.Contains(g)),
+                        IsTracked   = trackedSet.Contains(x.IGDBId)
                     };
                 }).ToList()
             );

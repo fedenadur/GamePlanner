@@ -7,8 +7,10 @@ namespace GamePlanner.API.Services;
 
 public class IgdbService(IHttpClientFactory httpFactory, IConfiguration config, ILogger<IgdbService> logger)
 {
-    private const string TokenUrl = "https://id.twitch.tv/oauth2/token";
-    private const string GamesUrl = "https://api.igdb.com/v4/games";
+    private const string TokenUrl       = "https://id.twitch.tv/oauth2/token";
+    private const string GamesUrl       = "https://api.igdb.com/v4/games";
+    private const string ScreenshotsUrl = "https://api.igdb.com/v4/screenshots";
+    private const string ArtworksUrl    = "https://api.igdb.com/v4/artworks";
 
     private string? _cachedToken;
     private DateTime _tokenExpiry = DateTime.MinValue;
@@ -104,8 +106,25 @@ public class IgdbService(IHttpClientFactory httpFactory, IConfiguration config, 
         return await PostQueryAsync(query, ct);
     }
 
+    public async Task<List<IgdbImage>> FetchScreenshotsByGameIdsAsync(IEnumerable<long> igdbIds, CancellationToken ct)
+    {
+        var ids   = string.Join(",", igdbIds);
+        var query = $"fields id,image_id,url,width,height,game; where game = ({ids}); limit 500;";
+        return await PostQueryAsync<IgdbImage>(ScreenshotsUrl, query, ct);
+    }
+
+    public async Task<List<IgdbImage>> FetchArtworksByGameIdsAsync(IEnumerable<long> igdbIds, CancellationToken ct)
+    {
+        var ids   = string.Join(",", igdbIds);
+        var query = $"fields id,image_id,url,width,height,game; where game = ({ids}); limit 500;";
+        return await PostQueryAsync<IgdbImage>(ArtworksUrl, query, ct);
+    }
+
     public static string OptimizeCoverUrl(string url) =>
         "https:" + url.Replace("t_thumb", "t_cover_big");
+
+    public static string OptimizeImageUrl(string url) =>
+        "https:" + url.Replace("t_thumb", "t_screenshot_big");
 
     public async Task<List<IgdbGame>> FetchUpdatedSinceAsync(DateTimeOffset since, int offset, CancellationToken ct)
     {
@@ -116,7 +135,10 @@ public class IgdbService(IHttpClientFactory httpFactory, IConfiguration config, 
 
     // ── Core HTTP ────────────────────────────────────────────────────────────
 
-    private async Task<List<IgdbGame>> PostQueryAsync(string query, CancellationToken ct)
+    private Task<List<IgdbGame>> PostQueryAsync(string query, CancellationToken ct) =>
+        PostQueryAsync<IgdbGame>(GamesUrl, query, ct);
+
+    private async Task<List<T>> PostQueryAsync<T>(string url, string query, CancellationToken ct)
     {
         var token  = await GetTokenAsync();
         var client = httpFactory.CreateClient();
@@ -125,7 +147,7 @@ public class IgdbService(IHttpClientFactory httpFactory, IConfiguration config, 
         client.DefaultRequestHeaders.Add("Client-ID", ClientId);
 
         var content  = new StringContent(query, Encoding.UTF8, "text/plain");
-        var response = await client.PostAsync(GamesUrl, content, ct);
+        var response = await client.PostAsync(url, content, ct);
 
         if (!response.IsSuccessStatusCode)
         {
@@ -135,6 +157,6 @@ public class IgdbService(IHttpClientFactory httpFactory, IConfiguration config, 
         }
 
         var json = await response.Content.ReadAsStringAsync(ct);
-        return JsonSerializer.Deserialize<List<IgdbGame>>(json) ?? [];
+        return JsonSerializer.Deserialize<List<T>>(json) ?? [];
     }
 }

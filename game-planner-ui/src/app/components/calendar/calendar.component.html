@@ -167,6 +167,7 @@
         </div>
         <span class="cover-pip pip-library" *ngIf="e.game.localGameId" title="In your library">✓</span>
         <span class="cover-pip pip-genre" *ngIf="e.game.genreMatch && !e.game.localGameId" title="Genre match">★</span>
+        <span class="cover-pip pip-tracked" *ngIf="e.game.isTracked" title="Tracking">🔔</span>
       </div>
       <span class="overflow-badge"
             *ngIf="visibleGames(cell.games).length > monthSlottedGames(cell.games).length">
@@ -190,6 +191,7 @@
           </div>
           <span class="week-library-badge" *ngIf="e.game.localGameId">✓</span>
           <span class="week-genre-badge" *ngIf="e.game.genreMatch && !e.game.localGameId">★</span>
+          <span class="week-tracked-badge" *ngIf="e.game.isTracked">🔔</span>
         </div>
         <div class="week-overflow"
              *ngIf="visibleGames(cell.games).length > weekSlottedGames(cell.games).length">
@@ -223,6 +225,12 @@
           <span class="badge badge-hot"   *ngIf="isHot(modal.game)">Highly Hyped</span>
         </div>
         <div class="modal-actions">
+          <button class="modal-btn modal-btn-track"
+                  [class.tracked]="modal.game.isTracked"
+                  [disabled]="trackingInProgress"
+                  (click)="toggleTrack(modal.game)">
+            {{ modal.game.isTracked ? '🔔 Tracking' : '🔔 Track' }}
+          </button>
           <a class="modal-btn modal-btn-steam"
              [href]="steamUrl(modal.game.name)"
              target="_blank" rel="noopener noreferrer">

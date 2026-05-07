@@ -18,6 +18,7 @@ export interface Game {
 }
 
 export interface GameDetail extends Game {
+  igdbId:                number | null;
   steamAppId:            number | null;
   steamUrl:              string | null;
   hltbMainStory:         number | null;
@@ -113,6 +114,12 @@ export class GameService {
     return this.http.post<SessionPlannerResult>(`${this.api}/session/plan`, request);
   }
 
+  getGameImages(type = 'screenshot', igdbId?: number | null): Observable<GameImage[]> {
+    const params: Record<string, string | number> = { type };
+    if (igdbId != null) params['igdbId'] = igdbId;
+    return this.http.get<GameImage[]>(`${this.api}/gameimages`, { params });
+  }
+
   startSteamImport(steamId: string): Observable<{ jobId: number; alreadyRunning?: boolean }> {
     return this.http.post<{ jobId: number; alreadyRunning?: boolean }>(`${this.api}/steam/import`, { steamId });
   }
@@ -128,4 +135,12 @@ export interface ImportJobStatus {
   processedGames: number;
   totalGames: number;
   errorMessage?: string;
+}
+
+export interface GameImage {
+  id:        number;
+  gameId:    number;
+  gameName:  string;
+  url:       string;
+  imageType: string;
 }

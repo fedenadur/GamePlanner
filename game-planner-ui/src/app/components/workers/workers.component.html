@@ -27,11 +27,20 @@
       </div>
     </div>
 
-    <button class="btn-primary run-btn"
-            [disabled]="w.status === 'Running' || triggering.has(w.name)"
-            (click)="run(w.name)">
-      <span *ngIf="w.status === 'Running' || triggering.has(w.name)" class="spinner"></span>
-      {{ w.status === 'Running' || triggering.has(w.name) ? 'Running...' : '▶ Run now' }}
-    </button>
+    <div class="run-actions">
+      <button class="btn-primary run-btn"
+              [disabled]="w.status === 'Running' || triggering.has(w.name)"
+              (click)="run(w.name)">
+        <span *ngIf="w.status === 'Running' || triggering.has(w.name)" class="spinner"></span>
+        {{ w.status === 'Running' || triggering.has(w.name) ? 'Running...' : '▶ Run now' }}
+      </button>
+      <button *ngIf="w.name === 'GameSyncWorker'"
+              class="btn-ghost run-btn"
+              [disabled]="w.status === 'Running' || triggering.has(w.name)"
+              (click)="run(w.name, true)"
+              title="Skips the freshness check and re-syncs all games regardless of IGDB updated_at">
+        ⚡ Force Run
+      </button>
+    </div>
   </div>
 </div>

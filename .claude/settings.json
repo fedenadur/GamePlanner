@@ -7,7 +7,12 @@
       "Bash(Get-ChildItem -Path 'e:\\\\PROYECTO NO WORK\\\\GamePlanner\\\\game-planner-ui\\\\src\\\\app\\\\components' -Recurse)",
       "Bash(Select-Object Name)",
       "PowerShell(\\(Get-ChildItem -Path 'e:\\\\PROYECTO NO WORK\\\\GamePlanner\\\\game-planner-ui\\\\src\\\\app\\\\components'\\).Name)",
-      "PowerShell(\\(Get-ChildItem -Path 'e:\\\\PROYECTO NO WORK\\\\GamePlanner\\\\game-planner-ui\\\\src\\\\app\\\\components\\\\game-detail'\\).Name)"
+      "PowerShell(\\(Get-ChildItem -Path 'e:\\\\PROYECTO NO WORK\\\\GamePlanner\\\\game-planner-ui\\\\src\\\\app\\\\components\\\\game-detail'\\).Name)",
+      "Bash(Get-ChildItem -Path \"e:\\\\PROYECTO NO WORK\\\\GamePlanner\" -Recurse -Directory)",
+      "Bash(Select-Object -First 30 FullName)",
+      "WebFetch(domain:api-docs.igdb.com)",
+      "WebSearch",
+      "Bash(npx tsc *)"
     ],
     "additionalDirectories": [
       "e:\\PROYECTO NO WORK\\GamePlanner\\game-planner-ui\\src\\app\\components"

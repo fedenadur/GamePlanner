@@ -15,7 +15,8 @@ public class WorkerController(
     private static readonly HashSet<string> KnownWorkers =
     [
         GameSyncWorker.WorkerName,
-        GameImageSyncWorker.WorkerName
+        GameImageSyncWorker.WorkerName,
+        GameHLTBSyncWorker.WorkerName
     ];
 
     [HttpGet]
@@ -23,18 +24,18 @@ public class WorkerController(
         Ok(await statusManager.GetAllAsync(ct));
 
     [HttpPost("{name}/run")]
-    public IActionResult Run(string name)
+    public IActionResult Run(string name, [FromQuery] bool force = false)
     {
         if (!KnownWorkers.Contains(name))
             return NotFound($"Worker '{name}' not found.");
 
         // Fire-and-forget — do NOT await
-        _ = Task.Run(() => RunWorkerAsync(name));
+        _ = Task.Run(() => RunWorkerAsync(name, force));
 
         return Accepted(new { message = $"{name} triggered." });
     }
 
-    private async Task RunWorkerAsync(string name)
+    private async Task RunWorkerAsync(string name, bool force = false)
     {
         await using var scope = scopeFactory.CreateAsyncScope();
 
@@ -42,12 +43,18 @@ public class WorkerController(
         {
             var worker = new GameSyncWorker(scopeFactory,
                 scope.ServiceProvider.GetRequiredService<ILogger<GameSyncWorker>>());
-            await worker.RunAsync(CancellationToken.None);
+            await worker.RunAsync(CancellationToken.None, force);
         }
         else if (name == GameImageSyncWorker.WorkerName)
         {
             var worker = new GameImageSyncWorker(scopeFactory,
                 scope.ServiceProvider.GetRequiredService<ILogger<GameImageSyncWorker>>());
+            await worker.RunAsync(CancellationToken.None);
+        }
+        else if (name == GameHLTBSyncWorker.WorkerName)
+        {
+            var worker = new GameHLTBSyncWorker(scopeFactory,
+                scope.ServiceProvider.GetRequiredService<ILogger<GameHLTBSyncWorker>>());
             await worker.RunAsync(CancellationToken.None);
         }
     }

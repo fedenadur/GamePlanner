@@ -22,6 +22,7 @@ export class SidebarComponent {
     { label: 'Now Playing',     icon: '🕹️', route: '/now-playing' },
     { label: 'Session Planner', icon: '📅', route: '/planner' },
     { label: 'Calendar',        icon: '🗓️', route: '/calendar' },
+    { label: 'Tracked Games',   icon: '🔔', route: '/tracked-games' },
     { label: 'Backlog',         icon: '📋', route: '/backlog-prioritizer' },
     { label: 'Journal',         icon: '📖', route: '/journal' },
     { label: 'Stats',           icon: '📊', route: '/stats' },

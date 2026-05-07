@@ -76,6 +76,7 @@ public class GameManager(GamePlannerDbContext db, IConfiguration config)
             CoverImageUrl      = base_.CoverImageUrl,
             PlaytimeHours      = base_.PlaytimeHours,
             Source             = base_.Source,
+            IGDBId             = game.IGDBId,
             SteamAppId         = game.SteamAppId,
             SteamUrl           = game.SteamAppId.HasValue
                                  ? $"https://store.steampowered.com/app/{game.SteamAppId.Value}"

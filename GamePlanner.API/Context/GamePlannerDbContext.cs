@@ -20,6 +20,7 @@ public class GamePlannerDbContext(DbContextOptions<GamePlannerDbContext> options
     public DbSet<NowPlayingGame>    NowPlayingGames    => Set<NowPlayingGame>();
     public DbSet<GameJournalEntry>  GameJournalEntries => Set<GameJournalEntry>();
     public DbSet<TrackedGame>       TrackedGames       => Set<TrackedGame>();
+    public DbSet<GameImage>         GameImages         => Set<GameImage>();
 
     protected override void OnModelCreating(ModelBuilder mb)
     {
@@ -45,6 +46,12 @@ public class GamePlannerDbContext(DbContextOptions<GamePlannerDbContext> options
             .HasForeignKey(g => g.UserId)
             .IsRequired(false);
 
+
+        mb.Entity<GameImage>()
+            .HasOne(i => i.Game)
+            .WithMany()
+            .HasForeignKey(i => i.GameId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         mb.Entity<Game>()
             .HasMany(g => g.Genres)

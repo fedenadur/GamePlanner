@@ -26,7 +26,7 @@ public class GameSyncWorker(IServiceScopeFactory scopeFactory, ILogger<GameSyncW
         }
     }
 
-    public async Task RunAsync(CancellationToken ct)
+    public async Task RunAsync(CancellationToken ct, bool force = false)
     {
         logger.LogInformation("{Worker} triggered at {Time}.", WorkerName, DateTime.UtcNow);
 
@@ -37,7 +37,7 @@ public class GameSyncWorker(IServiceScopeFactory scopeFactory, ILogger<GameSyncW
         try
         {
             await statusManager.SetRunningAsync(WorkerName, ct);
-            await manager.RunAsync(ct);
+            await manager.RunAsync(ct, force);
             await statusManager.SetCompletedAsync(WorkerName);
         }
         catch (OperationCanceledException)

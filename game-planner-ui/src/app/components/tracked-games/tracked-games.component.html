@@ -1,0 +1,109 @@
+<div class="page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">🔔 Tracked Games</h1>
+      <p class="page-sub">Upcoming releases you're following</p>
+    </div>
+    <div class="header-stats" *ngIf="!loading && !error">
+      <span class="stat-pill">{{ upcomingCount }} upcoming</span>
+      <span class="stat-pill muted" *ngIf="pastCount">{{ pastCount }} released</span>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="spinner-wrap" *ngIf="loading">
+    <span class="spinner"></span>
+  </div>
+
+  <!-- Error -->
+  <p class="error-msg" *ngIf="error">{{ error }}</p>
+
+  <!-- Empty state -->
+  <div class="empty-state" *ngIf="!loading && !error && groups.length === 0">
+    <div class="empty-icon">🔔</div>
+    <h2 class="empty-title">No tracked games yet</h2>
+    <p class="empty-sub">Open the calendar and click <strong>Track</strong> on any upcoming release to follow it here.</p>
+    <a class="btn-primary" routerLink="/calendar">Browse Calendar</a>
+  </div>
+
+  <!-- Game groups -->
+  <div class="groups" *ngIf="!loading && !error && groups.length > 0">
+    <div class="group" *ngFor="let group of groups" [class.past]="group.isPast">
+
+      <!-- Date header -->
+      <div class="group-header">
+        <div class="group-date-col">
+          <span class="group-label" [class.today]="group.isToday" [class.soon]="group.isSoon && !group.isToday">
+            {{ group.label }}
+          </span>
+          <span class="group-badge today-badge" *ngIf="group.isToday">Today</span>
+          <span class="group-badge soon-badge" *ngIf="group.isSoon && !group.isToday">
+            in {{ daysUntil(group.dateKey) }}d
+          </span>
+          <span class="group-badge past-badge" *ngIf="group.isPast">Released</span>
+        </div>
+        <span class="group-count">{{ group.games.length }} {{ group.games.length === 1 ? 'game' : 'games' }}</span>
+      </div>
+
+      <!-- Game cards -->
+      <div class="cards">
+        <div class="card"
+             *ngFor="let game of group.games"
+             [class.past]="group.isPast"
+             [class.untracking]="untrackingId === game.igdbId">
+
+          <!-- Cover -->
+          <div class="card-cover-wrap" (click)="goToGame(game)" [class.clickable]="!!game.localGameId">
+            <img [src]="game.coverUrl || 'assets/no-cover.png'"
+                 [alt]="game.name"
+                 class="card-cover" />
+            <div class="card-owned-badge" *ngIf="game.localGameId">In Library</div>
+          </div>
+
+          <!-- Info -->
+          <div class="card-info">
+            <div class="card-name" (click)="goToGame(game)" [class.clickable]="!!game.localGameId">
+              {{ game.name }}
+            </div>
+
+            <div class="card-meta">
+              <span class="card-date">
+                📅 {{ game.releaseDate | date:'MMM d, yyyy' }}
+              </span>
+              <span class="card-days" *ngIf="!group.isPast && !group.isToday">
+                {{ daysUntil(game.releaseDate) }}d away
+              </span>
+            </div>
+
+            <div class="card-hypes" *ngIf="game.hypes">
+              🔥 {{ game.hypes | number }} hypes
+            </div>
+
+            <div class="card-genres" *ngIf="game.genres.length">
+              <span class="genre-chip" *ngFor="let g of game.genres.slice(0, 3)">{{ g }}</span>
+            </div>
+
+            <div class="card-actions">
+              <a class="action-btn steam-btn"
+                 [href]="steamUrl(game.name)"
+                 target="_blank" rel="noopener noreferrer">Steam</a>
+              <a class="action-btn search-btn"
+                 [href]="googleUrl(game.name)"
+                 target="_blank" rel="noopener noreferrer">Search</a>
+              <button class="action-btn untrack-btn"
+                      [disabled]="untrackingId === game.igdbId"
+                      (click)="untrack(game)">
+                {{ untrackingId === game.igdbId ? '...' : 'Untrack' }}
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>

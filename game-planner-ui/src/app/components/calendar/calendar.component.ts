@@ -1,6 +1,7 @@
 import { Component, OnInit, HostListener } from '@angular/core';
 import { Router } from '@angular/router';
 import { CalendarService, CalendarData, CalendarGame, CalendarFilters } from '../../services/calendar.service';
+import { TrackedGamesService } from '../../services/tracked-games.service';
 
 interface CalendarCell {
   date:  Date | null;
@@ -52,7 +53,13 @@ export class CalendarComponent implements OnInit {
     { label: '100+ Hypes', value: 100 },
   ];
 
-  constructor(private calendarService: CalendarService, private router: Router) {}
+  trackingInProgress = false;
+
+  constructor(
+    private calendarService: CalendarService,
+    private trackedGamesService: TrackedGamesService,
+    private router: Router
+  ) {}
 
   ngOnInit() { this.load(); }
 
@@ -249,6 +256,21 @@ export class CalendarComponent implements OnInit {
   }
 
   closeModal() { this.modal = null; }
+
+  toggleTrack(game: CalendarGame) {
+    if (this.trackingInProgress) return;
+    this.trackingInProgress = true;
+    const obs = game.isTracked
+      ? this.trackedGamesService.untrack(game.igdbId)
+      : this.trackedGamesService.track(game.igdbId);
+    obs.subscribe({
+      next: () => {
+        game.isTracked = !game.isTracked;
+        this.trackingInProgress = false;
+      },
+      error: () => { this.trackingInProgress = false; }
+    });
+  }
 
   steamUrl(name: string): string {
     return `https://store.steampowered.com/search/?term=${encodeURIComponent(name)}`;

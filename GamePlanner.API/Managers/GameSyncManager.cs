@@ -13,19 +13,17 @@ public class GameSyncManager(
     private const int BatchSize = 50;
     private static readonly TimeSpan RequestDelay = TimeSpan.FromMilliseconds(250);
 
-    // Needs enrichment: missing collections OR missing rating/release data
-    private static bool NeedsEnrichment(Game g) =>
-        !g.Genres.Any() || !g.Tags.Any() || !g.Themes.Any()
-        || !g.PlayerPerspectives.Any() || !g.GameModes.Any()
-        || g.AggregatedRating is null || g.FirstReleaseDate is null;
-
-    public async Task RunAsync(CancellationToken ct)
+    public async Task RunAsync(CancellationToken ct, bool force = false)
     {
+        if (force)
+            logger.LogInformation("Force mode enabled — skipping freshness check.");
+
         var total = await db.Games
             .CountAsync(g => g.IsActive &&
                 (!g.Genres.Any() || !g.Tags.Any() || !g.Themes.Any()
                  || !g.PlayerPerspectives.Any() || !g.GameModes.Any()
-                 || g.AggregatedRating == null || g.FirstReleaseDate == null), ct);
+                 || g.AggregatedRating == null || g.FirstReleaseDate == null
+                 || g.IGDBId == null), ct);
 
         if (total == 0)
         {
@@ -44,7 +42,8 @@ public class GameSyncManager(
                 .Where(g => g.IsActive &&
                     (!g.Genres.Any() || !g.Tags.Any() || !g.Themes.Any()
                      || !g.PlayerPerspectives.Any() || !g.GameModes.Any()
-                     || g.AggregatedRating == null || g.FirstReleaseDate == null))
+                     || g.AggregatedRating == null || g.FirstReleaseDate == null
+                     || g.IGDBId == null))
                 .Select(g => new { g.Id, g.IGDBId, g.Name, g.IGDBUpdatedAt })
                 .OrderBy(g => g.Id)
                 .Skip(offset)
@@ -56,7 +55,7 @@ public class GameSyncManager(
             foreach (var item in batch)
             {
                 ct.ThrowIfCancellationRequested();
-                await EnrichGameAsync(item.Id, item.IGDBId, item.Name, item.IGDBUpdatedAt, ct);
+                await EnrichGameAsync(item.Id, item.IGDBId, item.Name, item.IGDBUpdatedAt, ct, force);
                 await Task.Delay(RequestDelay, ct);
             }
 
@@ -70,7 +69,7 @@ public class GameSyncManager(
         logger.LogInformation("Enrichment sync complete. {Processed} games processed.", processed);
     }
 
-    private async Task EnrichGameAsync(int id, long? igdbId, string name, DateTime? storedUpdatedAt, CancellationToken ct)
+    private async Task EnrichGameAsync(int id, long? igdbId, string name, DateTime? storedUpdatedAt, CancellationToken ct, bool force = false)
     {
         try
         {
@@ -80,9 +79,8 @@ public class GameSyncManager(
 
             if (result is null) return;
 
-            // Step 3: Skip if IGDB hasn't changed since last sync
             var igdbUpdatedAt = DateTimeOffset.FromUnixTimeSeconds(result.UpdatedAt).UtcDateTime;
-            if (storedUpdatedAt.HasValue && igdbUpdatedAt <= storedUpdatedAt.Value)
+            if (!force && storedUpdatedAt.HasValue && igdbUpdatedAt <= storedUpdatedAt.Value)
             {
                 logger.LogDebug("'{Name}' is up-to-date (IGDB updated_at unchanged). Skipping.", name);
                 return;
@@ -136,6 +134,9 @@ public class GameSyncManager(
 
             if (result.FirstReleaseDate.HasValue)
                 game.FirstReleaseDate = DateTimeOffset.FromUnixTimeSeconds(result.FirstReleaseDate.Value).UtcDateTime;
+
+            // Persist the resolved IGDB ID if the game didn't have one
+            game.IGDBId ??= result.Id;
 
             // Track sync timestamps
             game.IGDBUpdatedAt  = igdbUpdatedAt;

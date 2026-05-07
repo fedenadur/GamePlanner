@@ -31,3 +31,8 @@ Thumbs.db
 # Build output
 dist/
 build/
+
+# Claude Code local settings
+.claude/settings.local.json
+.claude/worktrees/
+.claude/plans/

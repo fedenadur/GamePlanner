@@ -25,14 +25,14 @@ export class WorkersComponent implements OnInit, OnDestroy {
     });
   }
 
-  run(name: string) {
+  run(name: string, force = false) {
     this.triggering.add(name);
     this.error = '';
 
-    this.workerService.run(name).subscribe({
+    this.workerService.run(name, force).subscribe({
       next: () => {
         this.triggering.delete(name);
-        setTimeout(() => this.load(), 800); // brief delay for status to update
+        setTimeout(() => this.load(), 800);
         this.startPolling();
       },
       error: () => {

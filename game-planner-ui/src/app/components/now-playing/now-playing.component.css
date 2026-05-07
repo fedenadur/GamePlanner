@@ -31,7 +31,8 @@
 /* ── Shelf ───────────────────────────────────────────────────────────────── */
 .shelf-wrapper {
   position: relative;
-  padding-bottom: 22px;
+  padding: 2.5rem 0 22px;
+  background: radial-gradient(ellipse 100% 90% at 50% 20%, rgba(14, 10, 35, 0.6) 0%, transparent 70%);
 }
 
 .shelf-slots {
@@ -65,6 +66,16 @@
   border-radius: 2px;
 }
 
+.shelf-board::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.14) 30%, rgba(255,255,255,0.14) 70%, transparent 100%);
+}
+
 /* ── Slot ────────────────────────────────────────────────────────────────── */
 .shelf-slot {
   position: relative;
@@ -78,11 +89,12 @@
 /* ── Filled slot ─────────────────────────────────────────────────────────── */
 .shelf-slot.filled {
   filter: drop-shadow(0 8px 24px rgba(0,0,0,0.7));
-  transition: transform var(--t-base);
+  transition: transform var(--t-base), filter var(--t-base);
 }
 
 .shelf-slot.filled:hover {
-  transform: translateY(-6px);
+  transform: translateY(-8px);
+  filter: drop-shadow(0 20px 40px rgba(0,0,0,0.9)) drop-shadow(0 0 24px rgba(124,58,237,0.28));
 }
 
 .game-case {
@@ -131,6 +143,20 @@
   opacity: 0.4;
 }
 
+.game-gloss {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    140deg,
+    rgba(255,255,255,0.14) 0%,
+    rgba(255,255,255,0.05) 30%,
+    transparent 55%
+  );
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 2;
+}
+
 .game-info {
   margin-top: 0.85rem;
   text-align: center;
@@ -159,46 +185,62 @@
 /* Remove button */
 .remove-btn {
   position: absolute;
-  top: -12px;
+  top: 10px;
   right: 10px;
-  z-index: 10;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
-  cursor: pointer;
+  z-index: 5;
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 5px;
+  padding: 5px 10px 5px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(6, 4, 18, 0.65);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
   opacity: 0;
-  transition: opacity 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35), 0 4px 14px rgba(239, 68, 68, 0.45);
+  transform: translateY(-6px) scale(0.88);
+  transition:
+    opacity 0.2s ease,
+    transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1),
+    background 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .remove-btn:hover {
-  transform: scale(1.12) rotate(90deg);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), 0 0 0 5px rgba(239, 68, 68, 0.18);
+  background: rgba(185, 28, 28, 0.85);
+  border-color: rgba(239, 68, 68, 0.4);
+  box-shadow: 0 2px 16px rgba(185, 28, 28, 0.45);
 }
 
 .remove-btn:active {
-  transform: scale(0.92) rotate(90deg);
+  transform: scale(0.93);
 }
 
 .shelf-slot.filled:hover .remove-btn {
   opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.remove-label {
+  font-size: 0.67rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
 }
 
 .remove-icon {
-  width: 15px;
-  height: 15px;
+  width: 9px;
+  height: 9px;
   fill: none;
-  stroke: #ffffff;
-  stroke-width: 2;
+  stroke: currentColor;
+  stroke-width: 2.8;
   stroke-linecap: round;
-  stroke-linejoin: round;
   display: block;
-  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.3));
+  flex-shrink: 0;
 }
 
 /* ── Empty slot ──────────────────────────────────────────────────────────── */
@@ -226,7 +268,8 @@
 .add-slot-btn:hover {
   border-color: var(--accent);
   color: var(--accent);
-  background: rgba(124, 58, 237, 0.06);
+  background: rgba(124, 58, 237, 0.07);
+  box-shadow: inset 0 0 30px rgba(124, 58, 237, 0.07), 0 0 0 1px rgba(124, 58, 237, 0.12);
 }
 
 .add-icon {

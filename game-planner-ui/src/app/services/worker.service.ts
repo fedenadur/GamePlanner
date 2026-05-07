@@ -22,7 +22,8 @@ export class WorkerService {
     return this.http.get<WorkerStatus[]>(this.api);
   }
 
-  run(name: string): Observable<any> {
-    return this.http.post(`${this.api}/${name}/run`, {});
+  run(name: string, force = false): Observable<any> {
+    const url = force ? `${this.api}/${name}/run?force=true` : `${this.api}/${name}/run`;
+    return this.http.post(url, {});
   }
 }

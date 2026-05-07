@@ -39,6 +39,31 @@
     </div>
   </div>
 
+  <!-- Screenshots carousel -->
+  <div class="screenshots-section" *ngIf="screenshots.length > 0">
+    <div class="section-heading">
+      <span class="section-title">Screenshots</span>
+      <span class="section-count">{{ screenshots.length }}</span>
+    </div>
+    <div class="carousel-wrap">
+      <button class="carousel-btn carousel-prev" (click)="carouselScroll(-1)">‹</button>
+      <div class="carousel-track" #carouselTrack>
+        <button class="carousel-item" *ngFor="let img of screenshots" (click)="openLightbox(img)">
+          <img [src]="img.url" [alt]="game!.name" loading="lazy" class="carousel-img" />
+        </button>
+      </div>
+      <button class="carousel-btn carousel-next" (click)="carouselScroll(1)">›</button>
+    </div>
+  </div>
+
+  <!-- Lightbox -->
+  <div class="lightbox-overlay" *ngIf="lightboxImage" (click)="closeLightbox()">
+    <button class="lightbox-close" (click)="closeLightbox()">✕</button>
+    <div class="lightbox-content" (click)="$event.stopPropagation()">
+      <img [src]="lightboxUrl(lightboxImage.url)" [alt]="game!.name" class="lightbox-img" />
+    </div>
+  </div>
+
   <div class="detail-body">
 
     <!-- Metadata -->
@@ -48,7 +73,7 @@
         <div class="meta-row" *ngIf="game.genres.length">
           <span class="meta-label">Genres</span>
           <div class="pills">
-            <span class="pill genre-default" *ngFor="let g of game.genres">{{ g }}</span>
+            <span class="pill genre-default" *ngFor="let g of game.genres">{{ genreIcon(g) }} {{ g }}</span>
           </div>
         </div>
         <div class="meta-row" *ngIf="game.tags.length">

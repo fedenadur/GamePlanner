@@ -25,11 +25,20 @@ public class GameImageManager(
         if (total == 0)
         {
             logger.LogInformation("GameImageManager: no games need cover images.");
-            return;
+        }
+        else
+        {
+            logger.LogInformation("GameImageManager: {Total} games need cover images.", total);
+            await SyncCoversAsync(ct);
         }
 
-        logger.LogInformation("GameImageManager: {Total} games need cover images.", total);
+        await SyncScreenshotsAndArtworksAsync(ct);
+    }
 
+    // ── Cover sync (existing logic, unchanged) ───────────────────────────────
+
+    private async Task SyncCoversAsync(CancellationToken ct)
+    {
         using var conn = CreateConnection();
         await conn.OpenAsync(ct);
 
@@ -37,7 +46,6 @@ public class GameImageManager(
 
         while (!ct.IsCancellationRequested)
         {
-            // Always query from offset 0 — processed games drop out of the filter
             var batch = await db.Games
                 .Where(g => g.IsActive && g.CoverImageUrl == null)
                 .OrderBy(g => g.Id)
@@ -47,11 +55,9 @@ public class GameImageManager(
 
             if (batch.Count == 0) break;
 
-            // Split into games with known IGDB IDs (batch fetch) and unknowns (name search)
             var withId    = batch.Where(g => g.IGDBId.HasValue).ToList();
             var withoutId = batch.Where(g => !g.IGDBId.HasValue).ToList();
 
-            // 1. Batch fetch covers for all games that have an IGDB ID — 1 API call
             Dictionary<long, IgdbGame> igdbResults = [];
             if (withId.Count > 0)
             {
@@ -66,7 +72,6 @@ public class GameImageManager(
                 }
             }
 
-            // 2. Apply batch results
             foreach (var game in withId)
             {
                 ct.ThrowIfCancellationRequested();
@@ -74,7 +79,6 @@ public class GameImageManager(
                 await SaveCoverAsync(conn, game.Id, game.Name, game.IGDBUpdatedAt, result);
             }
 
-            // 3. Name-search games individually (no batch API for this)
             foreach (var game in withoutId)
             {
                 ct.ThrowIfCancellationRequested();
@@ -87,11 +91,11 @@ public class GameImageManager(
                 {
                     logger.LogWarning(ex, "Cover search failed for '{Name}', skipping.", game.Name);
                 }
-                await Task.Delay(250, ct); // rate limit only for individual searches
+                await Task.Delay(250, ct);
             }
 
             processed += batch.Count;
-            logger.LogInformation("GameImageManager: {Processed}/{Total} processed.", processed, total);
+            logger.LogInformation("GameImageManager: covers {Processed}/{Total} processed.", processed, batch.Count);
 
             if (batch.Count < BatchSize) break;
         }
@@ -124,5 +128,120 @@ public class GameImageManager(
             commandType: System.Data.CommandType.StoredProcedure);
 
         logger.LogDebug("Cover saved for '{Name}'.", name);
+    }
+
+    // ── Screenshots + artworks sync ──────────────────────────────────────────
+
+    private async Task SyncScreenshotsAndArtworksAsync(CancellationToken ct)
+    {
+        var cutoff = DateTime.UtcNow.AddDays(-2);
+
+        var total = await db.Games.CountAsync(
+            g => g.IsActive && g.IGDBId != null
+              && (g.LastImageSyncDate == null || g.LastImageSyncDate < cutoff), ct);
+
+        if (total == 0)
+        {
+            logger.LogInformation("GameImageManager: no games need screenshot/artwork sync.");
+            return;
+        }
+
+        logger.LogInformation("GameImageManager: {Total} games need screenshot/artwork sync.", total);
+
+        using var conn = CreateConnection();
+        await conn.OpenAsync(ct);
+
+        int processed = 0;
+
+        while (!ct.IsCancellationRequested)
+        {
+            var batch = await db.Games
+                .Where(g => g.IsActive && g.IGDBId != null
+                         && (g.LastImageSyncDate == null || g.LastImageSyncDate < cutoff))
+                .OrderBy(g => g.Id)
+                .Take(BatchSize)
+                .Select(g => new { g.Id, g.IGDBId })
+                .ToListAsync(ct);
+
+            if (batch.Count == 0) break;
+
+            var igdbIds = batch.Select(g => g.IGDBId!.Value).ToList();
+
+            List<IgdbImage> screenshots = [];
+            List<IgdbImage> artworks    = [];
+
+            try
+            {
+                screenshots = await igdb.FetchScreenshotsByGameIdsAsync(igdbIds, ct);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Screenshot fetch failed for batch, skipping screenshots.");
+            }
+
+            try
+            {
+                artworks = await igdb.FetchArtworksByGameIdsAsync(igdbIds, ct);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Artwork fetch failed for batch, skipping artworks.");
+            }
+
+            // Map IGDB game ID → local game ID
+            var igdbToLocal = batch.ToDictionary(g => g.IGDBId!.Value, g => g.Id);
+
+            await SaveImagesAsync(conn, screenshots, "screenshot", igdbToLocal, ct);
+            await SaveImagesAsync(conn, artworks,    "artwork",    igdbToLocal, ct);
+
+            // Mark all games in batch as synced (even if they had no images)
+            foreach (var game in batch)
+            {
+                ct.ThrowIfCancellationRequested();
+                await conn.ExecuteAsync("sp_UpdateGameLastImageSync",
+                    new { GameId = game.Id },
+                    commandType: System.Data.CommandType.StoredProcedure);
+            }
+
+            processed += batch.Count;
+            logger.LogInformation("GameImageManager: images {Processed}/{Total} processed.", processed, total);
+
+            if (batch.Count < BatchSize) break;
+        }
+
+        logger.LogInformation("GameImageManager: screenshot/artwork sync complete.");
+    }
+
+    private async Task SaveImagesAsync(
+        SqlConnection conn,
+        List<IgdbImage> images,
+        string imageType,
+        Dictionary<long, int> igdbToLocal,
+        CancellationToken ct)
+    {
+        foreach (var image in images)
+        {
+            ct.ThrowIfCancellationRequested();
+
+            if (!igdbToLocal.TryGetValue(image.Game, out var localGameId))
+                continue;
+
+            if (string.IsNullOrEmpty(image.ImageId))
+                continue;
+
+            var url = IgdbService.OptimizeImageUrl(image.Url);
+
+            await conn.ExecuteAsync("sp_UpsertGameImage",
+                new
+                {
+                    GameId      = localGameId,
+                    IgdbImageId = image.ImageId,
+                    ImageType   = imageType,
+                    Url         = url,
+                    Width       = image.Width,
+                    Height      = image.Height
+                },
+                commandType: System.Data.CommandType.StoredProcedure);
+        }
     }
 }

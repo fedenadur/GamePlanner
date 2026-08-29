@@ -33,12 +33,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Every existing user workflow (login, backlog CRUD, session tracking, journal entries, IGDB/Steam/HLTB sync views) behaves identically in the browser after the upgrade, confirmed by manual walkthrough
   4. `npm run build` and the existing test command both complete without errors on the upgraded stack
 
-**Plans:** 6 plans (target resolved to Angular 22 — see `01-01-PLAN.md` § target_version_resolution)
+**Plans:** 1/6 plans executed
 
 Plans:
 **Wave 1**
 
-- [ ] 01-01-PLAN.md — Baseline verification + tracer hop 13 -> 14
+- [x] 01-01-PLAN.md — Baseline verification + tracer hop 13 -> 14
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -135,7 +135,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Angular EOL Upgrade | 0/6 | Planned | - |
+| 1. Angular EOL Upgrade | 1/6 | In Progress|  |
 | 2. Credential & Secrets Hardening | 0/TBD | Not started | - |
 | 3. Auth, CORS & Rate Limiting Hardening | 0/TBD | Not started | - |
 | 4. Data Layer Reliability & Audit Trail | 0/TBD | Not started | - |

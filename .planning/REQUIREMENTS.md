@@ -43,8 +43,8 @@ Requirements for this hardening milestone. Each maps to roadmap phases.
 
 ### Dependency Upgrade (DEP)
 
-- [ ] **DEP-01**: Angular upgraded sequentially from 13.3.0 to current LTS (13→...→target, no version skipping)
-- [ ] **DEP-02**: Related frontend dependencies (TypeScript, RxJS, zone.js, Jasmine, Karma) upgraded to versions compatible with the target Angular
+- [x] **DEP-01**: Angular upgraded sequentially from 13.3.0 to current LTS (13→...→target, no version skipping)
+- [x] **DEP-02**: Related frontend dependencies (TypeScript, RxJS, zone.js, Jasmine, Karma) upgraded to versions compatible with the target Angular
 
 ### Testing (TEST)
 
@@ -84,8 +84,8 @@ Explicitly excluded. Documented to prevent scope creep.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DEP-01 | Phase 1 | Pending |
-| DEP-02 | Phase 1 | Pending |
+| DEP-01 | Phase 1 | Complete |
+| DEP-02 | Phase 1 | Complete |
 | CRED-01 | Phase 2 | Pending |
 | CRED-02 | Phase 2 | Pending |
 | CRED-03 | Phase 2 | Pending |
@@ -106,6 +106,7 @@ Explicitly excluded. Documented to prevent scope creep.
 | TEST-02 | Phase 5 | Pending |
 
 **Coverage:**
+
 - v1 requirements: 20 total
 - Mapped to phases: 20/20 (5 phases) ✓
 - Unmapped: 0 ✓

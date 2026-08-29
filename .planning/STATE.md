@@ -5,15 +5,15 @@ milestone_name: milestone
 current_phase: 01
 current_phase_name: angular-eol-upgrade
 status: executing
-stopped_at: Completed 01-04-PLAN.md
-last_updated: "2026-08-29T17:52:46.834Z"
+stopped_at: Completed 01-05-PLAN.md
+last_updated: "2026-08-29T18:13:27.696Z"
 last_activity: 2026-08-29
 last_activity_desc: Phase 01 execution started
 progress:
   total_phases: 1
   completed_phases: 0
   total_plans: 6
-  completed_plans: 4
+  completed_plans: 5
 ---
 
 # Project State
@@ -28,11 +28,11 @@ See: .planning/PROJECT.md (updated 2026-08-28)
 ## Current Position
 
 Phase: 01 (angular-eol-upgrade) — EXECUTING
-Plan: 5 of 6
+Plan: 6 of 6
 Status: Ready to execute
 Last activity: 2026-08-29 — Phase 01 execution started
 
-Progress: [███████░░░] 67%
+Progress: [████████░░] 83%
 
 ## Performance Metrics
 
@@ -62,6 +62,7 @@ Progress: [███████░░░] 67%
 | Phase 01 P02 | 35min | 3 tasks | 6 files |
 | Phase 01 P03 | 50min | 3 tasks | 25 files |
 | Phase 01 P04 | 30min | 2 tasks | 5 files |
+| Phase 01 P05 | 65min | 2 tasks | 27 files |
 
 ## Accumulated Context
 
@@ -80,6 +81,10 @@ Recent decisions affecting current work:
 - [Phase ?]: [Phase 1] New technique: isolated a mandatory ng update codemod's change from pre-existing unrelated WIP in the same file (game-detail.component.ts) via HEAD-based reconstruction + stage + restore, so neither the codemod nor the WIP had to be sacrificed
 - [Phase ?]: Node runtime upgraded by developer (Administrator) from v24.14.0 to v24.19.0, satisfying Angular 22's ^24.15.0 engine requirement; re-verified via npm ci + build/test/boot smoke, no lockfile change
 - [Phase ?]: v21 hop's built-in control-flow codemod ran as a mandatory (non-optional) migration for the first time in this chain; manually reverted across 19 template files back to structural directives in the same hop commit (D-03)
+- [Phase ?]: Angular 21->22 (hop 9, final): TypeScript pinned to ~6.0.3 (not ecosystem-latest 7.x) to stay inside Angular 22's required range; both optional v22 migrations (Vitest, application-builder) declined
+- [Phase ?]: Removed deprecated tsconfig.json baseUrl/downlevelIteration (genuine TS 6.0 fix, not a strictness change -- neither used by this codebase's actual import/target config)
+- [Phase ?]: Supporting deps: jasmine-core/@types/jasmine deliberately pinned one major back (6.3.0/6.0.0, not ecosystem-latest 7.x) after a confirmed zone.js harness-boot failure, per RESEARCH.md assumption A1's documented fallback; rxjs->7.8.2, @types/node->24.13.3, karma->6.4.4 (within Angular 22's ^6.3.0 peer range)
+- [Phase ?]: Isolated the ChangeDetectionStrategy codemod from pre-existing WIP spanning three sibling files (game-detail.component.ts/.html/.css) via HEAD-reconstruct + apply-delta + commit + restore-WIP, extending 01-04's single-file precedent
 
 ### Pending Todos
 
@@ -100,6 +105,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-08-29T17:52:46.819Z
-Stopped at: Completed 01-04-PLAN.md
+Last session: 2026-08-29T18:13:27.680Z
+Stopped at: Completed 01-05-PLAN.md
 Resume file: None

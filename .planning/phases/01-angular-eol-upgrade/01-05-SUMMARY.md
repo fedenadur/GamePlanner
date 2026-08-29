@@ -193,3 +193,11 @@ None for this plan. A follow-up recommendation (not blocking): with the backend 
 ---
 *Phase: 01-angular-eol-upgrade*
 *Completed: 2026-08-29*
+
+## Self-Check: PASSED
+
+- FOUND: `.planning/phases/01-angular-eol-upgrade/01-05-SUMMARY.md`
+- FOUND: commit `24fa1e1` (Angular 21 -> 22 + TypeScript 6.0)
+- FOUND: commit `7e74f69` (Jasmine/Karma/RxJS/@types-node supporting-dependency bump)
+- FOUND: `game-planner-ui/package.json` reports `@angular/core` `^22.1.4`
+- FOUND: `game-planner-ui/package.json` reports `typescript` `~6.0.3`

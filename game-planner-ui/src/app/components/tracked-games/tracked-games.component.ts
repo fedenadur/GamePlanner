@@ -12,9 +12,10 @@ interface DateGroup {
 }
 
 @Component({
-  selector: 'app-tracked-games',
-  templateUrl: './tracked-games.component.html',
-  styleUrls: ['./tracked-games.component.css']
+    selector: 'app-tracked-games',
+    templateUrl: './tracked-games.component.html',
+    styleUrls: ['./tracked-games.component.css'],
+    standalone: false
 })
 export class TrackedGamesComponent implements OnInit {
   groups:  DateGroup[] = [];

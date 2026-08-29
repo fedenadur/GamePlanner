@@ -2,9 +2,10 @@ import { Component } from '@angular/core';
 import { GameService, SessionPlannerResult } from '../../services/game.service';
 
 @Component({
-  selector: 'app-session-planner',
-  templateUrl: './session-planner.component.html',
-  styleUrls: ['./session-planner.component.css']
+    selector: 'app-session-planner',
+    templateUrl: './session-planner.component.html',
+    styleUrls: ['./session-planner.component.css'],
+    standalone: false
 })
 export class SessionPlannerComponent {
   situationOptions = [

@@ -3,9 +3,10 @@ import { Game, GameService } from '../../services/game.service';
 import { NowPlayingService } from '../../services/now-playing.service';
 
 @Component({
-  selector: 'app-now-playing',
-  templateUrl: './now-playing.component.html',
-  styleUrls: ['./now-playing.component.css']
+    selector: 'app-now-playing',
+    templateUrl: './now-playing.component.html',
+    styleUrls: ['./now-playing.component.css'],
+    standalone: false
 })
 export class NowPlayingComponent implements OnInit {
   readonly MAX_SLOTS = 3;

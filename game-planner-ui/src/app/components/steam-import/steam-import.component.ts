@@ -6,9 +6,10 @@ const JOB_KEY = 'gp_import_job';
 const POLL_INTERVAL_MS = 3000;
 
 @Component({
-  selector: 'app-steam-import',
-  templateUrl: './steam-import.component.html',
-  styleUrls: ['./steam-import.component.css']
+    selector: 'app-steam-import',
+    templateUrl: './steam-import.component.html',
+    styleUrls: ['./steam-import.component.css'],
+    standalone: false
 })
 export class SteamImportComponent implements OnInit, OnDestroy {
   steamId     = '';

@@ -3,9 +3,10 @@ import { JournalService, JournalEntry, UpsertJournalRequest } from '../../servic
 import { GameService, Game } from '../../services/game.service';
 
 @Component({
-  selector: 'app-journal',
-  templateUrl: './journal.component.html',
-  styleUrls: ['./journal.component.css']
+    selector: 'app-journal',
+    templateUrl: './journal.component.html',
+    styleUrls: ['./journal.component.css'],
+    standalone: false
 })
 export class JournalComponent implements OnInit {
   entries:  JournalEntry[] = [];

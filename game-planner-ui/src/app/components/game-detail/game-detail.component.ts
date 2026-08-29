@@ -6,9 +6,10 @@ import { JournalService, JournalEntry, UpsertJournalRequest } from '../../servic
 import { genreIcon } from '../../shared/genre-meta';
 
 @Component({
-  selector: 'app-game-detail',
-  templateUrl: './game-detail.component.html',
-  styleUrls: ['./game-detail.component.css']
+    selector: 'app-game-detail',
+    templateUrl: './game-detail.component.html',
+    styleUrls: ['./game-detail.component.css'],
+    standalone: false
 })
 export class GameDetailComponent implements OnInit, OnDestroy {
   @ViewChild('carouselTrack') carouselTrack!: ElementRef<HTMLElement>;

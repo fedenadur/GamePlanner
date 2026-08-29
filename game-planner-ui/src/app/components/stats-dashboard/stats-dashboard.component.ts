@@ -2,9 +2,10 @@ import { Component, OnInit } from '@angular/core';
 import { StatsDashboard, StatsService } from '../../services/stats.service';
 
 @Component({
-  selector: 'app-stats-dashboard',
-  templateUrl: './stats-dashboard.component.html',
-  styleUrls: ['./stats-dashboard.component.css']
+    selector: 'app-stats-dashboard',
+    templateUrl: './stats-dashboard.component.html',
+    styleUrls: ['./stats-dashboard.component.css'],
+    standalone: false
 })
 export class StatsDashboardComponent implements OnInit {
   data: StatsDashboard | null = null;

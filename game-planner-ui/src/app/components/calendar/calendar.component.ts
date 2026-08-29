@@ -12,9 +12,10 @@ interface CalendarCell {
 const HOT_THRESHOLD = 100;
 
 @Component({
-  selector: 'app-calendar',
-  templateUrl: './calendar.component.html',
-  styleUrls: ['./calendar.component.css']
+    selector: 'app-calendar',
+    templateUrl: './calendar.component.html',
+    styleUrls: ['./calendar.component.css'],
+    standalone: false
 })
 export class CalendarComponent implements OnInit {
   mode: 'month' | 'week' = 'month';

@@ -3,9 +3,10 @@ import { Game, GameService } from '../../services/game.service';
 import { genreMeta } from '../../shared/genre-meta';
 
 @Component({
-  selector: 'app-game-list',
-  templateUrl: './game-list.component.html',
-  styleUrls: ['./game-list.component.css']
+    selector: 'app-game-list',
+    templateUrl: './game-list.component.html',
+    styleUrls: ['./game-list.component.css'],
+    standalone: false
 })
 export class GameListComponent implements OnInit {
   games: Game[] = [];

@@ -10,9 +10,10 @@ interface Mode {
 }
 
 @Component({
-  selector: 'app-backlog-prioritizer',
-  templateUrl: './backlog-prioritizer.component.html',
-  styleUrls: ['./backlog-prioritizer.component.css']
+    selector: 'app-backlog-prioritizer',
+    templateUrl: './backlog-prioritizer.component.html',
+    styleUrls: ['./backlog-prioritizer.component.css'],
+    standalone: false
 })
 export class BacklogPrioritizerComponent implements OnInit {
   modes: Mode[] = [

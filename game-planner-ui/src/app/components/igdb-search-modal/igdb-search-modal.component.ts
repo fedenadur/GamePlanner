@@ -2,9 +2,10 @@ import { Component, EventEmitter, Output } from '@angular/core';
 import { GameService, IgdbSearchResult } from '../../services/game.service';
 
 @Component({
-  selector: 'app-igdb-search-modal',
-  templateUrl: './igdb-search-modal.component.html',
-  styleUrls: ['./igdb-search-modal.component.css']
+    selector: 'app-igdb-search-modal',
+    templateUrl: './igdb-search-modal.component.html',
+    styleUrls: ['./igdb-search-modal.component.css'],
+    standalone: false
 })
 export class IgdbSearchModalComponent {
   @Output() closed = new EventEmitter<void>();

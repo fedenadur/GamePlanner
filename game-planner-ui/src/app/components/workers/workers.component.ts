@@ -1,10 +1,11 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { WorkerService, WorkerStatus } from '../../services/worker.service';
 
 @Component({
     selector: 'app-workers',
     templateUrl: './workers.component.html',
     styleUrls: ['./workers.component.css'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false
 })
 export class WorkersComponent implements OnInit, OnDestroy {

@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy } from '@angular/core';
 import { Game } from '../../services/game.service';
 import { genreMeta } from '../../shared/genre-meta';
 
@@ -6,6 +6,7 @@ import { genreMeta } from '../../shared/genre-meta';
     selector: 'app-game-card',
     templateUrl: './game-card.component.html',
     styleUrls: ['./game-card.component.css'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false
 })
 export class GameCardComponent {

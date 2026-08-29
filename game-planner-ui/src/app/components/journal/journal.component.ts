@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { JournalService, JournalEntry, UpsertJournalRequest } from '../../services/journal.service';
 import { GameService, Game } from '../../services/game.service';
 
@@ -6,6 +6,7 @@ import { GameService, Game } from '../../services/game.service';
     selector: 'app-journal',
     templateUrl: './journal.component.html',
     styleUrls: ['./journal.component.css'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false
 })
 export class JournalComponent implements OnInit {

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { Router } from '@angular/router';
 import { BacklogGame, BacklogPrioritizerService } from '../../services/backlog-prioritizer.service';
 
@@ -13,6 +13,7 @@ interface Mode {
     selector: 'app-backlog-prioritizer',
     templateUrl: './backlog-prioritizer.component.html',
     styleUrls: ['./backlog-prioritizer.component.css'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false
 })
 export class BacklogPrioritizerComponent implements OnInit {

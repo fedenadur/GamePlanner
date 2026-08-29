@@ -1,4 +1,4 @@
-import { Component, OnInit, HostListener } from '@angular/core';
+import { Component, OnInit, HostListener, ChangeDetectionStrategy } from '@angular/core';
 import { Router } from '@angular/router';
 import { CalendarService, CalendarData, CalendarGame, CalendarFilters } from '../../services/calendar.service';
 import { TrackedGamesService } from '../../services/tracked-games.service';
@@ -15,6 +15,7 @@ const HOT_THRESHOLD = 100;
     selector: 'app-calendar',
     templateUrl: './calendar.component.html',
     styleUrls: ['./calendar.component.css'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false
 })
 export class CalendarComponent implements OnInit {

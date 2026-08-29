@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { Game, GameService } from '../../services/game.service';
 import { genreMeta } from '../../shared/genre-meta';
 
@@ -6,6 +6,7 @@ import { genreMeta } from '../../shared/genre-meta';
     selector: 'app-game-list',
     templateUrl: './game-list.component.html',
     styleUrls: ['./game-list.component.css'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false
 })
 export class GameListComponent implements OnInit {

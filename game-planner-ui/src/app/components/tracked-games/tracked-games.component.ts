@@ -1,4 +1,4 @@
-import { Component, OnInit, HostListener } from '@angular/core';
+import { Component, OnInit, HostListener, ChangeDetectionStrategy } from '@angular/core';
 import { Router } from '@angular/router';
 import { TrackedGamesService, TrackedGame } from '../../services/tracked-games.service';
 
@@ -15,6 +15,7 @@ interface DateGroup {
     selector: 'app-tracked-games',
     templateUrl: './tracked-games.component.html',
     styleUrls: ['./tracked-games.component.css'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false
 })
 export class TrackedGamesComponent implements OnInit {

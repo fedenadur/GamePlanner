@@ -1,10 +1,11 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, EventEmitter, Output, ChangeDetectionStrategy } from '@angular/core';
 import { GameService, IgdbSearchResult } from '../../services/game.service';
 
 @Component({
     selector: 'app-igdb-search-modal',
     templateUrl: './igdb-search-modal.component.html',
     styleUrls: ['./igdb-search-modal.component.css'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false
 })
 export class IgdbSearchModalComponent {

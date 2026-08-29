@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { GameService } from '../../services/game.service';
 import { AuthService } from '../../services/auth.service';
 
@@ -9,6 +9,7 @@ const POLL_INTERVAL_MS = 3000;
     selector: 'app-steam-import',
     templateUrl: './steam-import.component.html',
     styleUrls: ['./steam-import.component.css'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false
 })
 export class SteamImportComponent implements OnInit, OnDestroy {

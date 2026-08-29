@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { GameService, GameDetail, GameImage } from '../../services/game.service';
@@ -9,6 +9,7 @@ import { genreIcon } from '../../shared/genre-meta';
     selector: 'app-game-detail',
     templateUrl: './game-detail.component.html',
     styleUrls: ['./game-detail.component.css'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false
 })
 export class GameDetailComponent implements OnInit, OnDestroy {

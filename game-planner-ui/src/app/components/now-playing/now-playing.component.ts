@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { Game, GameService } from '../../services/game.service';
 import { NowPlayingService } from '../../services/now-playing.service';
 
@@ -6,6 +6,7 @@ import { NowPlayingService } from '../../services/now-playing.service';
     selector: 'app-now-playing',
     templateUrl: './now-playing.component.html',
     styleUrls: ['./now-playing.component.css'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false
 })
 export class NowPlayingComponent implements OnInit {

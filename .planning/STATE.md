@@ -5,15 +5,15 @@ milestone_name: milestone
 current_phase: 01
 current_phase_name: angular-eol-upgrade
 status: executing
-stopped_at: Completed 01-02-PLAN.md
-last_updated: "2026-08-29T15:15:10.561Z"
+stopped_at: Completed 01-03-PLAN.md
+last_updated: "2026-08-29T15:41:34.375Z"
 last_activity: 2026-08-29
 last_activity_desc: Phase 01 execution started
 progress:
   total_phases: 1
   completed_phases: 0
   total_plans: 6
-  completed_plans: 2
+  completed_plans: 3
 ---
 
 # Project State
@@ -28,11 +28,11 @@ See: .planning/PROJECT.md (updated 2026-08-28)
 ## Current Position
 
 Phase: 01 (angular-eol-upgrade) — EXECUTING
-Plan: 3 of 6
+Plan: 4 of 6
 Status: Ready to execute
 Last activity: 2026-08-29 — Phase 01 execution started
 
-Progress: [███░░░░░░░] 33%
+Progress: [█████░░░░░] 50%
 
 ## Performance Metrics
 
@@ -60,6 +60,7 @@ Progress: [███░░░░░░░] 33%
 |------|----------|-------|-------|
 | Phase 01 P01 | 25min | 2 tasks | 4 files |
 | Phase 01 P02 | 35min | 3 tasks | 6 files |
+| Phase 01 P03 | 50min | 3 tasks | 25 files |
 
 ## Accumulated Context
 
@@ -74,6 +75,8 @@ Recent decisions affecting current work:
 - Roadmap: AUTH-01/02 (JWT hardening) and OBS-01 (security event logging) folded into Phase 3 alongside CORS/rate limiting since all four live in the same Program.cs/auth composition-root surface
 - [Phase ?]: Angular hop 1 (13->14): stayed on Node v24.14.0 (no version manager installed); ng update required --allow-dirty due to pre-existing unrelated WIP in the working tree; fixed a pre-existing anyComponentStyle CSS budget blocker in angular.json unrelated to Angular version
 - [Phase ?]: Angular hop 2-4 (14->15->16->17): stayed on Node v24.14.0, no --force needed at any hop, no optional migrations accepted; angular.json build-target option keys renamed by mandatory v17 migration but all three classic builders (browser/dev-server/karma) confirmed unchanged
+- [Phase ?]: [Phase 1] Angular hop 5-7 (17->18->19->20): stayed on Node v24.14.0, no --force needed at any hop; v19 mandatory standalone:false codemod and ExperimentalPendingTasks->PendingTasks codemod both applied cleanly; v20 CLI's own mandatory karma-removal migration confirmed karma.conf.js is not the removable default stub, Karma toolchain intact
+- [Phase ?]: [Phase 1] New technique: isolated a mandatory ng update codemod's change from pre-existing unrelated WIP in the same file (game-detail.component.ts) via HEAD-based reconstruction + stage + restore, so neither the codemod nor the WIP had to be sacrificed
 
 ### Pending Todos
 
@@ -94,6 +97,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-08-29T15:15:10.546Z
-Stopped at: Completed 01-02-PLAN.md
+Last session: 2026-08-29T15:41:34.359Z
+Stopped at: Completed 01-03-PLAN.md
 Resume file: None

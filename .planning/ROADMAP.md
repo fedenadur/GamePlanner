@@ -33,7 +33,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Every existing user workflow (login, backlog CRUD, session tracking, journal entries, IGDB/Steam/HLTB sync views) behaves identically in the browser after the upgrade, confirmed by manual walkthrough
   4. `npm run build` and the existing test command both complete without errors on the upgraded stack
 
-**Plans:** 2/6 plans executed
+**Plans:** 3/6 plans executed
 
 Plans:
 **Wave 1**
@@ -46,7 +46,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 01-03-PLAN.md — Hops 17 -> 18 -> 19 -> 20 (Karma default shift)
+- [x] 01-03-PLAN.md — Hops 17 -> 18 -> 19 -> 20 (Karma default shift)
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
@@ -135,7 +135,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Angular EOL Upgrade | 2/6 | In Progress|  |
+| 1. Angular EOL Upgrade | 3/6 | In Progress|  |
 | 2. Credential & Secrets Hardening | 0/TBD | Not started | - |
 | 3. Auth, CORS & Rate Limiting Hardening | 0/TBD | Not started | - |
 | 4. Data Layer Reliability & Audit Trail | 0/TBD | Not started | - |

@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
+import { HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { AuthInterceptor } from './interceptors/auth.interceptor';
 
@@ -26,38 +26,32 @@ import { DashboardComponent } from './components/dashboard/dashboard.component';
 import { SidebarComponent } from './components/sidebar/sidebar.component';
 import { TrackedGamesComponent } from './components/tracked-games/tracked-games.component';
 
-@NgModule({
-  declarations: [
-    AppComponent,
-    SidebarComponent,
-    GameListComponent,
-    SessionPlannerComponent,
-    SteamImportComponent,
-    GameCardComponent,
-    LoginComponent,
-    RegisterComponent,
-    ProfileComponent,
-    WorkersComponent,
-    GameDetailComponent,
-    CalendarComponent,
-    NowPlayingComponent,
-    BacklogPrioritizerComponent,
-    ClickOutsideDirective,
-    IgdbSearchModalComponent,
-    JournalComponent,
-    StatsDashboardComponent,
-    DashboardComponent,
-    TrackedGamesComponent
-  ],
-  imports: [
-    BrowserModule,
-    AppRoutingModule,
-    HttpClientModule,
-    FormsModule
-  ],
-  providers: [
-    { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }
-  ],
-  bootstrap: [AppComponent]
-})
+@NgModule({ declarations: [
+        AppComponent,
+        SidebarComponent,
+        GameListComponent,
+        SessionPlannerComponent,
+        SteamImportComponent,
+        GameCardComponent,
+        LoginComponent,
+        RegisterComponent,
+        ProfileComponent,
+        WorkersComponent,
+        GameDetailComponent,
+        CalendarComponent,
+        NowPlayingComponent,
+        BacklogPrioritizerComponent,
+        ClickOutsideDirective,
+        IgdbSearchModalComponent,
+        JournalComponent,
+        StatsDashboardComponent,
+        DashboardComponent,
+        TrackedGamesComponent
+    ],
+    bootstrap: [AppComponent], imports: [BrowserModule,
+        AppRoutingModule,
+        FormsModule], providers: [
+        { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
+        provideHttpClient(withInterceptorsFromDi())
+    ] })
 export class AppModule { }

@@ -29,7 +29,16 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. TypeScript, RxJS, zone.js, Jasmine, and Karma are all at versions compatible with the upgraded Angular version
   3. Every existing user workflow (login, backlog CRUD, session tracking, journal entries, IGDB/Steam/HLTB sync views) behaves identically in the browser after the upgrade, confirmed by manual walkthrough
   4. `npm run build` and the existing test command both complete without errors on the upgraded stack
-**Plans**: TBD
+**Plans:** 6 plans (target resolved to Angular 22 — see `01-01-PLAN.md` § target_version_resolution)
+
+Plans:
+- [ ] 01-01-PLAN.md — Baseline verification + tracer hop 13 -> 14
+- [ ] 01-02-PLAN.md — Hops 14 -> 15 -> 16 -> 17 (first application-builder prompt)
+- [ ] 01-03-PLAN.md — Hops 17 -> 18 -> 19 -> 20 (Karma default shift)
+- [ ] 01-04-PLAN.md — Hop 20 -> 21 + Node.js runtime bump to satisfy Angular 22
+- [ ] 01-05-PLAN.md — Final hop 21 -> 22 (TypeScript 6.0) + Jasmine/Karma/RxJS bump
+- [ ] 01-06-PLAN.md — npm audit, DEP-01/DEP-02 evidence record, manual UAT walkthrough
+
 **UI hint**: yes
 
 ### Phase 2: Credential & Secrets Hardening
@@ -86,7 +95,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Angular EOL Upgrade | 0/TBD | Not started | - |
+| 1. Angular EOL Upgrade | 0/6 | Planned | - |
 | 2. Credential & Secrets Hardening | 0/TBD | Not started | - |
 | 3. Auth, CORS & Rate Limiting Hardening | 0/TBD | Not started | - |
 | 4. Data Layer Reliability & Audit Trail | 0/TBD | Not started | - |

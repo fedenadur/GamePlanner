@@ -1,0 +1,18 @@
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=localhost;Database=GamePlannerDB;Trusted_Connection=True;TrustServerCertificate=True;"
+  },
+  "IGDB": {
+    "ClientId": "",
+    "ClientSecret": ""
+  },
+  "Steam": {
+    "ApiKey": ""
+  },
+  "Jwt": {
+    "Secret": ""
+  },
+  "HLTB": {
+    "CsvPath": "E:\\PROYECTO NO WORK\\GamePlanner\\howlongtobeat_games.csv"
+  }
+}

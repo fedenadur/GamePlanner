@@ -27,9 +27,14 @@ public class IgdbService(IHttpClientFactory httpFactory, IConfiguration config, 
             return _cachedToken;
 
         var client = httpFactory.CreateClient();
-        var url = $"{TokenUrl}?client_id={ClientId}&client_secret={ClientSecret}&grant_type=client_credentials";
+        var form = new Dictionary<string, string>
+        {
+            ["client_id"]     = ClientId,
+            ["client_secret"] = ClientSecret,
+            ["grant_type"]    = "client_credentials",
+        };
 
-        var response = await client.PostAsync(url, null);
+        var response = await client.PostAsync(TokenUrl, new FormUrlEncodedContent(form));
         response.EnsureSuccessStatusCode();
 
         var json = await response.Content.ReadAsStringAsync();

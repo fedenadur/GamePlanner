@@ -5,15 +5,15 @@ milestone_name: milestone
 current_phase: 02
 current_phase_name: Credential & Secrets Hardening
 status: executing
-stopped_at: Completed 02-01-PLAN.md
-last_updated: "2026-08-30T18:35:22.215Z"
+stopped_at: Completed 02-02-PLAN.md
+last_updated: "2026-08-30T19:08:34.418Z"
 last_activity: 2026-08-30
 last_activity_desc: Phase 02 execution started
 progress:
   total_phases: 2
   completed_phases: 1
   total_plans: 11
-  completed_plans: 7
+  completed_plans: 8
 ---
 
 # Project State
@@ -28,11 +28,11 @@ See: .planning/PROJECT.md (updated 2026-08-28)
 ## Current Position
 
 Phase: 02 (Credential & Secrets Hardening) — EXECUTING
-Plan: 2 of 5
+Plan: 3 of 5
 Status: Ready to execute
 Last activity: 2026-08-30 — Phase 02 execution started
 
-Progress: [██████░░░░] 64%
+Progress: [███████░░░] 73%
 
 ## Performance Metrics
 
@@ -65,6 +65,7 @@ Progress: [██████░░░░] 64%
 | Phase 01 P05 | 65min | 2 tasks | 27 files |
 | Phase 01 P06 | 40min | 2 tasks | 1 files |
 | Phase 02 P01 | 9min | 2 tasks | 6 files |
+| Phase 02 P02 | 12min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -92,6 +93,7 @@ Recent decisions affecting current work:
 - [Phase ?]: Two pre-existing backend findings (SessionManager cross-user data leak, IGDBId upsert cross-user deactivation) surfaced during UAT filed as pending todos, not fixed -- out of scope for this frontend-only phase
 - [Phase ?]: 02-01: seeded dotnet user-secrets with real pre-rotation values (not placeholders) per D-06 sequencing, keeping app functional until rotation lands in 02-04
 - [Phase ?]: 02-01: SteamService redaction wraps HTTP call+deserialization at all 3 sites with catch(OperationCanceledException){throw;} before catch(Exception ex){LogError redacted; throw;}, mirroring the Workers/*.cs pattern
+- [Phase ?]: 02-02: FailedItemCount/LastPartialFailureDetail added nullable (not defaulted) to WorkerStatus so 'not tracked' stays distinct from 'zero failures'; SetFailedAsync left untouched so partial failures never route through the failed-run path (D-16, RESEARCH Pitfall 4)
 
 ### Pending Todos
 
@@ -112,6 +114,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-08-30T18:35:22.196Z
-Stopped at: Completed 02-01-PLAN.md
+Last session: 2026-08-30T19:08:34.398Z
+Stopped at: Completed 02-02-PLAN.md
 Resume file: None

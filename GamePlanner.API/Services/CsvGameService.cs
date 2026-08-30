@@ -6,20 +6,20 @@ public class CsvGameService(IConfiguration config, ILogger<CsvGameService> logge
 {
     private const double SecondsToHours = 3600.0;
 
-    public List<HLTBGameDto> ReadGames()
+    public (List<HLTBGameDto> Records, int Skipped, string? FailureDetail) ReadGames()
     {
         var path = config["HLTB:CsvPath"];
 
         if (string.IsNullOrWhiteSpace(path))
         {
             logger.LogWarning("HLTB:CsvPath is not configured.");
-            return [];
+            return ([], 0, "HLTB:CsvPath is not configured");
         }
 
         if (!File.Exists(path))
         {
             logger.LogWarning("HLTB CSV file not found at: {Path}", path);
-            return [];
+            return ([], 0, "HLTB CSV file not found");
         }
 
         var results = new List<HLTBGameDto>();
@@ -34,7 +34,7 @@ public class CsvGameService(IConfiguration config, ILogger<CsvGameService> logge
             if (header is null)
             {
                 logger.LogWarning("HLTB CSV is empty.");
-                return [];
+                return ([], 0, "HLTB CSV is empty");
             }
 
             var columns = ParseRow(header);
@@ -47,7 +47,7 @@ public class CsvGameService(IConfiguration config, ILogger<CsvGameService> logge
             if (idxName < 0)
             {
                 logger.LogError("HLTB CSV missing required column 'game_name'.");
-                return [];
+                return ([], 0, "HLTB CSV missing required column 'game_name'");
             }
 
             string? line;
@@ -84,11 +84,15 @@ public class CsvGameService(IConfiguration config, ILogger<CsvGameService> logge
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to read HLTB CSV file.");
-            return [];
+            return ([], 0, "HLTB CSV read failed");
         }
 
-        logger.LogInformation("HLTB CSV read: {Count} records, {Skipped} skipped.", results.Count, skipped);
-        return results;
+        if (skipped > 0)
+            logger.LogWarning("HLTB CSV read: {Count} records, {Skipped} skipped.", results.Count, skipped);
+        else
+            logger.LogInformation("HLTB CSV read: {Count} records, {Skipped} skipped.", results.Count, skipped);
+
+        return (results, skipped, null);
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────

@@ -15,7 +15,7 @@ public class SteamPlaytimeSyncManager(
     private SqlConnection CreateConnection() =>
         new(config.GetConnectionString("DefaultConnection"));
 
-    public async Task RunAsync(CancellationToken ct)
+    public async Task<(int FailedCount, string? FailureDetail)> RunAsync(CancellationToken ct)
     {
         var users = await db.Users
             .Where(u => u.IsActive && u.SteamId != null)
@@ -25,7 +25,7 @@ public class SteamPlaytimeSyncManager(
         if (users.Count == 0)
         {
             logger.LogInformation("No users with SteamId linked. Skipping playtime sync.");
-            return;
+            return (0, null);
         }
 
         logger.LogInformation("Syncing Steam playtime for {Count} user(s).", users.Count);
@@ -33,14 +33,28 @@ public class SteamPlaytimeSyncManager(
         using var conn = CreateConnection();
         await conn.OpenAsync(ct);
 
+        int failedCount = 0;
+        var failedUserIds = new List<int>();
+
         foreach (var user in users)
         {
             ct.ThrowIfCancellationRequested();
-            await SyncUserAsync(user.Id, user.SteamId!, conn, ct);
+            var ok = await SyncUserAsync(user.Id, user.SteamId!, conn, ct);
+            if (!ok)
+            {
+                failedCount++;
+                failedUserIds.Add(user.Id);
+            }
         }
+
+        if (failedCount == 0) return (0, null);
+
+        var sample = string.Join(", ", failedUserIds.Take(5));
+        var detail = $"{failedCount} user(s) failed Steam playtime sync (user ids: {sample})";
+        return (failedCount, detail.Length > 480 ? detail[..480] : detail);
     }
 
-    private async Task SyncUserAsync(int userId, string steamId, SqlConnection conn, CancellationToken ct)
+    private async Task<bool> SyncUserAsync(int userId, string steamId, SqlConnection conn, CancellationToken ct)
     {
         try
         {
@@ -68,10 +82,15 @@ public class SteamPlaytimeSyncManager(
 
             logger.LogInformation("User {UserId}: updated playtime for {Count}/{Total} games.",
                 userId, updated, existing.Count);
+
+            return true;
         }
+        catch (OperationCanceledException) { throw; }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "Failed to sync Steam playtime for user {UserId}.", userId);
+            // Drops this user's entire playtime sync for the run — real data loss, not a per-item retry.
+            logger.LogError(ex, "Failed to sync Steam playtime for user {UserId}.", userId);
+            return false;
         }
     }
 }

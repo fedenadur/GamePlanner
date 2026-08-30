@@ -18,12 +18,14 @@ public class WorkerStatusManager(GamePlannerDbContext db)
         await db.SaveChangesAsync(ct);
     }
 
-    public async Task SetCompletedAsync(string name)
+    public async Task SetCompletedAsync(string name, int? failedItemCount = null, string? failureDetail = null)
     {
         var w = await GetOrCreateAsync(name, CancellationToken.None);
-        w.Status        = WorkerStatusValue.Completed;
-        w.LastSuccessAt = DateTime.UtcNow;
-        w.LastError     = null;
+        w.Status                     = WorkerStatusValue.Completed;
+        w.LastSuccessAt              = DateTime.UtcNow;
+        w.LastError                  = null;
+        w.FailedItemCount            = failedItemCount;
+        w.LastPartialFailureDetail   = failureDetail is null ? null : failureDetail[..Math.Min(failureDetail.Length, 500)];
         await db.SaveChangesAsync();
     }
 

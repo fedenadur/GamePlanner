@@ -8,6 +8,8 @@ public class WorkerStatus
     public DateTime? LastRunAt     { get; set; }
     public DateTime? LastSuccessAt { get; set; }
     public string?   LastError     { get; set; }
+    public int?      FailedItemCount            { get; set; }
+    public string?   LastPartialFailureDetail   { get; set; }
 }
 
 public static class WorkerStatusValue

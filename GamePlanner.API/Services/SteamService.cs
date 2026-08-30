@@ -39,16 +39,29 @@ public class SteamService(IHttpClientFactory httpFactory, IConfiguration config,
 
         var client = httpFactory.CreateClient();
         var url = $"{BaseUrl}/ISteamUser/ResolveVanityURL/v1/?key={ApiKey}&vanityurl={vanity}";
-        var response = await client.GetAsync(url, ct);
-        response.EnsureSuccessStatusCode();
 
-        var json = await response.Content.ReadAsStringAsync(ct);
-        var result = JsonSerializer.Deserialize<SteamVanityResponse>(json);
+        try
+        {
+            var response = await client.GetAsync(url, ct);
+            response.EnsureSuccessStatusCode();
 
-        if (result?.Response?.Success != 1 || result.Response.SteamId is null)
-            throw new InvalidOperationException($"Could not resolve Steam vanity URL: \"{vanity}\". Make sure the profile is public.");
+            var json = await response.Content.ReadAsStringAsync(ct);
+            var result = JsonSerializer.Deserialize<SteamVanityResponse>(json);
 
-        return result.Response.SteamId;
+            if (result?.Response?.Success != 1 || result.Response.SteamId is null)
+                throw new InvalidOperationException($"Could not resolve Steam vanity URL: \"{vanity}\". Make sure the profile is public.");
+
+            return result.Response.SteamId;
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Steam vanity resolution failed for '{Vanity}'.", vanity);
+            throw;
+        }
     }
 
     // ── Player Summary ───────────────────────────────────────────────────────
@@ -57,15 +70,28 @@ public class SteamService(IHttpClientFactory httpFactory, IConfiguration config,
     {
         var client   = httpFactory.CreateClient();
         var url      = $"{BaseUrl}/ISteamUser/GetPlayerSummaries/v2/?key={ApiKey}&steamids={steamId}";
-        var response = await client.GetAsync(url, ct);
-        if (!response.IsSuccessStatusCode) return null;
 
-        var json   = await response.Content.ReadAsStringAsync(ct);
-        var result = JsonSerializer.Deserialize<SteamPlayerSummaryResponse>(json);
-        var player = result?.Response?.Players?.FirstOrDefault();
-        if (player is null) return null;
+        try
+        {
+            var response = await client.GetAsync(url, ct);
+            if (!response.IsSuccessStatusCode) return null;
 
-        return (player.PersonaName, player.AvatarFull);
+            var json   = await response.Content.ReadAsStringAsync(ct);
+            var result = JsonSerializer.Deserialize<SteamPlayerSummaryResponse>(json);
+            var player = result?.Response?.Players?.FirstOrDefault();
+            if (player is null) return null;
+
+            return (player.PersonaName, player.AvatarFull);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Steam player summary lookup failed for SteamID {SteamId}.", steamId);
+            throw;
+        }
     }
 
     // ── Owned Games ──────────────────────────────────────────────────────────
@@ -77,21 +103,33 @@ public class SteamService(IHttpClientFactory httpFactory, IConfiguration config,
 
         logger.LogInformation("Fetching owned games for SteamID: {SteamId}", steamId);
 
-        var response = await client.GetAsync(url, ct);
-        response.EnsureSuccessStatusCode();
-
-        var json = await response.Content.ReadAsStringAsync(ct);
-        var result = JsonSerializer.Deserialize<SteamOwnedGamesResponse>(json);
-
-        var games = result?.Response?.Games;
-        if (games is null || games.Count == 0)
-            throw new InvalidOperationException("No games found. The Steam profile may be private or the library is empty.");
-
-        return games.Select(g => new SteamGameDto
+        try
         {
-            AppId        = g.AppId,
-            Name         = g.Name,
-            PlaytimeHours = Math.Round(g.PlaytimeMinutes / 60.0, 1)
-        }).ToList();
+            var response = await client.GetAsync(url, ct);
+            response.EnsureSuccessStatusCode();
+
+            var json = await response.Content.ReadAsStringAsync(ct);
+            var result = JsonSerializer.Deserialize<SteamOwnedGamesResponse>(json);
+
+            var games = result?.Response?.Games;
+            if (games is null || games.Count == 0)
+                throw new InvalidOperationException("No games found. The Steam profile may be private or the library is empty.");
+
+            return games.Select(g => new SteamGameDto
+            {
+                AppId        = g.AppId,
+                Name         = g.Name,
+                PlaytimeHours = Math.Round(g.PlaytimeMinutes / 60.0, 1)
+            }).ToList();
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Fetching owned games failed for SteamID {SteamId}.", steamId);
+            throw;
+        }
     }
 }

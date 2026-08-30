@@ -2,18 +2,18 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 2
+current_phase: 02
 current_phase_name: Credential & Secrets Hardening
 status: executing
-stopped_at: Phase 2 context gathered
-last_updated: "2026-08-30T02:56:18.255Z"
-last_activity: 2026-08-29
-last_activity_desc: Phase 01 complete, transitioned to Phase 2
+stopped_at: Completed 02-01-PLAN.md
+last_updated: "2026-08-30T18:35:22.215Z"
+last_activity: 2026-08-30
+last_activity_desc: Phase 02 execution started
 progress:
   total_phases: 2
   completed_phases: 1
   total_plans: 11
-  completed_plans: 6
+  completed_plans: 7
 ---
 
 # Project State
@@ -23,16 +23,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-08-28)
 
 **Core value:** Close the concrete security and reliability gaps already identified in the codebase (credential handling, CORS/rate limiting, resource leaks, missing audit trail) without breaking existing functionality.
-**Current focus:** Phase 01 — angular-eol-upgrade
+**Current focus:** Phase 02 — Credential & Secrets Hardening
 
 ## Current Position
 
-Phase: 2 — Credential & Secrets Hardening
-Plan: Not started
+Phase: 02 (Credential & Secrets Hardening) — EXECUTING
+Plan: 2 of 5
 Status: Ready to execute
-Last activity: 2026-08-29 — Phase 01 complete, transitioned to Phase 2
+Last activity: 2026-08-30 — Phase 02 execution started
 
-Progress: [██████████] 100%
+Progress: [██████░░░░] 64%
 
 ## Performance Metrics
 
@@ -64,6 +64,7 @@ Progress: [██████████] 100%
 | Phase 01 P04 | 30min | 2 tasks | 5 files |
 | Phase 01 P05 | 65min | 2 tasks | 27 files |
 | Phase 01 P06 | 40min | 2 tasks | 1 files |
+| Phase 02 P01 | 9min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -89,6 +90,8 @@ Recent decisions affecting current work:
 - [Phase ?]: Applied non-force npm audit fix resolving 6/8 advisory findings via lockfile-only transitive resolution; declined --force fix for the remaining 2 (image-size, uuid) since it would downgrade @angular-devkit/build-angular to a legacy pre-CLI-versioned 0.1002.1, outside Angular 22's peer range
 - [Phase ?]: Task 2 UAT walkthrough executed via Playwright MCP browser automation at user's explicit request; user reviewed full 15-check result set and replied approved, satisfying ROADMAP Phase 1 success criterion 3
 - [Phase ?]: Two pre-existing backend findings (SessionManager cross-user data leak, IGDBId upsert cross-user deactivation) surfaced during UAT filed as pending todos, not fixed -- out of scope for this frontend-only phase
+- [Phase ?]: 02-01: seeded dotnet user-secrets with real pre-rotation values (not placeholders) per D-06 sequencing, keeping app functional until rotation lands in 02-04
+- [Phase ?]: 02-01: SteamService redaction wraps HTTP call+deserialization at all 3 sites with catch(OperationCanceledException){throw;} before catch(Exception ex){LogError redacted; throw;}, mirroring the Workers/*.cs pattern
 
 ### Pending Todos
 
@@ -109,6 +112,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-08-30T02:08:47.119Z
-Stopped at: Phase 2 context gathered
-Resume file: .planning/phases/02-credential-secrets-hardening/02-CONTEXT.md
+Last session: 2026-08-30T18:35:22.196Z
+Stopped at: Completed 02-01-PLAN.md
+Resume file: None

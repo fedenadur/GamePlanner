@@ -83,12 +83,12 @@ Plans:
   5. A secret-scanning pre-commit hook (gitleaks or trufflehog) blocks a test commit containing a fake secret pattern
   6. External API calls (IGDB/Steam/HLTB) no longer use a broad silent `catch (Exception)` — failures are logged with severity and surfaced rather than silently dropped
 
-**Plans:** 5 plans
+**Plans:** 1/5 plans executed
 
 Plans:
 **Wave 1**
 
-- [ ] 02-01-PLAN.md — Credential transport tracer: user-secrets/env-var migration + form-encoded IGDB token body + redacted Steam errors (CRED-01/02/03)
+- [x] 02-01-PLAN.md — Credential transport tracer: user-secrets/env-var migration + form-encoded IGDB token body + redacted Steam errors (CRED-01/02/03)
 - [ ] 02-02-PLAN.md — WorkerStatus partial-failure contract: nullable columns, SetCompletedAsync overload, numbered migration (REL-03)
 
 **Wave 2** *(blocked on Wave 1 completion)*
@@ -151,7 +151,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Angular EOL Upgrade | 6/6 | Complete    | 2026-08-29 |
-| 2. Credential & Secrets Hardening | 0/5 | Planned      | - |
+| 2. Credential & Secrets Hardening | 1/5 | In Progress|  |
 | 3. Auth, CORS & Rate Limiting Hardening | 0/TBD | Not started | - |
 | 4. Data Layer Reliability & Audit Trail | 0/TBD | Not started | - |
 | 5. Regression Testing & Full-Stack Verification | 0/TBD | Not started | - |

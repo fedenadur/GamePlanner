@@ -21,6 +21,7 @@ Close the concrete security and reliability gaps already identified in the codeb
 - ✓ HowLongToBeat playtime sync via `GameHLTBManager` / `GameHLTBSyncWorker` — existing
 - ✓ JWT-based authentication with rate limiting on `/auth` endpoints — existing
 - ✓ Background sync workers (game, image, Steam playtime, HLTB) — existing
+- ✓ Upgrade Angular from 13.3.0 (EOL) to current LTS, plus related EOL deps (TypeScript, RxJS, zone.js, Jasmine/Karma) — eliminates unpatched frontend vulnerabilities — validated Phase 1 (angular-eol-upgrade), 2026-08-29
 
 ### Active
 
@@ -86,4 +87,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-08-28 after initialization*
+*Last updated: 2026-08-29 after Phase 1 (angular-eol-upgrade) completion*

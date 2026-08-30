@@ -6,7 +6,7 @@ current_phase: 01
 current_phase_name: angular-eol-upgrade
 status: executing
 stopped_at: Completed 01-05-PLAN.md
-last_updated: "2026-08-29T18:13:27.696Z"
+last_updated: "2026-08-29T18:20:05.343Z"
 last_activity: 2026-08-29
 last_activity_desc: Phase 01 execution started
 progress:
@@ -88,12 +88,14 @@ Recent decisions affecting current work:
 
 ### Pending Todos
 
-None yet.
+- [major] Session planner leaks cross-user game data — `SessionManager.cs:15` missing UserId filter. See `.planning/todos/pending/2026-08-29-session-planner-leaks-cross-user-game-data.md`
+- [major] IGDBId upsert silently deactivates manually-added games — fix drafted but unapplied (`Database/33_...sql`, `34_...sql`). See `.planning/todos/pending/2026-08-29-igdbid-upsert-deactivates-games-across-users.md`
 
 ### Blockers/Concerns
 
 - Phase 1: exact target Angular LTS version and per-hop breaking changes need re-confirmation via angular.dev at execution time (flagged in research/SUMMARY.md)
 - Phase 4: full enumeration of stored procedures touching Game, NowPlayingGame, and GameJournalEntry needed before implementing audit fields (flagged in research/SUMMARY.md)
+- 01-06 Task 2 (manual UAT walkthrough) blocked: precondition unmet — GamePlanner.API backend is not running (port 7174 not listening) and SQL Server reachability unconfirmed. User must start SQL Server + 'cd GamePlanner.API && dotnet run', then walk through all 15 checks in 01-06-PLAN.md Task 2 and reply 'approved' or list defects.
 
 ## Deferred Items
 

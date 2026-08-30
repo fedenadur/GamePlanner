@@ -13,7 +13,7 @@ This milestone closes the concrete security and reliability gaps already identif
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Angular EOL Upgrade** - Move the Angular SPA from the unpatched 13.3.0 to a current LTS, sequentially, with no functional regressions
+- [x] **Phase 1: Angular EOL Upgrade** - Move the Angular SPA from the unpatched 13.3.0 to a current LTS, sequentially, with no functional regressions (completed 2026-08-29)
 - [ ] **Phase 2: Credential & Secrets Hardening** - Stop leaking IGDB/Steam credentials via URLs/logs/committed config, rotate exposed secrets, and stop swallowing external-API failures silently
 - [ ] **Phase 3: Auth, CORS & Rate Limiting Hardening** - Tighten JWT lifetime/validation, lock down CORS to the real frontend contract, extend rate limiting to data-mutation endpoints, and log security-relevant rejections
 - [ ] **Phase 4: Data Layer Reliability & Audit Trail** - Make `GameManager` writes atomic, add `ModifiedAt`/`DeletedAt` audit fields, and stop unbounded `SteamTokenStore` growth
@@ -33,7 +33,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Every existing user workflow (login, backlog CRUD, session tracking, journal entries, IGDB/Steam/HLTB sync views) behaves identically in the browser after the upgrade, confirmed by manual walkthrough
   4. `npm run build` and the existing test command both complete without errors on the upgraded stack
 
-**Plans:** 6/6 plans executed
+**Plans:** 6/6 plans complete
 
 Plans:
 **Wave 1**
@@ -135,7 +135,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Angular EOL Upgrade | 6/6 | In Progress|  |
+| 1. Angular EOL Upgrade | 6/6 | Complete    | 2026-08-29 |
 | 2. Credential & Secrets Hardening | 0/TBD | Not started | - |
 | 3. Auth, CORS & Rate Limiting Hardening | 0/TBD | Not started | - |
 | 4. Data Layer Reliability & Audit Trail | 0/TBD | Not started | - |

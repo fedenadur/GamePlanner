@@ -4,16 +4,16 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 01
 current_phase_name: angular-eol-upgrade
-status: executing
-stopped_at: Completed 01-05-PLAN.md
-last_updated: "2026-08-29T18:20:05.343Z"
+status: verifying
+stopped_at: Completed 01-06-PLAN.md
+last_updated: "2026-08-30T01:25:40.469Z"
 last_activity: 2026-08-29
 last_activity_desc: Phase 01 execution started
 progress:
   total_phases: 1
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 6
-  completed_plans: 5
+  completed_plans: 6
 ---
 
 # Project State
@@ -29,10 +29,10 @@ See: .planning/PROJECT.md (updated 2026-08-28)
 
 Phase: 01 (angular-eol-upgrade) — EXECUTING
 Plan: 6 of 6
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-08-29 — Phase 01 execution started
 
-Progress: [████████░░] 83%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -63,6 +63,7 @@ Progress: [████████░░] 83%
 | Phase 01 P03 | 50min | 3 tasks | 25 files |
 | Phase 01 P04 | 30min | 2 tasks | 5 files |
 | Phase 01 P05 | 65min | 2 tasks | 27 files |
+| Phase 01 P06 | 40min | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -85,6 +86,9 @@ Recent decisions affecting current work:
 - [Phase ?]: Removed deprecated tsconfig.json baseUrl/downlevelIteration (genuine TS 6.0 fix, not a strictness change -- neither used by this codebase's actual import/target config)
 - [Phase ?]: Supporting deps: jasmine-core/@types/jasmine deliberately pinned one major back (6.3.0/6.0.0, not ecosystem-latest 7.x) after a confirmed zone.js harness-boot failure, per RESEARCH.md assumption A1's documented fallback; rxjs->7.8.2, @types/node->24.13.3, karma->6.4.4 (within Angular 22's ^6.3.0 peer range)
 - [Phase ?]: Isolated the ChangeDetectionStrategy codemod from pre-existing WIP spanning three sibling files (game-detail.component.ts/.html/.css) via HEAD-reconstruct + apply-delta + commit + restore-WIP, extending 01-04's single-file precedent
+- [Phase ?]: Applied non-force npm audit fix resolving 6/8 advisory findings via lockfile-only transitive resolution; declined --force fix for the remaining 2 (image-size, uuid) since it would downgrade @angular-devkit/build-angular to a legacy pre-CLI-versioned 0.1002.1, outside Angular 22's peer range
+- [Phase ?]: Task 2 UAT walkthrough executed via Playwright MCP browser automation at user's explicit request; user reviewed full 15-check result set and replied approved, satisfying ROADMAP Phase 1 success criterion 3
+- [Phase ?]: Two pre-existing backend findings (SessionManager cross-user data leak, IGDBId upsert cross-user deactivation) surfaced during UAT filed as pending todos, not fixed -- out of scope for this frontend-only phase
 
 ### Pending Todos
 
@@ -93,9 +97,7 @@ Recent decisions affecting current work:
 
 ### Blockers/Concerns
 
-- Phase 1: exact target Angular LTS version and per-hop breaking changes need re-confirmation via angular.dev at execution time (flagged in research/SUMMARY.md)
 - Phase 4: full enumeration of stored procedures touching Game, NowPlayingGame, and GameJournalEntry needed before implementing audit fields (flagged in research/SUMMARY.md)
-- 01-06 Task 2 (manual UAT walkthrough) blocked: precondition unmet — GamePlanner.API backend is not running (port 7174 not listening) and SQL Server reachability unconfirmed. User must start SQL Server + 'cd GamePlanner.API && dotnet run', then walk through all 15 checks in 01-06-PLAN.md Task 2 and reply 'approved' or list defects.
 
 ## Deferred Items
 
@@ -107,6 +109,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-08-29T18:13:27.680Z
-Stopped at: Completed 01-05-PLAN.md
+Last session: 2026-08-30T01:25:40.452Z
+Stopped at: Completed 01-06-PLAN.md
 Resume file: None

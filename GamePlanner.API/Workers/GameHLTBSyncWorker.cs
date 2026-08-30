@@ -40,17 +40,24 @@ public class GameHLTBSyncWorker(IServiceScopeFactory scopeFactory, ILogger<GameH
         {
             await statusManager.SetRunningAsync(WorkerName, ct);
 
-            var records = csvService.ReadGames();
+            var (records, skipped, failureDetail) = csvService.ReadGames();
 
             if (records.Count == 0)
             {
                 logger.LogWarning("{Worker}: no records to process.", WorkerName);
-                await statusManager.SetCompletedAsync(WorkerName);
+                await statusManager.SetCompletedAsync(WorkerName, skipped, failureDetail);
+
+                if (skipped > 0)
+                    logger.LogWarning("{Worker}: {FailedCount} item(s) failed.", WorkerName, skipped);
+
                 return;
             }
 
             await hltbManager.UpsertAsync(records, ct);
-            await statusManager.SetCompletedAsync(WorkerName);
+            await statusManager.SetCompletedAsync(WorkerName, skipped, failureDetail);
+
+            if (skipped > 0)
+                logger.LogWarning("{Worker}: {FailedCount} item(s) failed.", WorkerName, skipped);
         }
         catch (OperationCanceledException)
         {

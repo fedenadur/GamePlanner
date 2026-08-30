@@ -37,8 +37,11 @@ public class GameImageSyncWorker(IServiceScopeFactory scopeFactory, ILogger<Game
         try
         {
             await statusManager.SetRunningAsync(WorkerName, ct);
-            await manager.RunAsync(ct);
-            await statusManager.SetCompletedAsync(WorkerName);
+            var (failedCount, failureDetail) = await manager.RunAsync(ct);
+            await statusManager.SetCompletedAsync(WorkerName, failedCount, failureDetail);
+
+            if (failedCount > 0)
+                logger.LogWarning("{Worker}: {FailedCount} item(s) failed.", WorkerName, failedCount);
         }
         catch (OperationCanceledException)
         {

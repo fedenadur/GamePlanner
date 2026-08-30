@@ -18,9 +18,12 @@ public class GameImageManager(
     private SqlConnection CreateConnection() =>
         new(config.GetConnectionString("DefaultConnection"));
 
-    public async Task RunAsync(CancellationToken ct)
+    public async Task<(int FailedCount, string? FailureDetail)> RunAsync(CancellationToken ct)
     {
         var total = await db.Games.CountAsync(g => g.IsActive && g.CoverImageUrl == null, ct);
+
+        var failedCount = 0;
+        var failedNames = new List<string>();
 
         if (total == 0)
         {
@@ -29,20 +32,40 @@ public class GameImageManager(
         else
         {
             logger.LogInformation("GameImageManager: {Total} games need cover images.", total);
-            await SyncCoversAsync(ct);
+            var (coverFailedCount, coverFailedNames) = await SyncCoversAsync(ct);
+            failedCount += coverFailedCount;
+            failedNames.AddRange(coverFailedNames);
         }
 
-        await SyncScreenshotsAndArtworksAsync(ct);
+        var (imageFailedCount, imageFailedNames) = await SyncScreenshotsAndArtworksAsync(ct);
+        failedCount += imageFailedCount;
+        failedNames.AddRange(imageFailedNames);
+
+        return (failedCount, BuildFailureDetail(failedCount, failedNames));
+    }
+
+    private static string? BuildFailureDetail(int failedCount, List<string> failedNames)
+    {
+        if (failedCount == 0) return null;
+
+        var sample = string.Join(", ", failedNames.Take(3));
+        var detail = failedNames.Count > 0
+            ? $"{failedCount} game(s) had incomplete image sync (e.g. {sample})"
+            : $"{failedCount} game(s) had incomplete image sync";
+
+        return detail.Length > 480 ? detail[..480] : detail;
     }
 
     // ── Cover sync (existing logic, unchanged) ───────────────────────────────
 
-    private async Task SyncCoversAsync(CancellationToken ct)
+    private async Task<(int FailedCount, List<string> FailedNames)> SyncCoversAsync(CancellationToken ct)
     {
         using var conn = CreateConnection();
         await conn.OpenAsync(ct);
 
         int processed = 0;
+        int failedCount = 0;
+        var failedNames = new List<string>();
 
         while (!ct.IsCancellationRequested)
         {
@@ -66,8 +89,10 @@ public class GameImageManager(
                     var fetched = await igdb.FetchCoversByIdsAsync(withId.Select(g => g.IGDBId!.Value), ct);
                     igdbResults = fetched.ToDictionary(r => r.Id);
                 }
+                catch (OperationCanceledException) { throw; }
                 catch (Exception ex)
                 {
+                    // Retried per-game immediately below — not a permanent loss, keep Warning and don't count.
                     logger.LogWarning(ex, "Batch cover fetch failed, will retry individually.");
                 }
             }
@@ -87,9 +112,12 @@ public class GameImageManager(
                     var result = await igdb.SearchCoverByNameAsync(game.Name, ct);
                     await SaveCoverAsync(conn, game.Id, game.Name, game.IGDBUpdatedAt, result);
                 }
+                catch (OperationCanceledException) { throw; }
                 catch (Exception ex)
                 {
                     logger.LogWarning(ex, "Cover search failed for '{Name}', skipping.", game.Name);
+                    failedCount++;
+                    failedNames.Add(game.Name);
                 }
                 await Task.Delay(250, ct);
             }
@@ -101,6 +129,7 @@ public class GameImageManager(
         }
 
         logger.LogInformation("GameImageManager: cover sync complete.");
+        return (failedCount, failedNames);
     }
 
     private async Task SaveCoverAsync(
@@ -132,7 +161,7 @@ public class GameImageManager(
 
     // ── Screenshots + artworks sync ──────────────────────────────────────────
 
-    private async Task SyncScreenshotsAndArtworksAsync(CancellationToken ct)
+    private async Task<(int FailedCount, List<string> FailedNames)> SyncScreenshotsAndArtworksAsync(CancellationToken ct)
     {
         var cutoff = DateTime.UtcNow.AddDays(-2);
 
@@ -143,7 +172,7 @@ public class GameImageManager(
         if (total == 0)
         {
             logger.LogInformation("GameImageManager: no games need screenshot/artwork sync.");
-            return;
+            return (0, []);
         }
 
         logger.LogInformation("GameImageManager: {Total} games need screenshot/artwork sync.", total);
@@ -152,6 +181,8 @@ public class GameImageManager(
         await conn.OpenAsync(ct);
 
         int processed = 0;
+        int failedCount = 0;
+        var failedNames = new List<string>();
 
         while (!ct.IsCancellationRequested)
         {
@@ -160,7 +191,7 @@ public class GameImageManager(
                          && (g.LastImageSyncDate == null || g.LastImageSyncDate < cutoff))
                 .OrderBy(g => g.Id)
                 .Take(BatchSize)
-                .Select(g => new { g.Id, g.IGDBId })
+                .Select(g => new { g.Id, g.Name, g.IGDBId })
                 .ToListAsync(ct);
 
             if (batch.Count == 0) break;
@@ -169,23 +200,37 @@ public class GameImageManager(
 
             List<IgdbImage> screenshots = [];
             List<IgdbImage> artworks    = [];
+            bool batchFailed = false;
 
             try
             {
                 screenshots = await igdb.FetchScreenshotsByGameIdsAsync(igdbIds, ct);
             }
+            catch (OperationCanceledException) { throw; }
             catch (Exception ex)
             {
-                logger.LogWarning(ex, "Screenshot fetch failed for batch, skipping screenshots.");
+                // Raised from Warning: the batch's games are still marked synced below, so a
+                // failed fetch here means up to BatchSize games silently go two days without images.
+                logger.LogError(ex, "Screenshot fetch failed for batch, skipping screenshots.");
+                batchFailed = true;
             }
 
             try
             {
                 artworks = await igdb.FetchArtworksByGameIdsAsync(igdbIds, ct);
             }
+            catch (OperationCanceledException) { throw; }
             catch (Exception ex)
             {
-                logger.LogWarning(ex, "Artwork fetch failed for batch, skipping artworks.");
+                logger.LogError(ex, "Artwork fetch failed for batch, skipping artworks.");
+                batchFailed = true;
+            }
+
+            if (batchFailed)
+            {
+                // Count the whole batch once, even if both fetches failed.
+                failedCount += batch.Count;
+                failedNames.AddRange(batch.Select(g => g.Name).Take(3));
             }
 
             // Map IGDB game ID → local game ID
@@ -210,6 +255,7 @@ public class GameImageManager(
         }
 
         logger.LogInformation("GameImageManager: screenshot/artwork sync complete.");
+        return (failedCount, failedNames);
     }
 
     private async Task SaveImagesAsync(

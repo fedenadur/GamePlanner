@@ -13,7 +13,7 @@ public class GameSyncManager(
     private const int BatchSize = 50;
     private static readonly TimeSpan RequestDelay = TimeSpan.FromMilliseconds(250);
 
-    public async Task RunAsync(CancellationToken ct, bool force = false)
+    public async Task<(int FailedCount, string? FailureDetail)> RunAsync(CancellationToken ct, bool force = false)
     {
         if (force)
             logger.LogInformation("Force mode enabled — skipping freshness check.");
@@ -28,13 +28,15 @@ public class GameSyncManager(
         if (total == 0)
         {
             logger.LogInformation("All games are already enriched. Skipping sync.");
-            return;
+            return (0, null);
         }
 
         logger.LogInformation("Starting enrichment for {Total} games with missing metadata.", total);
 
         int offset = 0;
         int processed = 0;
+        int failedCount = 0;
+        var failedNames = new List<string>();
 
         while (!ct.IsCancellationRequested)
         {
@@ -55,7 +57,12 @@ public class GameSyncManager(
             foreach (var item in batch)
             {
                 ct.ThrowIfCancellationRequested();
-                await EnrichGameAsync(item.Id, item.IGDBId, item.Name, item.IGDBUpdatedAt, ct, force);
+                var ok = await EnrichGameAsync(item.Id, item.IGDBId, item.Name, item.IGDBUpdatedAt, ct, force);
+                if (!ok)
+                {
+                    failedCount++;
+                    failedNames.Add(item.Name);
+                }
                 await Task.Delay(RequestDelay, ct);
             }
 
@@ -67,9 +74,15 @@ public class GameSyncManager(
         }
 
         logger.LogInformation("Enrichment sync complete. {Processed} games processed.", processed);
+
+        if (failedCount == 0) return (0, null);
+
+        var sample = string.Join(", ", failedNames.Take(3));
+        var detail = $"{failedCount} game(s) failed to enrich (e.g. {sample})";
+        return (failedCount, detail.Length > 480 ? detail[..480] : detail);
     }
 
-    private async Task EnrichGameAsync(int id, long? igdbId, string name, DateTime? storedUpdatedAt, CancellationToken ct, bool force = false)
+    private async Task<bool> EnrichGameAsync(int id, long? igdbId, string name, DateTime? storedUpdatedAt, CancellationToken ct, bool force = false)
     {
         try
         {
@@ -77,13 +90,13 @@ public class GameSyncManager(
                 ? await igdb.FetchEnrichmentByIdAsync(igdbId.Value, ct)
                 : await igdb.SearchGameAsync(name, ct);
 
-            if (result is null) return;
+            if (result is null) return true;
 
             var igdbUpdatedAt = DateTimeOffset.FromUnixTimeSeconds(result.UpdatedAt).UtcDateTime;
             if (!force && storedUpdatedAt.HasValue && igdbUpdatedAt <= storedUpdatedAt.Value)
             {
                 logger.LogDebug("'{Name}' is up-to-date (IGDB updated_at unchanged). Skipping.", name);
-                return;
+                return true;
             }
 
             var genreNames       = result.Genres?.Select(g => g.Name).ToList() ?? [];
@@ -148,10 +161,14 @@ public class GameSyncManager(
                 name, genreNames.Count,
                 result.AggregatedRating?.ToString("F1") ?? "n/a",
                 game.FirstReleaseDate?.Year.ToString() ?? "n/a");
+
+            return true;
         }
+        catch (OperationCanceledException) { throw; }
         catch (Exception ex)
         {
             logger.LogWarning(ex, "Failed to enrich '{Name}', skipping.", name);
+            return false;
         }
     }
 

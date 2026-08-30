@@ -88,7 +88,9 @@ public class GameImportManager(
         }
 
         logger.LogInformation("Steam import complete. {Count} games processed.", imported);
-        await enrichment.EnrichAsync(ct);
+        var (enrichFailedCount, _) = await enrichment.EnrichAsync(ct);
+        if (enrichFailedCount > 0)
+            logger.LogWarning("Steam import: {FailedCount} game(s) failed enrichment.", enrichFailedCount);
         return imported;
     }
 

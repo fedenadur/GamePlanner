@@ -10,7 +10,7 @@ public class GameEnrichmentManager(
     IgdbService igdb,
     ILogger<GameEnrichmentManager> logger)
 {
-    public async Task EnrichAsync(CancellationToken ct)
+    public async Task<(int FailedCount, string? FailureDetail)> EnrichAsync(CancellationToken ct)
     {
         var games = await db.Games
             .Where(g => g.IsActive && !g.Genres.Any() && !g.Tags.Any())
@@ -20,10 +20,13 @@ public class GameEnrichmentManager(
         if (games.Count == 0)
         {
             logger.LogInformation("No games require enrichment.");
-            return;
+            return (0, null);
         }
 
         logger.LogInformation("Enriching {Count} games via IGDB.", games.Count);
+
+        int failedCount = 0;
+        var failedNames = new List<string>();
 
         foreach (var item in games)
         {
@@ -74,14 +77,27 @@ public class GameEnrichmentManager(
                 await db.SaveChangesAsync(ct);
                 logger.LogDebug("Enriched '{Name}'.", item.Name);
             }
+            catch (OperationCanceledException) { throw; }
             catch (Exception ex)
             {
+                // Next run re-selects games with missing metadata — retried, not permanently lost.
                 logger.LogWarning(ex, "Enrichment failed for '{Name}', skipping.", item.Name);
+                failedCount++;
+                failedNames.Add(item.Name);
             }
 
             await Task.Delay(250, ct);
         }
 
+        if (failedCount > 0)
+            logger.LogWarning("Enrichment: {FailedCount} game(s) failed to enrich.", failedCount);
+
         logger.LogInformation("Enrichment complete.");
+
+        if (failedCount == 0) return (0, null);
+
+        var sample = string.Join(", ", failedNames.Take(3));
+        var detail = $"{failedCount} game(s) failed enrichment (e.g. {sample})";
+        return (failedCount, detail.Length > 480 ? detail[..480] : detail);
     }
 }

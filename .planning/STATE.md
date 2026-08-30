@@ -5,15 +5,15 @@ milestone_name: milestone
 current_phase: 02
 current_phase_name: Credential & Secrets Hardening
 status: executing
-stopped_at: Completed 02-02-PLAN.md
-last_updated: "2026-08-30T19:08:34.418Z"
+stopped_at: Completed 02-03-PLAN.md
+last_updated: "2026-08-30T19:33:42.508Z"
 last_activity: 2026-08-30
 last_activity_desc: Phase 02 execution started
 progress:
   total_phases: 2
   completed_phases: 1
   total_plans: 11
-  completed_plans: 8
+  completed_plans: 9
 ---
 
 # Project State
@@ -28,11 +28,11 @@ See: .planning/PROJECT.md (updated 2026-08-28)
 ## Current Position
 
 Phase: 02 (Credential & Secrets Hardening) — EXECUTING
-Plan: 3 of 5
+Plan: 4 of 5
 Status: Ready to execute
 Last activity: 2026-08-30 — Phase 02 execution started
 
-Progress: [███████░░░] 73%
+Progress: [████████░░] 82%
 
 ## Performance Metrics
 
@@ -66,6 +66,7 @@ Progress: [███████░░░] 73%
 | Phase 01 P06 | 40min | 2 tasks | 1 files |
 | Phase 02 P01 | 9min | 2 tasks | 6 files |
 | Phase 02 P02 | 12min | 2 tasks | 3 files |
+| Phase 02 P03 | 55min | 3 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -94,6 +95,8 @@ Recent decisions affecting current work:
 - [Phase ?]: 02-01: seeded dotnet user-secrets with real pre-rotation values (not placeholders) per D-06 sequencing, keeping app functional until rotation lands in 02-04
 - [Phase ?]: 02-01: SteamService redaction wraps HTTP call+deserialization at all 3 sites with catch(OperationCanceledException){throw;} before catch(Exception ex){LogError redacted; throw;}, mirroring the Workers/*.cs pattern
 - [Phase ?]: 02-02: FailedItemCount/LastPartialFailureDetail added nullable (not defaulted) to WorkerStatus so 'not tracked' stays distinct from 'zero failures'; SetFailedAsync left untouched so partial failures never route through the failed-run path (D-16, RESEARCH Pitfall 4)
+- [Phase ?]: 02-03: All 8 D-14 catch sites raise severity to LogError only for whole-batch/whole-user data loss (screenshot/artwork fetch, Steam per-user sync); per-item retryable failures stay LogWarning, matching D-15
+- [Phase ?]: 02-03: git apply -3 staged the restored deferred-todo GameImageManager.cs WIP into the index on a clean 3-way merge (no conflict); corrected with git reset to keep it unstaged per the plan's working-tree-hazard convention
 
 ### Pending Todos
 
@@ -114,6 +117,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-08-30T19:08:34.398Z
-Stopped at: Completed 02-02-PLAN.md
+Last session: 2026-08-30T19:33:42.488Z
+Stopped at: Completed 02-03-PLAN.md
 Resume file: None

@@ -98,9 +98,11 @@ public class GameManager(GamePlannerDbContext db, IConfiguration config)
         if (existing is not null)
             return existing.Id;
 
-        using var conn = CreateConnection();
+        await using var tx = await db.Database.BeginTransactionAsync();
+        var conn = db.Database.GetDbConnection();
         var newId = await conn.ExecuteScalarAsync<int>("sp_InsertGame",
             new { request.Name, request.EstimatedMinutes },
+            transaction: tx.GetDbTransaction(),
             commandType: System.Data.CommandType.StoredProcedure);
 
         var game = await db.Games
@@ -117,15 +119,18 @@ public class GameManager(GamePlannerDbContext db, IConfiguration config)
 
         await SyncGenresAsync(game, request.Genres);
         await db.SaveChangesAsync();
+        await tx.CommitAsync();
 
         return newId;
     }
 
     public async Task<int> CreateAsync(CreateGameRequest request, int userId)
     {
-        using var conn = CreateConnection();
+        await using var tx = await db.Database.BeginTransactionAsync();
+        var conn = db.Database.GetDbConnection();
         var newId = await conn.ExecuteScalarAsync<int>("sp_InsertGame",
             new { request.Name, request.EstimatedMinutes },
+            transaction: tx.GetDbTransaction(),
             commandType: System.Data.CommandType.StoredProcedure);
 
         var game = await db.Games
@@ -140,6 +145,7 @@ public class GameManager(GamePlannerDbContext db, IConfiguration config)
         await SyncGenresAsync(game, request.Genres);
         await SyncTagsAsync(game, request.Tags);
         await db.SaveChangesAsync();
+        await tx.CommitAsync();
 
         return newId;
     }

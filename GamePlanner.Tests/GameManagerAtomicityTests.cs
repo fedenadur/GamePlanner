@@ -182,4 +182,73 @@ public class GameManagerAtomicityTests
             await CleanupByNamePrefixAsync(name);
         }
     }
+
+    [Fact]
+    public async Task CreateAsync_RollsBackInsertedGame_WhenSaveChangesThrows()
+    {
+        var name = $"{NamePrefix}{Guid.NewGuid():N}";
+
+        await using var db = CreateContext();
+        var userId = await db.Users.Select(u => u.Id).FirstAsync();
+        var manager = CreateManager(db);
+
+        try
+        {
+            // Same over-length-genre truncation trick as the update rollback fact, but here it
+            // fires against a brand-new sp_InsertGame row: the insert must not survive un-rolled-back.
+            var overLengthGenre = new string('x', 150);
+
+            await Assert.ThrowsAsync<DbUpdateException>(() => manager.CreateAsync(
+                new CreateGameRequest
+                {
+                    Name = name,
+                    EstimatedMinutes = 20,
+                    Genres = [overLengthGenre],
+                    Tags = []
+                },
+                userId));
+
+            await using var freshDb = CreateContext();
+            var survived = await freshDb.Games.AnyAsync(g => g.Name == name);
+            Assert.False(survived);
+        }
+        finally
+        {
+            // Cleanup still runs by prefix even though the row should never have committed --
+            // if the assertion above ever fails, a partially-committed row is still removed.
+            await CleanupByNamePrefixAsync(name);
+        }
+    }
+
+    [Fact]
+    public async Task CreateFromIgdbAsync_ReturnsExistingId_WhenIgdbIdAlreadyLinkedToUser()
+    {
+        var name = $"{NamePrefix}{Guid.NewGuid():N}";
+        var igdbId = Random.Shared.NextInt64(1_000_000_000, 2_000_000_000);
+
+        await using var db = CreateContext();
+        var userId = await db.Users.Select(u => u.Id).FirstAsync();
+        var manager = CreateManager(db);
+
+        var firstId = await manager.CreateFromIgdbAsync(
+            new CreateGameFromIgdbRequest { IgdbId = igdbId, Name = name, EstimatedMinutes = 25, Genres = [] },
+            userId);
+
+        try
+        {
+            var secondId = await manager.CreateFromIgdbAsync(
+                new CreateGameFromIgdbRequest { IgdbId = igdbId, Name = name, EstimatedMinutes = 25, Genres = [] },
+                userId);
+
+            Assert.Equal(firstId, secondId);
+
+            await using var freshDb = CreateContext();
+            var count = await freshDb.Games.CountAsync(g => g.IGDBId == igdbId && g.UserId == userId);
+            Assert.Equal(1, count);
+        }
+        finally
+        {
+            await CleanupByNamePrefixAsync(name);
+        }
+    }
 }

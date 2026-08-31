@@ -33,10 +33,10 @@ public class SessionPlannerManager(GamePlannerDbContext db)
         ["multiplayer"] = "multiplayer",
     };
 
-    public async Task<SessionPlannerResult> GetRecommendationsAsync(SessionPlannerRequest request, CancellationToken ct)
+    public async Task<SessionPlannerResult> GetRecommendationsAsync(SessionPlannerRequest request, int userId, CancellationToken ct)
     {
         var games = await db.Games
-            .Where(g => g.IsActive)
+            .Where(g => g.IsActive && g.UserId == userId)
             .Include(g => g.Genres)
             .Include(g => g.Tags)
             .Include(g => g.Themes)

@@ -7,12 +7,12 @@ namespace GamePlanner.API.Managers;
 
 public class SessionManager(GamePlannerDbContext db)
 {
-    public async Task<SessionRecommendation> GetRecommendationAsync(SessionRequest request)
+    public async Task<SessionRecommendation> GetRecommendationAsync(SessionRequest request, int userId)
     {
         var mood = request.Mood.Trim().ToLower();
 
         var candidates = await db.Games
-            .Where(g => g.IsActive && g.EstimatedMinutes <= request.AvailableMinutes)
+            .Where(g => g.IsActive && g.UserId == userId && g.EstimatedMinutes <= request.AvailableMinutes)
             .Include(g => g.Genres)
             .Include(g => g.Tags)
             .ToListAsync();

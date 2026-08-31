@@ -3,6 +3,7 @@ using GamePlanner.API.Domain;
 using GamePlanner.API.Managers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace GamePlanner.API.Controllers;
 
@@ -29,6 +30,7 @@ public class GameJournalController(GameJournalManager manager) : ControllerBase
     }
 
     [HttpPost("{gameId:int}")]
+    [EnableRateLimiting("mutations")]
     public async Task<IActionResult> CreateEntry(int gameId, [FromBody] UpsertJournalRequest request)
     {
         var userId = GetUserId();
@@ -38,6 +40,7 @@ public class GameJournalController(GameJournalManager manager) : ControllerBase
     }
 
     [HttpPut("{gameId:int}")]
+    [EnableRateLimiting("mutations")]
     public async Task<IActionResult> UpdateEntry(int gameId, [FromBody] UpsertJournalRequest request)
     {
         var userId = GetUserId();
@@ -47,6 +50,7 @@ public class GameJournalController(GameJournalManager manager) : ControllerBase
     }
 
     [HttpDelete("{gameId:int}")]
+    [EnableRateLimiting("mutations")]
     public async Task<IActionResult> DeleteEntry(int gameId)
     {
         var userId = GetUserId();

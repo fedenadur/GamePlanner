@@ -58,6 +58,7 @@ public class GamesController(GameManager manager, IgdbService igdb) : Controller
     }
 
     [HttpPost("from-igdb")]
+    [EnableRateLimiting("mutations")]
     public async Task<IActionResult> CreateFromIgdb([FromBody] CreateGameFromIgdbRequest request)
     {
         var userId = GetUserId();
@@ -67,6 +68,7 @@ public class GamesController(GameManager manager, IgdbService igdb) : Controller
     }
 
     [HttpPost]
+    [EnableRateLimiting("mutations")]
     public async Task<IActionResult> Create([FromBody] CreateGameRequest request)
     {
         var userId = GetUserId();
@@ -76,6 +78,7 @@ public class GamesController(GameManager manager, IgdbService igdb) : Controller
     }
 
     [HttpPut("{id}")]
+    [EnableRateLimiting("mutations")]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateGameRequest request)
     {
         var userId = GetUserId();

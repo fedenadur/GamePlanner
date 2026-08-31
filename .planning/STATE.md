@@ -2,18 +2,18 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 4
-current_phase_name: Data Layer Reliability & Audit Trail
+current_phase: 04
+current_phase_name: data-layer-reliability-audit-trail
 status: executing
-stopped_at: Phase 4 context gathered
-last_updated: "2026-08-31T18:31:25.408Z"
+stopped_at: Completed 04-01-PLAN.md
+last_updated: "2026-08-31T19:59:36.657Z"
 last_activity: 2026-08-31
-last_activity_desc: Phase 03 complete, transitioned to Phase 4
+last_activity_desc: Phase 04 execution started
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 17
-  completed_plans: 14
+  completed_plans: 15
 ---
 
 # Project State
@@ -23,16 +23,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-08-31)
 
 **Core value:** Close the concrete security and reliability gaps already identified in the codebase (credential handling, CORS/rate limiting, resource leaks, missing audit trail) without breaking existing functionality.
-**Current focus:** Phase 04 — data-layer-reliability-&-audit-trail
+**Current focus:** Phase 04 — data-layer-reliability-audit-trail
 
 ## Current Position
 
-Phase: 4 — Data Layer Reliability & Audit Trail
-Plan: Not started
+Phase: 04 (data-layer-reliability-audit-trail) — EXECUTING
+Plan: 2 of 3
 Status: Ready to execute
-Last activity: 2026-08-31 — Phase 03 complete, transitioned to Phase 4
+Last activity: 2026-08-31 — Phase 04 execution started
 
-Progress: [██████████] 100%
+Progress: [█████████░] 88%
 
 ## Performance Metrics
 
@@ -74,6 +74,7 @@ Progress: [██████████] 100%
 | Phase 03 P01 | 50min | 2 tasks | 3 files |
 | Phase 03 P02 | 25min | 2 tasks | 5 files |
 | Phase 03 P03 | 5min | 2 tasks | 3 files |
+| Phase 04 P01 | 20min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -118,6 +119,9 @@ Recent decisions affecting current work:
 - [Phase 3]: End-of-phase human UAT (browser CORS walkthrough, concurrent rate-limit atomicity, five judgment-tier prohibitions) executed via Playwright MCP browser automation at user's explicit request instead of manual testing -- all 3 checks passed, including a real backend restart proving the CORS fail-fast-on-missing-config path (no permissive fallback exists)
 - [Phase 3]: Security audit (gsd-secure-phase) short-circuited to direct SECURITY.md authoring (ASVS L1, threats_open: 0, register authored at plan time in all three PLAN.md threat_model blocks) rather than spawning the auditor subagent, since this session's own live re-testing already covered the judgment-tier items independently
 - [Phase 3]: Pending todo "Session planner leaks cross-user game data" resolved by 03-02 and moved to `.planning/todos/completed/`
+- [Phase ?]: 04-01: sp_DeleteGame's SET NOCOUNT ON silently made GameManager.DeleteAsync always return false (Dapper ExecuteAsync returns -1 under NOCOUNT); fixed via SELECT @@ROWCOUNT + ExecuteScalarAsync<int>, not by dropping NOCOUNT
+- [Phase ?]: 04-01: sqlcmd's default QUOTED_IDENTIFIER OFF got baked into sp_UpdateGame/sp_DeleteGame at CREATE time, breaking every UPDATE against Games (two filtered indexes); fixed by pinning SET ANSI_NULLS ON / SET QUOTED_IDENTIFIER ON before each CREATE OR ALTER PROCEDURE
+- [Phase ?]: 04-01: All three GameManager write paths (Create/CreateFromIgdb/Update) now share one EF-owned transaction with their Dapper call via tx.GetDbTransaction(); DeleteAsync stays a single SQL-side write per D-06
 
 ### Pending Todos
 
@@ -137,6 +141,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-08-31T17:57:19.666Z
-Stopped at: Phase 4 context gathered
-Resume file: .planning/phases/04-data-layer-reliability-audit-trail/04-CONTEXT.md
+Last session: 2026-08-31T19:59:36.640Z
+Stopped at: Completed 04-01-PLAN.md
+Resume file: None

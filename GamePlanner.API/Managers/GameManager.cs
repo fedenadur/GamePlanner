@@ -5,6 +5,7 @@ using GamePlanner.API.Entities;
 using GamePlanner.API.Mapping;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace GamePlanner.API.Managers;
 
@@ -91,6 +92,12 @@ public class GameManager(GamePlannerDbContext db, IConfiguration config)
 
     public async Task<int> CreateFromIgdbAsync(CreateGameFromIgdbRequest request, int userId)
     {
+        var existing = await db.Games
+            .FirstOrDefaultAsync(g => g.IGDBId == request.IgdbId && g.UserId == userId && g.IsActive);
+
+        if (existing is not null)
+            return existing.Id;
+
         using var conn = CreateConnection();
         var newId = await conn.ExecuteScalarAsync<int>("sp_InsertGame",
             new { request.Name, request.EstimatedMinutes },
@@ -149,14 +156,17 @@ public class GameManager(GamePlannerDbContext db, IConfiguration config)
 
         if (game is null) return false;
 
-        using var conn = CreateConnection();
+        await using var tx = await db.Database.BeginTransactionAsync();
+        var conn = db.Database.GetDbConnection();
         await conn.ExecuteAsync("sp_UpdateGame",
             new { Id = id, request.Name, request.EstimatedMinutes },
+            transaction: tx.GetDbTransaction(),
             commandType: System.Data.CommandType.StoredProcedure);
 
         await SyncGenresAsync(game, request.Genres);
         await SyncTagsAsync(game, request.Tags);
         await db.SaveChangesAsync();
+        await tx.CommitAsync();
 
         return true;
     }
@@ -167,7 +177,7 @@ public class GameManager(GamePlannerDbContext db, IConfiguration config)
         if (!exists) return false;
 
         using var conn = CreateConnection();
-        var rows = await conn.ExecuteAsync("sp_DeleteGame",
+        var rows = await conn.ExecuteScalarAsync<int>("sp_DeleteGame",
             new { Id = id },
             commandType: System.Data.CommandType.StoredProcedure);
 

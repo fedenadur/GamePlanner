@@ -7,6 +7,7 @@ public class NowPlayingGame
     public int      GameId  { get; set; }
     public int      Slot    { get; set; }
     public DateTime AddedAt { get; set; }
+    public DateTime? ModifiedAt { get; set; }
 
     public Game Game { get; set; } = null!;
 }

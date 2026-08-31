@@ -7,6 +7,8 @@ public class Game
     public int EstimatedMinutes { get; set; }
     public bool IsActive { get; set; }
     public DateTime CreatedAt { get; set; }
+    public DateTime? ModifiedAt { get; set; }
+    public DateTime? DeletedAt { get; set; }
 
     // IGDB fields
     public long? IGDBId { get; set; }

@@ -22,16 +22,16 @@ Close the concrete security and reliability gaps already identified in the codeb
 - ✓ JWT-based authentication with rate limiting on `/auth` endpoints — existing
 - ✓ Background sync workers (game, image, Steam playtime, HLTB) — existing
 - ✓ Upgrade Angular from 13.3.0 (EOL) to current LTS, plus related EOL deps (TypeScript, RxJS, zone.js, Jasmine/Karma) — eliminates unpatched frontend vulnerabilities — validated Phase 1 (angular-eol-upgrade), 2026-08-29
+- ✓ Move IGDB and Steam API credentials out of URL query strings into headers/body, off committed config, and rotate previously-leaked values (`IgdbService.cs`, `SteamService.cs`, `dotnet user-secrets`, gitleaks pre-commit hook) — validated Phase 2 (credential-secrets-hardening), 2026-08-30
+- ✓ Replace broad silent `catch (Exception)` patterns around external API calls with explicit handling (logging severity + failure counts surfaced via `WorkerStatus`) — validated Phase 2 (credential-secrets-hardening), 2026-08-30
 
 ### Active
 
-- [ ] Move IGDB and Steam API credentials out of URL query strings into headers/body (`IgdbService.cs`, `SteamService.cs`)
 - [ ] Environment-based CORS configuration (replace hardcoded `localhost:4200` policy) with restricted headers/methods
 - [ ] Rate limiting extended to data-modification endpoints (game create/update/delete, journal, sessions), not just `/auth`
 - [ ] Review JWT/auth flow end-to-end for hardening opportunities (token lifetime, secret handling, Steam OpenID trust boundary)
 - [ ] Fix `SqlConnection` disposal/connection handling in `GameManager` (Create/Update/Delete paths)
 - [ ] Add periodic cleanup for `SteamTokenStore` (currently grows unbounded until redeemed)
-- [ ] Replace broad silent `catch (Exception)` patterns around external API calls with explicit handling (at least logging severity + no silent data loss)
 - [ ] Add basic audit fields (who/when) for data-modifying operations, at least on soft-delete (`IsActive`) paths
 - [ ] Upgrade Angular from 13.3.0 (EOL) to current LTS, plus related EOL deps (TypeScript, RxJS, zone.js, Jasmine/Karma) — eliminates unpatched frontend vulnerabilities
 - [ ] Targeted unit/integration tests covering the areas touched by hardening (auth, `GameManager`, `IgdbService`, `SteamService`, `SteamTokenStore`) — not full coverage, just enough to catch regressions from these fixes
@@ -87,4 +87,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-08-29 after Phase 1 (angular-eol-upgrade) completion*
+*Last updated: 2026-08-30 after Phase 2 (credential-secrets-hardening) completion*

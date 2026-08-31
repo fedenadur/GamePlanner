@@ -135,6 +135,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseMiddleware<GamePlanner.API.Middleware.CorsRejectionLoggingMiddleware>();
 app.UseCors("AllowAngular");
 app.UseAuthentication();
 app.UseRateLimiter();

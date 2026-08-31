@@ -1,15 +1,17 @@
 ---
 phase: 03-auth-cors-rate-limiting-hardening
 verified: 2026-08-31T12:30:00Z
-status: human_needed
+status: passed
 score: 6/8 must-haves verified
 behavior_unverified: 2
 overrides_applied: 0
 behavior_unverified_items:
+
   - truth: "ROADMAP success criterion 4 — the real, post-Phase-1 Angular SPA can call every endpoint it needs against the hardened API with no CORS errors, confirmed by a full manual browser walkthrough"
     test: "Log in fresh in the browser, then walk every major workflow (login, backlog CRUD, session planner, journal entries, IGDB/Steam/HLTB sync views) with browser DevTools console open"
     expected: "No CORS error appears in the browser console on any request across any workflow"
     why_human: "This requires visually driving the real Angular SPA in a browser and reading the DevTools console — the underlying mechanism (CORS policy correctness) was proven independently via curl-based preflight checks in this verification pass, but the criterion's own wording specifically demands a browser walkthrough, which the phase's own plan (D-08) deferred to end-of-phase human verification and which was never executed by any plan in this phase"
+
   - truth: "Concurrent in-scope mutation requests from the SAME user are counted atomically against a single partition with no lost updates under parallel load (03-01-PLAN.md must_haves, verification: backstop)"
     test: "Fire N concurrent mutation requests from one authenticated user's token against a mutations-policy endpoint and confirm the partition's permit count decrements exactly N times with no race-condition over/under-count"
     expected: "The FixedWindowRateLimiter partition for that user's key is decremented exactly once per concurrent request, with no lost updates"

@@ -9,7 +9,7 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace GamePlanner.API.Services;
 
-public class AuthService(GamePlannerDbContext db, IConfiguration config)
+public class AuthService(GamePlannerDbContext db, IConfiguration config, ILogger<AuthService> logger)
 {
     public async Task<AuthResponse?> RegisterAsync(RegisterRequest request)
     {
@@ -39,8 +39,16 @@ public class AuthService(GamePlannerDbContext db, IConfiguration config)
         var user = await db.Users
             .FirstOrDefaultAsync(u => u.Email == request.Email.ToLower() && u.IsActive);
 
-        if (user is null || user.PasswordHash is null) return null;
-        if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash)) return null;
+        if (user is null || user.PasswordHash is null)
+        {
+            logger.LogWarning("Failed login attempt for {Email}: {Reason}", request.Email, "user not found or inactive");
+            return null;
+        }
+        if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+        {
+            logger.LogWarning("Failed login attempt for {Email}: {Reason}", request.Email, "invalid password");
+            return null;
+        }
 
         return new AuthResponse
         {

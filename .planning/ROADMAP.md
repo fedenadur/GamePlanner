@@ -138,7 +138,7 @@ Plans:
   3. `DeletedAt` is populated whenever a soft-deletable entity is marked `IsActive = false`
   4. Expired entries in `SteamTokenStore` are automatically removed by a background worker without manual intervention, confirmed by observing store size stay bounded over time
 
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans executed
 
 Plans:
 **Wave 1**
@@ -148,7 +148,7 @@ Plans:
 **Wave 2** *(blocked on Wave 1 completion)*
 
 - [x] 04-02-PLAN.md — `SteamTokenStore.RemoveExpired()` + 10-minute `SteamTokenCleanupWorker` reporting to `WorkerStatus` (REL-02)
-- [ ] 04-03-PLAN.md — Folded IGDBId cross-user collision fix (scripts 33/34) + delete-failure message in the games list
+- [x] 04-03-PLAN.md — Folded IGDBId cross-user collision fix (scripts 33/34) + delete-failure message in the games list
 
 ### Phase 5: Regression Testing & Full-Stack Verification
 
@@ -173,5 +173,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 1. Angular EOL Upgrade | 6/6 | Complete    | 2026-08-29 |
 | 2. Credential & Secrets Hardening | 5/5 | Complete    | 2026-08-30 |
 | 3. Auth, CORS & Rate Limiting Hardening | 3/3 | Complete    | 2026-08-31 |
-| 4. Data Layer Reliability & Audit Trail | 2/3 | In Progress|  |
+| 4. Data Layer Reliability & Audit Trail | 3/3 | In Progress|  |
 | 5. Regression Testing & Full-Stack Verification | 0/TBD | Not started | - |

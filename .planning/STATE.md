@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 03
-current_phase_name: auth-cors-rate-limiting-hardening
-status: verifying
+current_phase: 4
+current_phase_name: Data Layer Reliability & Audit Trail
+status: planning
 stopped_at: Completed 03-03-PLAN.md
-last_updated: "2026-08-31T12:11:16.628Z"
+last_updated: "2026-08-31T16:40:48.699Z"
 last_activity: 2026-08-31
-last_activity_desc: Phase 03 execution started
+last_activity_desc: Phase 03 complete, transitioned to Phase 4
 progress:
   total_phases: 3
   completed_phases: 3
@@ -20,17 +20,17 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-08-28)
+See: .planning/PROJECT.md (updated 2026-08-31)
 
 **Core value:** Close the concrete security and reliability gaps already identified in the codebase (credential handling, CORS/rate limiting, resource leaks, missing audit trail) without breaking existing functionality.
-**Current focus:** Phase 03 — auth-cors-rate-limiting-hardening
+**Current focus:** Phase 04 — data-layer-reliability-&-audit-trail
 
 ## Current Position
 
-Phase: 03 (auth-cors-rate-limiting-hardening) — EXECUTING
-Plan: 3 of 3
-Status: Phase complete — ready for verification
-Last activity: 2026-08-31 — Phase 03 execution started
+Phase: 4 — Data Layer Reliability & Audit Trail
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-08-31 — Phase 03 complete, transitioned to Phase 4
 
 Progress: [██████████] 100%
 
@@ -38,7 +38,7 @@ Progress: [██████████] 100%
 
 **Velocity:**
 
-- Total plans completed: 11
+- Total plans completed: 14
 - Average duration: - min
 - Total execution time: 0 hours
 
@@ -48,6 +48,7 @@ Progress: [██████████] 100%
 |-------|-------|-------|----------|
 | 01 | 6 | - | - |
 | 02 | 5 | - | - |
+| 03 | 3 | - | - |
 
 **Recent Trend:**
 
@@ -114,10 +115,12 @@ Recent decisions affecting current work:
 - [Phase ?]: 03-02: GetUserId() copied verbatim into SessionController, matching the existing byte-identical duplication already present across GamesController/GameJournalController
 - [Phase ?]: 03-03: Two distinct failed-login log reasons stay operator-only -- AuthController.Login still returns one indistinguishable Unauthorized response for both branches, preventing a user-enumeration oracle
 - [Phase ?]: 03-03: CorsRejectionLoggingMiddleware is purely observational -- registered before UseCors, always calls next(context), never sets status/headers; implements RESEARCH.md D-16's primary middleware pattern, not the ICorsService decorator fallback
+- [Phase 3]: End-of-phase human UAT (browser CORS walkthrough, concurrent rate-limit atomicity, five judgment-tier prohibitions) executed via Playwright MCP browser automation at user's explicit request instead of manual testing -- all 3 checks passed, including a real backend restart proving the CORS fail-fast-on-missing-config path (no permissive fallback exists)
+- [Phase 3]: Security audit (gsd-secure-phase) short-circuited to direct SECURITY.md authoring (ASVS L1, threats_open: 0, register authored at plan time in all three PLAN.md threat_model blocks) rather than spawning the auditor subagent, since this session's own live re-testing already covered the judgment-tier items independently
+- [Phase 3]: Pending todo "Session planner leaks cross-user game data" resolved by 03-02 and moved to `.planning/todos/completed/`
 
 ### Pending Todos
 
-- [major] Session planner leaks cross-user game data — `SessionManager.cs:15` missing UserId filter. See `.planning/todos/pending/2026-08-29-session-planner-leaks-cross-user-game-data.md`
 - [major] IGDBId upsert silently deactivates manually-added games — fix drafted but unapplied (`Database/33_...sql`, `34_...sql`). See `.planning/todos/pending/2026-08-29-igdbid-upsert-deactivates-games-across-users.md`
 
 ### Blockers/Concerns
@@ -134,6 +137,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-08-31T12:11:16.606Z
-Stopped at: Completed 03-03-PLAN.md
+Last session: 2026-08-31T14:45:00.000Z
+Stopped at: Phase 3 complete (UAT + security review passed), ready to plan Phase 4
 Resume file: None

@@ -24,16 +24,17 @@ Close the concrete security and reliability gaps already identified in the codeb
 - ✓ Upgrade Angular from 13.3.0 (EOL) to current LTS, plus related EOL deps (TypeScript, RxJS, zone.js, Jasmine/Karma) — eliminates unpatched frontend vulnerabilities — validated Phase 1 (angular-eol-upgrade), 2026-08-29
 - ✓ Move IGDB and Steam API credentials out of URL query strings into headers/body, off committed config, and rotate previously-leaked values (`IgdbService.cs`, `SteamService.cs`, `dotnet user-secrets`, gitleaks pre-commit hook) — validated Phase 2 (credential-secrets-hardening), 2026-08-30
 - ✓ Replace broad silent `catch (Exception)` patterns around external API calls with explicit handling (logging severity + failure counts surfaced via `WorkerStatus`) — validated Phase 2 (credential-secrets-hardening), 2026-08-30
+- ✓ Environment-based CORS configuration (replace hardcoded `localhost:4200` policy) with restricted headers/methods — validated Phase 3 (auth-cors-rate-limiting-hardening), 2026-08-31
+- ✓ Rate limiting extended to data-modification endpoints (game create/update/delete, journal, sessions), not just `/auth` — validated Phase 3 (auth-cors-rate-limiting-hardening), 2026-08-31
+- ✓ JWT lifetime bounded to 24h and `TokenValidationParameters` explicitly hardened (issuer/audience/lifetime/algorithm) — validated Phase 3 (auth-cors-rate-limiting-hardening), 2026-08-31
+- ✓ Security-relevant rejections (failed logins, CORS mismatches, rate-limit rejections) visible in a central log stream — validated Phase 3 (auth-cors-rate-limiting-hardening), 2026-08-31
 
 ### Active
 
-- [ ] Environment-based CORS configuration (replace hardcoded `localhost:4200` policy) with restricted headers/methods
-- [ ] Rate limiting extended to data-modification endpoints (game create/update/delete, journal, sessions), not just `/auth`
-- [ ] Review JWT/auth flow end-to-end for hardening opportunities (token lifetime, secret handling, Steam OpenID trust boundary)
+- [ ] Steam OpenID trust boundary review (not covered by Phase 3's JWT/CORS/rate-limiting scope)
 - [ ] Fix `SqlConnection` disposal/connection handling in `GameManager` (Create/Update/Delete paths)
 - [ ] Add periodic cleanup for `SteamTokenStore` (currently grows unbounded until redeemed)
 - [ ] Add basic audit fields (who/when) for data-modifying operations, at least on soft-delete (`IsActive`) paths
-- [ ] Upgrade Angular from 13.3.0 (EOL) to current LTS, plus related EOL deps (TypeScript, RxJS, zone.js, Jasmine/Karma) — eliminates unpatched frontend vulnerabilities
 - [ ] Targeted unit/integration tests covering the areas touched by hardening (auth, `GameManager`, `IgdbService`, `SteamService`, `SteamTokenStore`) — not full coverage, just enough to catch regressions from these fixes
 
 ### Out of Scope
@@ -68,6 +69,8 @@ Close the concrete security and reliability gaps already identified in the codeb
 | Include Angular EOL upgrade in this milestone | Angular 13 has been unpatched for 2+ years; treated as a security fix, not a feature/maintenance task | — Pending |
 | Add targeted tests alongside hardening fixes | Auth/external-service code has zero existing test coverage; changes here risk silent regressions without tests | — Pending |
 | Scope limited to personal/local use, not production-hardening | App is not publicly deployed; distributed/scaling concerns and infra-level hardening excluded | — Pending |
+| Fixed cross-user session-planner data leak inside Phase 3 rather than deferring | Folded todo's reproduction traced the leak to both `SessionManager` and `SessionPlannerManager`; fixing while already in the auth/session trust-boundary code was lower-risk than a separate follow-up phase | ✓ Closed — Phase 3 (03-02), live-verified no cross-user leak |
+| Rate-limit backstop (concurrent-load atomicity) and CORS browser-walkthrough closed via Playwright MCP live testing at end-of-phase human verification, not left as open gaps | Both were marked `verification: backstop`/deferred-to-human in the phase's own plans; automated sequential testing during the phase couldn't prove concurrent-safety or real browser CORS enforcement | ✓ Closed — Phase 3 UAT, 2026-08-31 |
 
 ## Evolution
 
@@ -87,4 +90,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-08-30 after Phase 2 (credential-secrets-hardening) completion*
+*Last updated: 2026-08-31 after Phase 3 (auth-cors-rate-limiting-hardening) completion*

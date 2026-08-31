@@ -6,7 +6,18 @@ severity: major
 files:
   - GamePlanner.API/Managers/SessionManager.cs:15
   - GamePlanner.API/Managers/SessionManager.cs:21
+resolved: 2026-08-31
+resolved_by: "Phase 3, plan 03-02"
 ---
+
+## Resolution
+
+Fixed in Phase 3 (auth-cors-rate-limiting-hardening), plan 03-02: `.Where(g => g.UserId ==
+userId)` added to both `SessionManager.GetRecommendationAsync` (line 15) and, since the same
+folded-todo reproduction traced the leak there too, `SessionPlannerManager.GetRecommendationsAsync`
+(line 39). Live-verified in `03-VERIFICATION.md` (Truth 7) and re-confirmed in `03-SECURITY.md`
+(T-03-07, closed) — a zero-game test account now gets a no-games response, not another account's
+rows, from both session endpoints.
 
 ## Problem
 

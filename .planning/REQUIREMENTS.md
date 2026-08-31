@@ -24,7 +24,7 @@ Requirements for this hardening milestone. Each maps to roadmap phases.
 
 - [x] **NET-01**: CORS allowed origins load from environment-based configuration (no hardcoded `localhost`)
 - [x] **NET-02**: CORS restricted to explicit headers/methods (no `AllowAnyHeader`/`AllowAnyMethod`)
-- [ ] **NET-03**: Rate limiting extended to data-mutation endpoints (game/journal/session POST/PUT/DELETE), partitioned by JWT user ID
+- [x] **NET-03**: Rate limiting extended to data-mutation endpoints (game/journal/session POST/PUT/DELETE), partitioned by JWT user ID
 
 ### Reliability (REL)
 
@@ -96,7 +96,7 @@ Explicitly excluded. Documented to prevent scope creep.
 | AUTH-02 | Phase 3 | Complete |
 | NET-01 | Phase 3 | Complete |
 | NET-02 | Phase 3 | Complete |
-| NET-03 | Phase 3 | Pending |
+| NET-03 | Phase 3 | Complete |
 | OBS-01 | Phase 3 | Pending |
 | REL-01 | Phase 4 | Pending |
 | REL-02 | Phase 4 | Pending |

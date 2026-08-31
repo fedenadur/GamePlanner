@@ -114,12 +114,12 @@ Plans:
   5. Rate limiting rejects excessive requests on data-mutation endpoints (game/journal/session POST/PUT/DELETE), partitioned per JWT user ID, so one user's rejections don't affect another user's requests
   6. Failed logins, CORS rejections, and rate-limit rejections all appear in a central log stream, confirmed by triggering each and inspecting the log
 
-**Plans:** 3 plans
+**Plans:** 1/3 plans executed
 
 Plans:
 **Wave 1**
 
-- [ ] 03-01-PLAN.md — Tracer: middleware reorder + per-user "mutations" limiter + 24h JWT + CORS/JWT lockdown, proven end-to-end (AUTH-01/02, NET-01/02/03, OBS-01)
+- [x] 03-01-PLAN.md — Tracer: middleware reorder + per-user "mutations" limiter + 24h JWT + CORS/JWT lockdown, proven end-to-end (AUTH-01/02, NET-01/02/03, OBS-01)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -162,6 +162,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 |-------|----------------|--------|-----------|
 | 1. Angular EOL Upgrade | 6/6 | Complete    | 2026-08-29 |
 | 2. Credential & Secrets Hardening | 5/5 | Complete    | 2026-08-30 |
-| 3. Auth, CORS & Rate Limiting Hardening | 0/3 | Not started | - |
+| 3. Auth, CORS & Rate Limiting Hardening | 1/3 | In Progress|  |
 | 4. Data Layer Reliability & Audit Trail | 0/TBD | Not started | - |
 | 5. Regression Testing & Full-Stack Verification | 0/TBD | Not started | - |

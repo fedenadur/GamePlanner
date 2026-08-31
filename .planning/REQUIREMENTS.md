@@ -17,13 +17,13 @@ Requirements for this hardening milestone. Each maps to roadmap phases.
 
 ### Auth & JWT Hardening (AUTH)
 
-- [ ] **AUTH-01**: JWT lifetime reduced from 7 days to a deliberate, bounded value
-- [ ] **AUTH-02**: `TokenValidationParameters` explicitly reviewed and configured (issuer, audience, lifetime validation)
+- [x] **AUTH-01**: JWT lifetime reduced from 7 days to a deliberate, bounded value
+- [x] **AUTH-02**: `TokenValidationParameters` explicitly reviewed and configured (issuer, audience, lifetime validation)
 
 ### CORS & Rate Limiting (NET)
 
-- [ ] **NET-01**: CORS allowed origins load from environment-based configuration (no hardcoded `localhost`)
-- [ ] **NET-02**: CORS restricted to explicit headers/methods (no `AllowAnyHeader`/`AllowAnyMethod`)
+- [x] **NET-01**: CORS allowed origins load from environment-based configuration (no hardcoded `localhost`)
+- [x] **NET-02**: CORS restricted to explicit headers/methods (no `AllowAnyHeader`/`AllowAnyMethod`)
 - [ ] **NET-03**: Rate limiting extended to data-mutation endpoints (game/journal/session POST/PUT/DELETE), partitioned by JWT user ID
 
 ### Reliability (REL)
@@ -92,10 +92,10 @@ Explicitly excluded. Documented to prevent scope creep.
 | CRED-04 | Phase 2 | Complete |
 | CRED-05 | Phase 2 | Complete |
 | REL-03 | Phase 2 | Complete |
-| AUTH-01 | Phase 3 | Pending |
-| AUTH-02 | Phase 3 | Pending |
-| NET-01 | Phase 3 | Pending |
-| NET-02 | Phase 3 | Pending |
+| AUTH-01 | Phase 3 | Complete |
+| AUTH-02 | Phase 3 | Complete |
+| NET-01 | Phase 3 | Complete |
+| NET-02 | Phase 3 | Complete |
 | NET-03 | Phase 3 | Pending |
 | OBS-01 | Phase 3 | Pending |
 | REL-01 | Phase 4 | Pending |

@@ -2,18 +2,18 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 3
-current_phase_name: Auth, CORS & Rate Limiting Hardening
+current_phase: 03
+current_phase_name: auth-cors-rate-limiting-hardening
 status: executing
-stopped_at: Phase 3 context gathered
-last_updated: "2026-08-31T02:56:41.356Z"
-last_activity: 2026-08-30
-last_activity_desc: Phase 02 complete, transitioned to Phase 3
+stopped_at: Completed 03-01-PLAN.md
+last_updated: "2026-08-31T03:07:59.334Z"
+last_activity: 2026-08-31
+last_activity_desc: Phase 03 execution started
 progress:
   total_phases: 3
   completed_phases: 2
   total_plans: 14
-  completed_plans: 11
+  completed_plans: 12
 ---
 
 # Project State
@@ -23,16 +23,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-08-28)
 
 **Core value:** Close the concrete security and reliability gaps already identified in the codebase (credential handling, CORS/rate limiting, resource leaks, missing audit trail) without breaking existing functionality.
-**Current focus:** Phase 02 — Credential & Secrets Hardening
+**Current focus:** Phase 03 — auth-cors-rate-limiting-hardening
 
 ## Current Position
 
-Phase: 3 — Auth, CORS & Rate Limiting Hardening
-Plan: Not started
+Phase: 03 (auth-cors-rate-limiting-hardening) — EXECUTING
+Plan: 2 of 3
 Status: Ready to execute
-Last activity: 2026-08-30 — Phase 02 complete, transitioned to Phase 3
+Last activity: 2026-08-31 — Phase 03 execution started
 
-Progress: [██████████] 100%
+Progress: [█████████░] 86%
 
 ## Performance Metrics
 
@@ -70,6 +70,7 @@ Progress: [██████████] 100%
 | Phase 02 P03 | 55min | 3 tasks | 10 files |
 | Phase 02 P04 | 20min | 2 tasks | 0 files |
 | Phase 02 P05 | 25min | 2 tasks | 3 files |
+| Phase 03 P01 | 50min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -104,6 +105,9 @@ Recent decisions affecting current work:
 - [Phase ?]: 02-05: Installed gitleaks 8.30.1 via winget (official Gitleaks.Gitleaks package); pre-commit hook pipes staged diff into gitleaks stdin, soft-fails open when binary is absent from PATH (D-13)
 - [Phase ?]: 02-05: install-git-hooks.ps1 stages scripts/pre-commit before chmod (fixes first-run index-not-tracked failure) and scopes ErrorActionPreference around git calls (fixes stderr-as-terminating-error PowerShell quirk)
 - [Phase ?]: 02-05: gitleaks 8.30.1 default ruleset did not fire on AKIA-shaped/canonical AWS example keys, GitHub PAT prefix, or RSA private key PEM header on this machine; used a generic-api-key-shaped JSON probe (proven to match this repo's real rotated ClientSecret) to prove the blocking branch instead
+- [Phase ?]: 03-01: Reordered middleware pipeline (UseAuthentication before UseRateLimiter) so the per-user mutations rate-limit partitioner reads the authenticated claim instead of collapsing everyone into one anonymous bucket
+- [Phase ?]: 03-01: 'auth' policy (login/register) stays unpartitioned; only 'mutations' is per-user, since no JWT identity exists yet at the login/register boundary
+- [Phase ?]: 03-01: Live verification run on http://localhost:5127 (default dotnet run http profile) instead of the plan's https://localhost:7174 example; identical application logic exercised
 
 ### Pending Todos
 
@@ -124,6 +128,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-08-31T02:18:19.603Z
-Stopped at: Phase 3 context gathered
-Resume file: .planning/phases/03-auth-cors-rate-limiting-hardening/03-CONTEXT.md
+Last session: 2026-08-31T03:07:59.314Z
+Stopped at: Completed 03-01-PLAN.md
+Resume file: None

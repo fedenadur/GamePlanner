@@ -68,7 +68,7 @@ public class AuthService(GamePlannerDbContext db, IConfiguration config)
             issuer:   config["Jwt:Issuer"],
             audience: config["Jwt:Audience"],
             claims:   claims.ToArray(),
-            expires:  DateTime.UtcNow.AddDays(7),
+            expires:  DateTime.UtcNow.AddHours(24),
             signingCredentials: creds);
 
         return new JwtSecurityTokenHandler().WriteToken(token);

@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using System.Text;
 using System.Threading.RateLimiting;
 using GamePlanner.API.Context;
@@ -77,7 +78,38 @@ builder.Services.AddRateLimiter(options =>
         o.QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst;
         o.QueueLimit          = 0;
     });
+
+    options.AddPolicy<string>("mutations", httpContext =>
+    {
+        var key = httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "anonymous";
+        return RateLimitPartition.GetFixedWindowLimiter(key, _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit           = 100,
+            Window                 = TimeSpan.FromHours(1),
+            QueueProcessingOrder   = QueueProcessingOrder.OldestFirst,
+            QueueLimit             = 0
+        });
+    });
+
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    options.OnRejected = (context, _) =>
+    {
+        var logger = context.HttpContext.RequestServices
+            .GetRequiredService<ILoggerFactory>()
+            .CreateLogger("RateLimiting");
+
+        var userId = context.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? context.HttpContext.Connection.RemoteIpAddress?.ToString()
+            ?? "unknown";
+        var path = context.HttpContext.Request.Path;
+        var policyName = context.HttpContext.GetEndpoint()?
+            .Metadata.GetMetadata<EnableRateLimitingAttribute>()?.PolicyName;
+
+        logger.LogWarning("Rate limit rejected for {UserId} on {Path} by policy {PolicyName}", userId, path, policyName);
+
+        return ValueTask.CompletedTask;
+    };
 });
 
 builder.Services.AddCors(options =>
@@ -98,8 +130,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors("AllowAngular");
-app.UseRateLimiter();
 app.UseAuthentication();
+app.UseRateLimiter();
 app.UseAuthorization();
 app.MapControllers();
 

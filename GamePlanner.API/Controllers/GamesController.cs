@@ -4,6 +4,7 @@ using GamePlanner.API.Managers;
 using GamePlanner.API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace GamePlanner.API.Controllers;
 
@@ -84,6 +85,7 @@ public class GamesController(GameManager manager, IgdbService igdb) : Controller
     }
 
     [HttpDelete("{id}")]
+    [EnableRateLimiting("mutations")]
     public async Task<IActionResult> Delete(int id)
     {
         var userId = GetUserId();

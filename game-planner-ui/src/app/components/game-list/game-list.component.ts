@@ -129,6 +129,10 @@ export class GameListComponent implements OnInit {
   }
 
   deleteGame(id: number) {
-    this.gameService.deleteGame(id).subscribe({ next: () => this.loadGames() });
+    this.error = '';
+    this.gameService.deleteGame(id).subscribe({
+      next: () => this.loadGames(),
+      error: () => { this.error = 'Could not delete game. Please try again.'; }
+    });
   }
 }

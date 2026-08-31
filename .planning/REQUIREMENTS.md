@@ -12,7 +12,7 @@ Requirements for this hardening milestone. Each maps to roadmap phases.
 - [x] **CRED-01**: IGDB token request uses a form-encoded POST body instead of a URL query string
 - [x] **CRED-02**: Steam API key no longer appears in logs or unhandled exception output (query param usage stays, since Steam's Web API has no body-based auth option)
 - [x] **CRED-03**: Secrets removed from `appsettings.Development.json`, moved to `dotnet user-secrets` (dev) and environment variables (closer-to-deployed)
-- [ ] **CRED-04**: The IGDB/Steam credentials already exposed in committed config are rotated
+- [x] **CRED-04**: The IGDB/Steam credentials already exposed in committed config are rotated
 - [ ] **CRED-05**: Secret-scanning pre-commit hook (gitleaks or trufflehog) installed to prevent future leaks
 
 ### Auth & JWT Hardening (AUTH)
@@ -89,7 +89,7 @@ Explicitly excluded. Documented to prevent scope creep.
 | CRED-01 | Phase 2 | Complete |
 | CRED-02 | Phase 2 | Complete |
 | CRED-03 | Phase 2 | Complete |
-| CRED-04 | Phase 2 | Pending |
+| CRED-04 | Phase 2 | Complete |
 | CRED-05 | Phase 2 | Pending |
 | REL-03 | Phase 2 | Complete |
 | AUTH-01 | Phase 3 | Pending |

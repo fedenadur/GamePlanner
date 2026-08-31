@@ -50,6 +50,7 @@ builder.Services.AddHostedService<SteamImportWorker>();
 builder.Services.AddHostedService<GameHLTBSyncWorker>();
 builder.Services.AddHostedService<UpcomingGamesSyncWorker>();
 builder.Services.AddHostedService<SteamPlaytimeSyncWorker>();
+builder.Services.AddHostedService<SteamTokenCleanupWorker>();
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

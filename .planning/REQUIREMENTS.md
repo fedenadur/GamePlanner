@@ -29,7 +29,7 @@ Requirements for this hardening milestone. Each maps to roadmap phases.
 ### Reliability (REL)
 
 - [x] **REL-01**: `GameManager` writes wrap the Dapper stored-proc call and EF `SaveChangesAsync` in a single atomic transaction
-- [ ] **REL-02**: `SteamTokenStore` has periodic cleanup of expired entries via a background worker
+- [x] **REL-02**: `SteamTokenStore` has periodic cleanup of expired entries via a background worker
 - [x] **REL-03**: Broad silent `catch (Exception)` around external API calls replaced with explicit handling (no silent data loss)
 
 ### Audit Trail (AUDIT)
@@ -99,7 +99,7 @@ Explicitly excluded. Documented to prevent scope creep.
 | NET-03 | Phase 3 | Complete |
 | OBS-01 | Phase 3 | Complete |
 | REL-01 | Phase 4 | Complete |
-| REL-02 | Phase 4 | Pending |
+| REL-02 | Phase 4 | Complete |
 | AUDIT-01 | Phase 4 | Complete |
 | AUDIT-02 | Phase 4 | Complete |
 | TEST-01 | Phase 5 | Pending |

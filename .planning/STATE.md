@@ -4,16 +4,16 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 02
 current_phase_name: Credential & Secrets Hardening
-status: executing
-stopped_at: Completed 02-04-PLAN.md
-last_updated: "2026-08-31T01:29:37.954Z"
+status: verifying
+stopped_at: Completed 02-05-PLAN.md
+last_updated: "2026-08-31T01:43:05.245Z"
 last_activity: 2026-08-30
 last_activity_desc: Phase 02 execution started
 progress:
   total_phases: 2
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 11
-  completed_plans: 10
+  completed_plans: 11
 ---
 
 # Project State
@@ -29,10 +29,10 @@ See: .planning/PROJECT.md (updated 2026-08-28)
 
 Phase: 02 (Credential & Secrets Hardening) — EXECUTING
 Plan: 5 of 5
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-08-30 — Phase 02 execution started
 
-Progress: [█████████░] 91%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -68,6 +68,7 @@ Progress: [█████████░] 91%
 | Phase 02 P02 | 12min | 2 tasks | 3 files |
 | Phase 02 P03 | 55min | 3 tasks | 10 files |
 | Phase 02 P04 | 20min | 2 tasks | 0 files |
+| Phase 02 P05 | 25min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -99,6 +100,9 @@ Recent decisions affecting current work:
 - [Phase ?]: 02-03: All 8 D-14 catch sites raise severity to LogError only for whole-batch/whole-user data loss (screenshot/artwork fetch, Steam per-user sync); per-item retryable failures stay LogWarning, matching D-15
 - [Phase ?]: 02-03: git apply -3 staged the restored deferred-todo GameImageManager.cs WIP into the index on a clean 3-way merge (no conflict); corrected with git reset to keep it unstaged per the plan's working-tree-hazard convention
 - [Phase ?]: 02-04: Rotated IGDB client secret/ID and Steam API key at providers (Task 1 human-action), generated a fresh 48-byte Jwt:Secret, and live-proved old values dead (Twitch 400, Steam 403) and new values working (Twitch 200, Steam 200, login+Authorize 200); no pre-rotation JWT was available so a locally-forged old-secret token was used to prove 401 rejection instead
+- [Phase ?]: 02-05: Installed gitleaks 8.30.1 via winget (official Gitleaks.Gitleaks package); pre-commit hook pipes staged diff into gitleaks stdin, soft-fails open when binary is absent from PATH (D-13)
+- [Phase ?]: 02-05: install-git-hooks.ps1 stages scripts/pre-commit before chmod (fixes first-run index-not-tracked failure) and scopes ErrorActionPreference around git calls (fixes stderr-as-terminating-error PowerShell quirk)
+- [Phase ?]: 02-05: gitleaks 8.30.1 default ruleset did not fire on AKIA-shaped/canonical AWS example keys, GitHub PAT prefix, or RSA private key PEM header on this machine; used a generic-api-key-shaped JSON probe (proven to match this repo's real rotated ClientSecret) to prove the blocking branch instead
 
 ### Pending Todos
 
@@ -119,6 +123,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-08-31T01:29:37.937Z
-Stopped at: Completed 02-04-PLAN.md
+Last session: 2026-08-31T01:43:05.227Z
+Stopped at: Completed 02-05-PLAN.md
 Resume file: None

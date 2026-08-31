@@ -65,7 +65,9 @@ builder.Services
             ValidIssuer              = jwt["Issuer"],
             ValidAudience            = jwt["Audience"],
             IssuerSigningKey         = new SymmetricSecurityKey(
-                                           Encoding.UTF8.GetBytes(jwt["Secret"]!))
+                                           Encoding.UTF8.GetBytes(jwt["Secret"]!)),
+            RequireExpirationTime    = true,
+            ValidAlgorithms          = [SecurityAlgorithms.HmacSha256]
         };
     });
 
@@ -112,12 +114,16 @@ builder.Services.AddRateLimiter(options =>
     };
 });
 
+var frontendUrl = builder.Configuration["App:FrontendUrl"];
+if (string.IsNullOrWhiteSpace(frontendUrl))
+    throw new InvalidOperationException("Missing required configuration key 'App:FrontendUrl'.");
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngular", policy =>
-        policy.WithOrigins("http://localhost:4200")
-              .AllowAnyHeader()
-              .AllowAnyMethod());
+        policy.WithOrigins(frontendUrl)
+              .WithHeaders("Authorization", "Content-Type")
+              .WithMethods("GET", "POST", "PUT", "DELETE"));
 });
 
 var app = builder.Build();

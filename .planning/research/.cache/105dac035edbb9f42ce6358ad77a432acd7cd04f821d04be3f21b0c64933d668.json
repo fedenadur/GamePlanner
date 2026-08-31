@@ -1,0 +1,1 @@
+{"content":"Use FormUrlEncodedContent with a Dictionary<string,string> (client_id, client_secret, grant_type) as the HttpContent for client.PostAsync(tokenUrl, content) in .NET 8 HttpClient OAuth2 client_credentials flows.","source":"web","provider":"websearch","confidence":"MEDIUM","fetched_at":"2026-08-30T02:20:16.192Z","ttl":86400000,"kind":"web"}

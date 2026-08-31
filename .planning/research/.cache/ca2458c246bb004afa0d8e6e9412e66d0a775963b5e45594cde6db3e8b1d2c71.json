@@ -1,0 +1,1 @@
+{"content":"dotnet user-secrets init creates a UserSecretsId in the .csproj; dotnet user-secrets set \"Section:Key\" \"value\" sets nested keys using colon notation, auto-picked up by WebApplication.CreateBuilder when environment is Development.","source":"web","provider":"websearch","confidence":"MEDIUM","fetched_at":"2026-08-30T02:20:17.997Z","ttl":86400000,"kind":"docs"}

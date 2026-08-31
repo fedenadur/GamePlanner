@@ -4,16 +4,16 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 03
 current_phase_name: auth-cors-rate-limiting-hardening
-status: executing
-stopped_at: Completed 03-02-PLAN.md
-last_updated: "2026-08-31T12:06:09.349Z"
+status: verifying
+stopped_at: Completed 03-03-PLAN.md
+last_updated: "2026-08-31T12:11:16.628Z"
 last_activity: 2026-08-31
 last_activity_desc: Phase 03 execution started
 progress:
   total_phases: 3
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 14
-  completed_plans: 13
+  completed_plans: 14
 ---
 
 # Project State
@@ -29,10 +29,10 @@ See: .planning/PROJECT.md (updated 2026-08-28)
 
 Phase: 03 (auth-cors-rate-limiting-hardening) — EXECUTING
 Plan: 3 of 3
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-08-31 — Phase 03 execution started
 
-Progress: [█████████░] 93%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -72,6 +72,7 @@ Progress: [█████████░] 93%
 | Phase 02 P05 | 25min | 2 tasks | 3 files |
 | Phase 03 P01 | 50min | 2 tasks | 3 files |
 | Phase 03 P02 | 25min | 2 tasks | 5 files |
+| Phase 03 P03 | 5min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -111,6 +112,8 @@ Recent decisions affecting current work:
 - [Phase ?]: 03-01: Live verification run on http://localhost:5127 (default dotnet run http profile) instead of the plan's https://localhost:7174 example; identical application logic exercised
 - [Phase ?]: 03-02: Fixed cross-user data leak in both SessionManager and SessionPlannerManager, not just the one named in CONTEXT/RESEARCH/PATTERNS -- the folded todo's own reproduction traced to SessionPlannerManager via POST /api/session/plan
 - [Phase ?]: 03-02: GetUserId() copied verbatim into SessionController, matching the existing byte-identical duplication already present across GamesController/GameJournalController
+- [Phase ?]: 03-03: Two distinct failed-login log reasons stay operator-only -- AuthController.Login still returns one indistinguishable Unauthorized response for both branches, preventing a user-enumeration oracle
+- [Phase ?]: 03-03: CorsRejectionLoggingMiddleware is purely observational -- registered before UseCors, always calls next(context), never sets status/headers; implements RESEARCH.md D-16's primary middleware pattern, not the ICorsService decorator fallback
 
 ### Pending Todos
 
@@ -131,6 +134,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-08-31T12:06:09.327Z
-Stopped at: Completed 03-02-PLAN.md
+Last session: 2026-08-31T12:11:16.606Z
+Stopped at: Completed 03-03-PLAN.md
 Resume file: None

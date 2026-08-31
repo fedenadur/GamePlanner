@@ -39,7 +39,7 @@ Requirements for this hardening milestone. Each maps to roadmap phases.
 
 ### Observability (OBS)
 
-- [ ] **OBS-01**: Security-relevant events logged centrally (failed logins, CORS rejections, rate-limit rejections)
+- [x] **OBS-01**: Security-relevant events logged centrally (failed logins, CORS rejections, rate-limit rejections)
 
 ### Dependency Upgrade (DEP)
 
@@ -97,7 +97,7 @@ Explicitly excluded. Documented to prevent scope creep.
 | NET-01 | Phase 3 | Complete |
 | NET-02 | Phase 3 | Complete |
 | NET-03 | Phase 3 | Complete |
-| OBS-01 | Phase 3 | Pending |
+| OBS-01 | Phase 3 | Complete |
 | REL-01 | Phase 4 | Pending |
 | REL-02 | Phase 4 | Pending |
 | AUDIT-01 | Phase 4 | Pending |

@@ -16,6 +16,19 @@ cd game-planner-ui && npm start
 # New migrations: add the next numbered file (e.g. 27_...sql) and apply manually
 ```
 
+## Local setup (one-time)
+
+```bash
+# Install the secret-scanning pre-commit hook (warns and allows the commit if gitleaks is missing)
+winget install --id Gitleaks.Gitleaks --exact
+powershell -File scripts/install-git-hooks.ps1
+```
+
+Secrets (`IGDB:ClientId`, `IGDB:ClientSecret`, `Steam:ApiKey`, `Jwt:Secret`) are not in `appsettings.Development.json`.
+
+- **Development:** set with `dotnet user-secrets set` from `GamePlanner.API/` — use `GamePlanner.API/appsettings.Development.json.example` as the key reference.
+- **Other environments:** set via environment variables `IGDB__ClientId`, `IGDB__ClientSecret`, `Steam__ApiKey`, `Jwt__Secret`.
+
 ## Behavior Rules
 
 - Be concise. No restating the problem, no trailing summaries.

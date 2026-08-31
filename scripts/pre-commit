@@ -1,0 +1,15 @@
+#!/bin/sh
+# .git/hooks/pre-commit
+# Tracked source: scripts/pre-commit — install with scripts/install-git-hooks.ps1
+if ! command -v gitleaks >/dev/null 2>&1; then
+    echo "gitleaks not found on PATH — skipping secret scan (install: winget install --id Gitleaks.Gitleaks --exact)"
+    exit 0
+fi
+
+if git diff --cached | gitleaks stdin; then
+    exit 0
+else
+    echo "gitleaks detected a potential secret in staged changes. Commit blocked."
+    echo "Review the findings above, remove the secret, and re-stage before committing."
+    exit 1
+fi

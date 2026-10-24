@@ -3,10 +3,16 @@ using System.Net.Http.Json;
 using System.Security.Claims;
 using System.Text.Json;
 using Dapper;
+using GamePlanner.API.Context;
 using GamePlanner.API.Entities;
 using GamePlanner.API.Services;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Primitives;
 
 namespace GamePlanner.Tests;
 
@@ -125,5 +131,265 @@ public class SteamAuthServiceTests(ApiFactory factory) : IClassFixture<ApiFactor
         var jwt = new JwtSecurityTokenHandler().ReadJwtToken(CreateAuthService().GenerateToken(user));
 
         Assert.Contains(jwt.Claims, c => (c.Type == ClaimTypes.Email || c.Type == "email") && c.Value == "someone@example.test");
+    }
+
+    // ── Service-level rejection matrix (direct construction, no API host) ───
+
+    private const string ValidId = "76561190000000001";
+
+    private sealed record Rig(SteamAuthService Service, RecordingHandler Handler, CapturingLoggerProvider Logs, GamePlannerDbContext Db);
+
+    private static Rig CreateRig(Func<HttpRequestMessage, HttpResponseMessage>? responder = null)
+    {
+        var handler = new RecordingHandler();
+        if (responder is not null) handler.Responder = responder;
+
+        var logs = new CapturingLoggerProvider();
+        var loggerFactory = LoggerFactory.Create(b => b.AddProvider(logs));
+
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Jwt:Secret"] = ApiFactory.Secret,
+                ["Jwt:Issuer"] = ApiFactory.Issuer,
+                ["Jwt:Audience"] = ApiFactory.Audience,
+                ["Steam:ApiKey"] = ApiFactory.TestSteamKey,
+            })
+            .Build();
+
+        var db = new GamePlannerDbContext(new DbContextOptionsBuilder<GamePlannerDbContext>().UseSqlServer(ConnectionString).Options);
+        var http = new StubHttpClientFactory(handler);
+        var auth = new AuthService(db, config, NullLogger<AuthService>.Instance);
+        var steam = new SteamService(http, config, NullLogger<SteamService>.Instance);
+
+        return new Rig(new SteamAuthService(db, auth, steam, http, loggerFactory.CreateLogger<SteamAuthService>()), handler, logs, db);
+    }
+
+    private static QueryCollection ToQuery(Dictionary<string, string> fields) =>
+        new(fields.ToDictionary(kv => kv.Key, kv => new StringValues(kv.Value)));
+
+    private static HttpResponseMessage SteamReply(string body) =>
+        new(System.Net.HttpStatusCode.OK) { Content = new StringContent(body) };
+
+    private static async Task AssertRejectedLocally(Dictionary<string, string> fields)
+    {
+        var rig = CreateRig(_ => SteamReply(ValidSteamReply));
+
+        var result = await rig.Service.HandleCallbackAsync(ToQuery(fields), CallbackUrl);
+
+        Assert.Null(result);
+        Assert.Empty(rig.Handler.Requests);
+        Assert.Single(rig.Logs.Entries, e => e.Level == LogLevel.Warning && e.Text.Contains("Steam callback rejected"));
+    }
+
+    [Fact]
+    public async Task Callback_SteamSaysInvalid_IsRejected_AfterOneVerificationRequestToSteam()
+    {
+        var rig = CreateRig(_ => SteamReply("ns:http://specs.openid.net/auth/2.0\nis_valid:false\n"));
+
+        var result = await rig.Service.HandleCallbackAsync(ToQuery(ValidQuery(ValidId, CallbackUrl)), CallbackUrl);
+
+        Assert.Null(result);
+        var sent = Assert.Single(rig.Handler.Requests);
+        Assert.Equal("https://steamcommunity.com/openid/login", sent.Uri.ToString());
+        Assert.Contains("openid.mode=check_authentication", sent.Body);
+    }
+
+    [Fact]
+    public async Task Callback_VerificationRequestGoesToFixedEndpoint_WhateverTheCallerSupplies()
+    {
+        // op_endpoint and mode are checked locally, so an attacker-supplied endpoint never gets a request
+        var fields = ValidQuery(ValidId, CallbackUrl);
+        fields["openid.op_endpoint"] = "https://evil.example/openid/login";
+        var rig = CreateRig(_ => SteamReply(ValidSteamReply));
+
+        var result = await rig.Service.HandleCallbackAsync(ToQuery(fields), CallbackUrl);
+
+        Assert.Null(result);
+        Assert.Empty(rig.Handler.Requests);
+    }
+
+    [Fact]
+    public async Task Callback_SteamAnswers500_IsRefused()
+    {
+        var rig = CreateRig(_ => new HttpResponseMessage(System.Net.HttpStatusCode.InternalServerError));
+
+        var result = await rig.Service.HandleCallbackAsync(ToQuery(ValidQuery(ValidId, CallbackUrl)), CallbackUrl);
+
+        Assert.Null(result);
+        Assert.Single(rig.Handler.Requests);
+    }
+
+    [Fact]
+    public async Task Callback_SteamCallThrows_IsRefused_NoExceptionEscapes()
+    {
+        var rig = CreateRig(_ => throw new HttpRequestException("simulated network failure"));
+
+        var result = await rig.Service.HandleCallbackAsync(ToQuery(ValidQuery(ValidId, CallbackUrl)), CallbackUrl);
+
+        Assert.Null(result);
+        Assert.Contains(rig.Logs.Entries, e => e.Level == LogLevel.Warning && e.Text.Contains("refusing login"));
+    }
+
+    [Theory]
+    [InlineData("ns:x is_valid:true")]
+    [InlineData("is_valid:true-not-really")]
+    [InlineData("is_valid:false\nnote is_valid:true")]
+    [InlineData("")]
+    public async Task Callback_IsValidTrueOnlyInsideAnotherLine_IsRefused(string body)
+    {
+        // Fake id + cleanup: if this rule regressed, the assertion would be accepted and a user row created
+        var steamId = FakeSteamId();
+        var rig = CreateRig(_ => SteamReply(body));
+
+        try
+        {
+            var result = await rig.Service.HandleCallbackAsync(ToQuery(ValidQuery(steamId, CallbackUrl)), CallbackUrl);
+
+            Assert.Null(result);
+        }
+        finally
+        {
+            await DeleteUserBySteamIdAsync(steamId);
+        }
+    }
+
+    [Fact]
+    public async Task Callback_ForeignReturnTo_IsRejected_WithoutContactingSteam() =>
+        await AssertRejectedLocally(ValidQuery(ValidId, "https://evil.example/api/auth/steam/callback"));
+
+    [Fact]
+    public async Task Callback_ReturnToDifferingOnlyInCase_IsRejected() =>
+        await AssertRejectedLocally(ValidQuery(ValidId, CallbackUrl.ToUpperInvariant()));
+
+    [Fact]
+    public async Task Callback_ModeCancel_IsRejected()
+    {
+        var fields = ValidQuery(ValidId, CallbackUrl);
+        fields["openid.mode"] = "cancel";
+        await AssertRejectedLocally(fields);
+    }
+
+    [Fact]
+    public async Task Callback_WrongNamespace_IsRejected()
+    {
+        var fields = ValidQuery(ValidId, CallbackUrl);
+        fields["openid.ns"] = "http://specs.openid.net/auth/1.1";
+        await AssertRejectedLocally(fields);
+    }
+
+    [Fact]
+    public async Task Callback_ForeignOpEndpoint_IsRejected()
+    {
+        var fields = ValidQuery(ValidId, CallbackUrl);
+        fields["openid.op_endpoint"] = "https://evil.example/openid/login";
+        await AssertRejectedLocally(fields);
+    }
+
+    [Fact]
+    public async Task Callback_SignedListMissingReturnTo_IsRejected_AndLogsTheReceivedList()
+    {
+        var fields = ValidQuery(ValidId, CallbackUrl);
+        fields["openid.signed"] = "signed,op_endpoint,claimed_id,identity,response_nonce,assoc_handle";
+        var rig = CreateRig(_ => SteamReply(ValidSteamReply));
+
+        var result = await rig.Service.HandleCallbackAsync(ToQuery(fields), CallbackUrl);
+
+        Assert.Null(result);
+        Assert.Empty(rig.Handler.Requests);
+        Assert.Contains(rig.Logs.Entries, e => e.Level == LogLevel.Warning
+            && e.Text.Contains("signed,op_endpoint,claimed_id,identity,response_nonce,assoc_handle"));
+    }
+
+    [Fact]
+    public async Task Callback_ForeignClaimedIdPrefix_IsRejected()
+    {
+        var fields = ValidQuery(ValidId, CallbackUrl);
+        fields["openid.claimed_id"] = $"http://evil.example/openid/id/{ValidId}";
+        await AssertRejectedLocally(fields);
+    }
+
+    [Theory]
+    [InlineData("7656119800000000")]      // 16 digits
+    [InlineData("765611980000000012")]    // 18 digits
+    [InlineData("7656119800000000x")]     // 17 chars, non-digit
+    [InlineData("76561198000000001/extra")] // trailing path segment
+    public async Task Callback_MalformedSteamId_IsRejected(string steamId)
+    {
+        var fields = ValidQuery(ValidId, CallbackUrl);
+        fields["openid.claimed_id"] = $"https://steamcommunity.com/openid/id/{steamId}";
+        await AssertRejectedLocally(fields);
+    }
+
+    [Fact]
+    public async Task Callback_RejectionLogs_NeverContainSigAssocHandleOrNonce()
+    {
+        var fields = ValidQuery(ValidId, "https://evil.example/cb");
+        var rig = CreateRig(_ => SteamReply(ValidSteamReply));
+        var failing = CreateRig(_ => throw new HttpRequestException("simulated"));
+
+        await rig.Service.HandleCallbackAsync(ToQuery(fields), CallbackUrl);
+        await failing.Service.HandleCallbackAsync(ToQuery(ValidQuery(ValidId, CallbackUrl)), CallbackUrl);
+
+        foreach (var entry in rig.Logs.Entries.Concat(failing.Logs.Entries))
+        {
+            Assert.DoesNotContain(fields["openid.sig"], entry.Text);
+            Assert.DoesNotContain(fields["openid.assoc_handle"], entry.Text);
+            Assert.DoesNotContain(fields["openid.response_nonce"], entry.Text);
+        }
+    }
+
+    [Fact]
+    public async Task Callback_PlayerSummaryThrows_StillCreatesUserAndIssuesToken()
+    {
+        var steamId = FakeSteamId();
+        var rig = CreateRig(req => req.RequestUri!.Host switch
+        {
+            "steamcommunity.com" => SteamReply(ValidSteamReply),
+            _ => throw new HttpRequestException("simulated Steam Web API outage"),
+        });
+
+        try
+        {
+            var result = await rig.Service.HandleCallbackAsync(ToQuery(ValidQuery(steamId, CallbackUrl)), CallbackUrl);
+
+            Assert.NotNull(result);
+            Assert.False(string.IsNullOrEmpty(result!.Token));
+            var user = await rig.Db.Users.AsNoTracking().SingleAsync(u => u.SteamId == steamId);
+            Assert.Null(user.DisplayName);
+            Assert.Contains(rig.Logs.Entries, e => e.Level == LogLevel.Warning && e.Text.Contains("continuing without profile data"));
+        }
+        finally
+        {
+            await DeleteUserBySteamIdAsync(steamId);
+        }
+    }
+
+    // ── Controller-level failure redirects ──────────────────────────────────
+
+    [Fact]
+    public async Task SteamCallback_SteamSaysInvalid_RedirectsToSteamFailed()
+    {
+        factory.Http.Reset();
+        factory.Http.Responder = _ => SteamReply("ns:http://specs.openid.net/auth/2.0\nis_valid:false\n");
+
+        var response = await factory.CreateApiClient()
+            .GetAsync("/api/auth/steam/callback?" + ToQueryString(ValidQuery(ValidId, CallbackUrl)));
+
+        Assert.Equal(System.Net.HttpStatusCode.Redirect, response.StatusCode);
+        Assert.EndsWith("/login?error=steam_failed", response.Headers.Location!.ToString());
+    }
+
+    [Fact]
+    public async Task SteamCallback_SteamUnreachable_RedirectsToSteamFailed_NotA500()
+    {
+        factory.Http.Reset();
+        factory.Http.Responder = _ => throw new HttpRequestException("simulated network failure");
+
+        var response = await factory.CreateApiClient()
+            .GetAsync("/api/auth/steam/callback?" + ToQueryString(ValidQuery(ValidId, CallbackUrl)));
+
+        Assert.Equal(System.Net.HttpStatusCode.Redirect, response.StatusCode);
+        Assert.EndsWith("/login?error=steam_failed", response.Headers.Location!.ToString());
     }
 }

@@ -100,7 +100,15 @@ Deprecated (`dotnet list GamePlanner.sln package --deprecated`): `GamePlanner.AP
 
 ## e2e package
 
-Appended by 05-06.
+Added by 05-06 (2026-10-24). The UAT runner lives in an isolated `e2e/` package, so its dependency tree is audited separately from `game-planner-ui`.
+
+Command: `npx -y npm@11.21.1 audit --json` in `e2e/`
+
+| Package | Version | Pin | critical | high | moderate | low | total |
+|---------|---------|-----|---------:|-----:|---------:|----:|------:|
+| `@playwright/test` (dev) | 1.64.1 | exact | 0 | 0 | 0 | 0 | 0 |
+
+3 packages in the tree (`@playwright/test`, `playwright`, `playwright-core`), 0 vulnerabilities. Package legitimacy was approved by the user at the 05-06 Task 1 gate (publisher Microsoft, repository github.com/microsoft/playwright, not deprecated, no postinstall script). No browser download: the suite runs on system Chrome (`channel: 'chrome'`).
 
 ## Verdict
 

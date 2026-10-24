@@ -156,6 +156,24 @@ test.describe.serial('GamePlanner UAT', () => {
       await expect(page.locator('.game-tile', { hasText: uatName })).toHaveCount(0);
     });
 
+    test('session planner returns only games from the UAT library', async ({ request }) => {
+      const a = api(request);
+      const ownRes = await a.get('/api/games');
+      expect(ownRes.status()).toBe(200);
+      const own = new Set(((await ownRes.json()) as { id: number }[]).map(g => g.id));
+      expect(own.has(gameId)).toBeTruthy();
+
+      const res = await request.post(`${API}/api/session/plan`, {
+        headers: bearer(),
+        data: { playedStatus: 'all', mood: '', duration: '', perspective: '', gameModes: [], gameLength: '' },
+      });
+      expect(res.status()).toBe(200);
+      const plan = (await res.json()) as { games: { id: number }[] };
+      for (const g of plan.games) {
+        expect(own.has(g.id), `planner returned game ${g.id} outside the UAT library`).toBeTruthy();
+      }
+    });
+
     test('delete the game from its card; the API then returns 404', async ({ page, request }) => {
       await filterGames(page, uatName);
       const card = page.locator('.game-card', { hasText: uatName });
@@ -176,6 +194,70 @@ test.describe.serial('GamePlanner UAT', () => {
       await page.getByPlaceholder('Search by title...').fill(uatName);
       await expect(page.locator('.game-card', { hasText: uatName })).toHaveCount(0);
       expect((await a.get(`/api/games/${gameId}`)).status()).toBe(404);
+    });
+  });
+
+  test.describe('workers', () => {
+    interface WorkerRow { name: string; status: string; lastRunAt: string | null; lastError: string | null }
+
+    async function worker(request: APIRequestContext, name: string): Promise<WorkerRow> {
+      const res = await request.get(`${API}/api/worker`, { headers: bearer() });
+      expect(res.status()).toBe(200);
+      const row = ((await res.json()) as WorkerRow[]).find(w => w.name === name);
+      expect(row, `worker ${name} missing from GET /api/worker`).toBeTruthy();
+      return row!;
+    }
+
+    // The API serialises LastRunAt as UTC without an offset.
+    const asUtc = (s: string): number => Date.parse(/[zZ]|[+-]dd:dd$/.test(s) ? s : `${s}Z`);
+
+    for (const name of ['GameSyncWorker', 'GameImageSyncWorker', 'GameHLTBSyncWorker']) {
+      test(`${name}: Run now completes without error`, async ({ page, request }) => {
+        test.setTimeout(16 * 60_000);
+        const requested: string[] = [];
+        page.on('request', r => requested.push(r.url()));
+
+        await page.goto('/workers');
+        await expect(page.getByRole('heading', { name: 'Workers' })).toBeVisible();
+        const card = page.locator('.worker-card').filter({
+          has: page.locator('.worker-name', { hasText: new RegExp(`^${name}$`) }),
+        });
+        await expect(card).toBeVisible();
+
+        await expect.poll(async () => (await worker(request, name)).status, {
+          timeout: 15 * 60_000, intervals: [2_000],
+        }).not.toBe('Running');
+        const before = (await worker(request, name)).lastRunAt;
+
+        await card.getByRole('button', { name: /Run now/ }).click();
+
+        await expect.poll(async () => {
+          const w = await worker(request, name);
+          return w.lastRunAt !== before && w.status !== 'Running';
+        }, { timeout: 15 * 60_000, intervals: [2_000] }).toBe(true);
+
+        const after = await worker(request, name);
+        expect(after.status).toBe('Completed');
+        expect(after.lastError).toBeNull();
+        expect(requested.filter(u => u.includes('force=true'))).toEqual([]);
+      });
+    }
+
+    // SteamPlaytimeSyncWorker has no run-now trigger; the user accepted the API restart as its
+    // trigger (recorded D-04 deviation, decision of 2026-10-24).
+    test('SteamPlaytimeSyncWorker restart-initiated run (accepted D-04 deviation, 05-06 Task 2)', async ({ request }) => {
+      await expect.poll(async () => (await worker(request, 'SteamPlaytimeSyncWorker')).status, {
+        timeout: 5 * 60_000, intervals: [2_000],
+      }).not.toBe('Running');
+
+      const w = await worker(request, 'SteamPlaytimeSyncWorker');
+      expect(w.status).toBe('Completed');
+      expect(w.lastError).toBeNull();
+      expect(w.lastRunAt).not.toBeNull();
+      const floor = process.env.UAT_API_STARTED_AT
+        ? Date.parse(process.env.UAT_API_STARTED_AT)
+        : Date.now() - 24 * 60 * 60 * 1000;
+      expect(asUtc(w.lastRunAt!)).toBeGreaterThanOrEqual(floor);
     });
   });
 });

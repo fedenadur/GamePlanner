@@ -221,6 +221,42 @@ public class GameManagerAtomicityTests
     }
 
     [Fact]
+    public async Task CreateFromIgdbAsync_RollsBackInsertedGame_WhenSaveChangesThrows()
+    {
+        var name = $"{NamePrefix}{Guid.NewGuid():N}";
+        var igdbId = 9_000_000_000L + Random.Shared.Next(1, 1_000_000);
+
+        await using var db = CreateContext();
+        var userId = await db.Users.Select(u => u.Id).FirstAsync();
+        var manager = CreateManager(db);
+
+        try
+        {
+            // Over-length genre fires the truncation DbUpdateException after sp_InsertGame ran
+            // inside the shared transaction; the inserted Games row must roll back with it.
+            var overLengthGenre = new string('x', 150);
+
+            await Assert.ThrowsAsync<DbUpdateException>(() => manager.CreateFromIgdbAsync(
+                new CreateGameFromIgdbRequest
+                {
+                    IgdbId = igdbId,
+                    Name = name,
+                    EstimatedMinutes = 20,
+                    Genres = [overLengthGenre]
+                },
+                userId));
+
+            await using var freshDb = CreateContext();
+            var survived = await freshDb.Games.AnyAsync(g => g.Name == name);
+            Assert.False(survived);
+        }
+        finally
+        {
+            await CleanupByNamePrefixAsync(name);
+        }
+    }
+
+    [Fact]
     public async Task CreateFromIgdbAsync_ReturnsExistingId_WhenIgdbIdAlreadyLinkedToUser()
     {
         var name = $"{NamePrefix}{Guid.NewGuid():N}";

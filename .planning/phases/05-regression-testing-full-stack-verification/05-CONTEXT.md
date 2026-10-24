@@ -30,6 +30,7 @@ Two items were explicitly folded in at user request (see Folded Todos): the Half
 
 ### Full-stack UAT
 - **D-04:** UAT is a **Playwright script committed to the repo**, re-runnable on demand, covering: login, game CRUD (add via IGDB search, edit, delete), session tracking / now-playing, journal, and triggering the sync workers (IGDB, images, HLTB, Steam playtime) with results checked on `/workers`. — **Reversibility:** costly — adds a new dev dependency (`@playwright/test`) and test folder that later tooling/CI would build on.
+  - **Approved deviation (2026-10-24, plan-phase):** the user accepted that "edit" runs through `PUT /api/games/{id}` with the test account's token, with the new name checked in the UI, because the app has no game-edit screen and building one would be out-of-scope feature work (recorded in 05-06).
 - **D-05:** The script logs in as the dedicated test account `uat-test@gameplanner.local` (UserId 17), never the owner's account (UserId 2). Credentials must not be committed — read from environment variables / local config.
 - **D-06:** Steps that need the owner's real Steam account (Steam login, Steam library import) are **done manually by the user**; Claude verifies the outcome via SQL and API logs. Everything else is automated.
 

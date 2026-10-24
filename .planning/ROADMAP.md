@@ -161,7 +161,7 @@ Plans:
   2. A full manual UAT pass through every major user workflow (login, backlog CRUD, session tracking, journal, IGDB/Steam/HLTB sync) succeeds with the upgraded Angular client and hardened backend running together
   3. A dependency vulnerability scan (`npm audit` / `dotnet list package --vulnerable`) shows no known-EOL or high-severity vulnerable packages remaining from the pre-hardening baseline
 
-**Plans:** 5/6 plans executed
+**Plans:** 6/6 plans executed
 
 Plans:
 **Wave 1**
@@ -177,7 +177,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 05-06-PLAN.md — Re-runnable Playwright full-stack UAT as the test account + owner-only Steam human checks (TEST-02; D-04, D-05, D-06)
+- [x] 05-06-PLAN.md — Re-runnable Playwright full-stack UAT as the test account + owner-only Steam human checks (TEST-02; D-04, D-05, D-06)
 
 ## Progress
 
@@ -190,4 +190,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 2. Credential & Secrets Hardening | 5/5 | Complete    | 2026-08-30 |
 | 3. Auth, CORS & Rate Limiting Hardening | 3/3 | Complete    | 2026-08-31 |
 | 4. Data Layer Reliability & Audit Trail | 3/3 | Complete    | 2026-10-24 |
-| 5. Regression Testing & Full-Stack Verification | 5/6 | In Progress|  |
+| 5. Regression Testing & Full-Stack Verification | 6/6 | In Progress|  |

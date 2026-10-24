@@ -4,16 +4,16 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 05
 current_phase_name: regression-testing-full-stack-verification
-status: executing
-stopped_at: Completed 05-05-PLAN.md
-last_updated: "2026-10-24T22:01:35.687Z"
+status: verifying
+stopped_at: Completed 05-06-PLAN.md
+last_updated: "2026-10-24T22:18:15.740Z"
 last_activity: 2026-10-24
 last_activity_desc: Phase 05 execution started
 progress:
   total_phases: 5
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 23
-  completed_plans: 22
+  completed_plans: 23
 ---
 
 # Project State
@@ -29,10 +29,10 @@ See: .planning/PROJECT.md (updated 2026-10-24)
 
 Phase: 05 (regression-testing-full-stack-verification) — EXECUTING
 Plan: 6 of 6
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-10-24 — Phase 05 execution started
 
-Progress: [██████████] 96% (4/5 phases)
+Progress: [██████████] 100% (4/5 phases)
 
 ## Performance Metrics
 
@@ -83,6 +83,7 @@ Progress: [██████████] 96% (4/5 phases)
 | Phase 05 P03 | ~25min | 2 tasks | 3 files |
 | Phase 05 P04 | ~35min | 2 tasks | 5 files |
 | Phase 05 P05 | ~30min | 3 tasks | 6 files |
+| Phase 05 P06 | ~20min | 5 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -140,6 +141,7 @@ Recent decisions affecting current work:
 - [Phase ?]: 05-03: Steam key log leak closed by config only (System.Net.Http.HttpClient=Warning); proven red-then-green through the real IHttpClientFactory pipeline
 - [Phase ?]: 05-04: Steam callback fails closed and verifies return_to/mode/ns/op_endpoint/signed fields; UQ_Users_Email allows only one email-less user (logged as todo, not fixed)
 - [Phase ?]: 05-05: Residual vite 8.3.0 high accepted (pinned exactly by @angular/build@22.2.4; angular.json uses only webpack-based builders); Angular 22.2.3 bump cleared 5 critical and 13 high npm findings in range; JwtBearer 8.0.32 option recorded, not applied per D-07
+- [Phase ?]: 05-06: Steam playtime worker verified via API-restart run (accept-restart, recorded D-04 deviation); game edit via PUT (approved D-04 deviation)
 
 ### Pending Todos
 
@@ -159,6 +161,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-10-24T22:01:35.661Z
-Stopped at: Completed 05-05-PLAN.md
+Last session: 2026-10-24T22:18:15.714Z
+Stopped at: Completed 05-06-PLAN.md
 Resume file: None

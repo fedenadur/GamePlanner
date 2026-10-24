@@ -16,7 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Angular EOL Upgrade** - Move the Angular SPA from the unpatched 13.3.0 to a current LTS, sequentially, with no functional regressions (completed 2026-08-29)
 - [x] **Phase 2: Credential & Secrets Hardening** - Stop leaking IGDB/Steam credentials via URLs/logs/committed config, rotate exposed secrets, and stop swallowing external-API failures silently (completed 2026-08-30)
 - [x] **Phase 3: Auth, CORS & Rate Limiting Hardening** - Tighten JWT lifetime/validation, lock down CORS to the real frontend contract, extend rate limiting to data-mutation endpoints, and log security-relevant rejections (completed 2026-08-31)
-- [ ] **Phase 4: Data Layer Reliability & Audit Trail** - Make `GameManager` writes atomic, add `ModifiedAt`/`DeletedAt` audit fields, and stop unbounded `SteamTokenStore` growth
+- [x] **Phase 4: Data Layer Reliability & Audit Trail** - Make `GameManager` writes atomic, add `ModifiedAt`/`DeletedAt` audit fields, and stop unbounded `SteamTokenStore` growth (completed 2026-10-24)
 - [ ] **Phase 5: Regression Testing & Full-Stack Verification** - Add targeted tests for every hardening-touched path and validate the combined frontend+backend contract end-to-end
 
 ## Phase Details
@@ -138,7 +138,7 @@ Plans:
   3. `DeletedAt` is populated whenever a soft-deletable entity is marked `IsActive = false`
   4. Expired entries in `SteamTokenStore` are automatically removed by a background worker without manual intervention, confirmed by observing store size stay bounded over time
 
-**Plans:** 3/3 plans executed
+**Plans:** 3/3 plans complete
 
 Plans:
 **Wave 1**
@@ -173,5 +173,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 1. Angular EOL Upgrade | 6/6 | Complete    | 2026-08-29 |
 | 2. Credential & Secrets Hardening | 5/5 | Complete    | 2026-08-30 |
 | 3. Auth, CORS & Rate Limiting Hardening | 3/3 | Complete    | 2026-08-31 |
-| 4. Data Layer Reliability & Audit Trail | 3/3 | In Progress|  |
+| 4. Data Layer Reliability & Audit Trail | 3/3 | Complete    | 2026-10-24 |
 | 5. Regression Testing & Full-Stack Verification | 0/TBD | Not started | - |

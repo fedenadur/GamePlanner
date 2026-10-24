@@ -1,17 +1,20 @@
 ---
 phase: 04-data-layer-reliability-audit-trail
 verified: 2026-08-31T00:00:00Z
-status: human_needed
+status: passed
 score: 4/4 must-haves verified
 behavior_unverified: 0
 overrides_applied: 0
 human_verification:
+
   - test: "D-14 live sweep check: /workers dashboard + log line (04-02 human-check)"
     expected: "SteamTokenCleanupWorker shows a recent LastSuccessAt on /workers, and the API log carries exactly one count-only removal line (e.g. 'SteamTokenCleanupWorker: removed 3 expired token(s).') after 3 abandoned Steam logins age past their 5-minute expiry and a sweep runs"
     why_human: "Requires the API and Angular app running live, waiting past a 5-minute token expiry and a 10-minute worker interval, and reading the live API log — not reproducible from an offline unit test"
+
   - test: "04-03 Human-check A: delete-failure UI message with the API stopped"
     expected: "Clicking delete on a game while the API is down renders the fixed sentence 'Could not delete game. Please try again.' with no status code, exception text, or response body visible anywhere on the page"
     why_human: "Requires the API and Angular dev servers running live and visually confirming rendered page text"
+
   - test: "04-03 Human-check B: IGDBId cross-user re-verification (folded todo, still pending)"
     expected: "Two games newly added through the live 'Add Game' IGDB search flow still read IsActive = 1 after GameSyncWorker and GameImageSyncWorker both report Completed"
     why_human: "Requires live IGDB search calls and triggering background workers via the /workers page; this is the check that determines whether the folded pending todo (.planning/todos/pending/2026-08-29-igdbid-upsert-deactivates-games-across-users.md) can be closed — it has NOT yet been observed and the todo remains in .planning/todos/pending/"

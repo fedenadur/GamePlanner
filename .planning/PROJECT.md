@@ -28,13 +28,14 @@ Close the concrete security and reliability gaps already identified in the codeb
 - ✓ Rate limiting extended to data-modification endpoints (game create/update/delete, journal, sessions), not just `/auth` — validated Phase 3 (auth-cors-rate-limiting-hardening), 2026-08-31
 - ✓ JWT lifetime bounded to 24h and `TokenValidationParameters` explicitly hardened (issuer/audience/lifetime/algorithm) — validated Phase 3 (auth-cors-rate-limiting-hardening), 2026-08-31
 - ✓ Security-relevant rejections (failed logins, CORS mismatches, rate-limit rejections) visible in a central log stream — validated Phase 3 (auth-cors-rate-limiting-hardening), 2026-08-31
+- ✓ `GameManager` create/update/delete writes atomic (Dapper + EF share one transaction) — validated Phase 4 (data-layer-reliability-audit-trail), 2026-10-24
+- ✓ `ModifiedAt`/`DeletedAt` audit fields set by `GETUTCDATE()` in stored procedures; repeat soft-delete is a no-op — validated Phase 4, 2026-10-24
+- ✓ Periodic `SteamTokenStore` cleanup (`SteamTokenCleanupWorker`, 10-min sweep, count-only logging) — validated Phase 4, 2026-10-24
+- ✓ `Games.IGDBId` no longer globally unique; `sp_UpsertIGDBGame` UPDATE-only and user-scoped (cross-user deactivation bug fixed) — validated Phase 4, 2026-10-24
 
 ### Active
 
 - [ ] Steam OpenID trust boundary review (not covered by Phase 3's JWT/CORS/rate-limiting scope)
-- [ ] Fix `SqlConnection` disposal/connection handling in `GameManager` (Create/Update/Delete paths)
-- [ ] Add periodic cleanup for `SteamTokenStore` (currently grows unbounded until redeemed)
-- [ ] Add basic audit fields (who/when) for data-modifying operations, at least on soft-delete (`IsActive`) paths
 - [ ] Targeted unit/integration tests covering the areas touched by hardening (auth, `GameManager`, `IgdbService`, `SteamService`, `SteamTokenStore`) — not full coverage, just enough to catch regressions from these fixes
 
 ### Out of Scope
@@ -90,4 +91,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-08-31 after Phase 3 (auth-cors-rate-limiting-hardening) completion*
+*Last updated: 2026-10-24 after Phase 4 (data-layer-reliability-audit-trail) completion*

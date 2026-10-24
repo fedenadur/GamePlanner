@@ -5,15 +5,15 @@ milestone_name: milestone
 current_phase: 05
 current_phase_name: regression-testing-full-stack-verification
 status: executing
-stopped_at: Completed 05-03-PLAN.md
-last_updated: "2026-10-24T21:47:24.225Z"
+stopped_at: Completed 05-04-PLAN.md
+last_updated: "2026-10-24T21:52:43.771Z"
 last_activity: 2026-10-24
 last_activity_desc: Phase 05 execution started
 progress:
   total_phases: 5
   completed_phases: 4
   total_plans: 23
-  completed_plans: 20
+  completed_plans: 21
 ---
 
 # Project State
@@ -28,11 +28,11 @@ See: .planning/PROJECT.md (updated 2026-10-24)
 ## Current Position
 
 Phase: 05 (regression-testing-full-stack-verification) — EXECUTING
-Plan: 4 of 6
+Plan: 5 of 6
 Status: Ready to execute
 Last activity: 2026-10-24 — Phase 05 execution started
 
-Progress: [█████████░] 87% (4/5 phases)
+Progress: [█████████░] 91% (4/5 phases)
 
 ## Performance Metrics
 
@@ -81,6 +81,7 @@ Progress: [█████████░] 87% (4/5 phases)
 | Phase 05 P01 | n/a | 2 tasks | 8 files |
 | Phase 05 P02 | ~2h | 3 tasks | 5 files |
 | Phase 05 P03 | ~25min | 2 tasks | 3 files |
+| Phase 05 P04 | ~35min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -136,6 +137,7 @@ Recent decisions affecting current work:
 - [Phase ?]: 05-02: Half-Life and Half-Life 2 both corrected (231 / 233); user-approved SP-only exemption for script 38
 - [Phase ?]: 05-02: Cover left NULL on 107683/107687 - image worker skips cover when IGDBUpdatedAt already set; logged as todo, 05-06 will not self-heal
 - [Phase ?]: 05-03: Steam key log leak closed by config only (System.Net.Http.HttpClient=Warning); proven red-then-green through the real IHttpClientFactory pipeline
+- [Phase ?]: 05-04: Steam callback fails closed and verifies return_to/mode/ns/op_endpoint/signed fields; UQ_Users_Email allows only one email-less user (logged as todo, not fixed)
 
 ### Pending Todos
 
@@ -155,6 +157,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-10-24T21:47:24.200Z
-Stopped at: Completed 05-03-PLAN.md
+Last session: 2026-10-24T21:52:43.745Z
+Stopped at: Completed 05-04-PLAN.md
 Resume file: None

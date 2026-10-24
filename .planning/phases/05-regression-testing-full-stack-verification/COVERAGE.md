@@ -1,0 +1,1 @@
+No external API integration: Phase 5 only adds tests (offline stubbed IGDB/Steam calls, in-process host, Playwright UAT) and hardening fixes around existing IGDB/Steam/Steam-OpenID calls; no new third-party API, SDK or service is integrated.

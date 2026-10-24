@@ -161,7 +161,23 @@ Plans:
   2. A full manual UAT pass through every major user workflow (login, backlog CRUD, session tracking, journal, IGDB/Steam/HLTB sync) succeeds with the upgraded Angular client and hardened backend running together
   3. A dependency vulnerability scan (`npm audit` / `dotnet list package --vulnerable`) shows no known-EOL or high-severity vulnerable packages remaining from the pre-hardening baseline
 
-**Plans**: TBD
+**Plans:** 6 plans
+
+Plans:
+**Wave 1**
+
+- [ ] 05-01-PLAN.md — Tracer: in-process `WebApplicationFactory` host + JWT lifetime/validation matrix, xunit 2.9.3, CreateFromIgdb rollback (TEST-01; D-02, D-07)
+- [ ] 05-02-PLAN.md — Half-Life/Half-Life 2 IGDBId fix via guarded, reversible script 38 with dry run + decision checkpoint (TEST-02; D-08)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 05-03-PLAN.md — Offline IGDB/Steam contract tests + fix Steam API key leaking via HttpClient logging (TEST-01; D-01)
+- [ ] 05-04-PLAN.md — Steam OpenID review: null-email crash, return_to binding, fail-closed checks, callback tests, S5-S7 todo (TEST-01; D-09)
+- [ ] 05-05-PLAN.md — 8 Karma specs (interceptor/guard/delete message) + in-range npm remediation and dependency audit record (TEST-01, TEST-02; D-03, D-07)
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
+- [ ] 05-06-PLAN.md — Re-runnable Playwright full-stack UAT as the test account + owner-only Steam human checks (TEST-02; D-04, D-05, D-06)
 
 ## Progress
 
@@ -174,4 +190,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 2. Credential & Secrets Hardening | 5/5 | Complete    | 2026-08-30 |
 | 3. Auth, CORS & Rate Limiting Hardening | 3/3 | Complete    | 2026-08-31 |
 | 4. Data Layer Reliability & Audit Trail | 3/3 | Complete    | 2026-10-24 |
-| 5. Regression Testing & Full-Stack Verification | 0/TBD | Not started | - |
+| 5. Regression Testing & Full-Stack Verification | 0/6 | Planned | - |

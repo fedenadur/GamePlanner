@@ -65,4 +65,107 @@ public class SteamServiceContractTests(ApiFactory factory) : IClassFixture<ApiFa
             "Steam key leaked into logs: " + string.Join(" | ",
                 leaking.Select(e => $"{e.Category} [{e.Level}] {e.Text.Replace(ApiFactory.TestSteamKey, "<redacted>")}")));
     }
+
+    // ── Transport ────────────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task GetOwnedGames_NumericSteamId_SendsSingleOwnedGamesRequestWithKeyOnce()
+    {
+        var (steam, handler, _) = Build();
+        handler.Responder = _ => Json(OwnedGamesJson);
+
+        var games = await steam.GetOwnedGamesAsync("76561198000000001", CancellationToken.None);
+
+        var request = Assert.Single(handler.Requests);
+        Assert.Equal(HttpMethod.Get, request.Method);
+        Assert.Equal("https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/", request.Uri.GetLeftPart(UriPartial.Path));
+        Assert.Equal(1, CountOf(request.Uri.Query, "key="));
+        Assert.Contains("steamid=76561198000000001", request.Uri.Query);
+        Assert.DoesNotContain(handler.Requests, r => r.Uri.AbsolutePath.Contains("ResolveVanityURL"));
+        Assert.Single(games);
+    }
+
+    [Fact]
+    public async Task GetOwnedGames_VanityInput_ResolvesVanityBeforeOwnedGames()
+    {
+        var (steam, handler, _) = Build();
+        handler.Responder = r => r.RequestUri!.AbsolutePath.Contains("ResolveVanityURL")
+            ? Json("""{"response":{"success":1,"steamid":"76561198000000002"}}""")
+            : Json(OwnedGamesJson);
+
+        await steam.GetOwnedGamesAsync("somevanity", CancellationToken.None);
+
+        Assert.Equal(2, handler.Requests.Count);
+        Assert.Equal("/ISteamUser/ResolveVanityURL/v1/", handler.Requests[0].Uri.AbsolutePath);
+        Assert.Contains("vanityurl=somevanity", handler.Requests[0].Uri.Query);
+        Assert.Equal("/IPlayerService/GetOwnedGames/v1/", handler.Requests[1].Uri.AbsolutePath);
+        Assert.Contains("steamid=76561198000000002", handler.Requests[1].Uri.Query);
+    }
+
+    // ── Failure surfacing ────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task GetOwnedGames_Steam500_ThrowsHttpRequestException_WithoutLeakingKey()
+    {
+        var (steam, handler, logs) = Build();
+        handler.Responder = _ => Json("{}", HttpStatusCode.InternalServerError);
+
+        var ex = await Assert.ThrowsAsync<HttpRequestException>(
+            () => steam.GetOwnedGamesAsync("76561198000000001", CancellationToken.None));
+
+        Assert.DoesNotContain(ApiFactory.TestSteamKey, ex.ToString());
+        Assert.NotEmpty(logs.Entries);
+        Assert.DoesNotContain(logs.Entries, e => e.Text.Contains(ApiFactory.TestSteamKey));
+    }
+
+    [Fact]
+    public async Task GetOwnedGames_NetworkFailure_IsRethrown_WithoutLeakingKey()
+    {
+        var (steam, handler, logs) = Build();
+        handler.Responder = _ => throw new HttpRequestException("network down");
+
+        var ex = await Assert.ThrowsAsync<HttpRequestException>(
+            () => steam.GetOwnedGamesAsync("76561198000000001", CancellationToken.None));
+
+        Assert.Equal("network down", ex.Message);
+        Assert.DoesNotContain(ApiFactory.TestSteamKey, ex.ToString());
+        Assert.Contains(logs.Entries, e => e.Level == LogLevel.Error);
+        Assert.DoesNotContain(logs.Entries, e => e.Text.Contains(ApiFactory.TestSteamKey));
+    }
+
+    [Fact]
+    public async Task GetOwnedGames_EmptyGamesList_ThrowsInvalidOperationException()
+    {
+        var (steam, handler, _) = Build();
+        handler.Responder = _ => Json("""{"response":{"game_count":0}}""");
+
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            () => steam.GetOwnedGamesAsync("76561198000000001", CancellationToken.None));
+    }
+
+    // ── Player summary ───────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task GetPlayerSummary_NonSuccessStatus_ReturnsNull()
+    {
+        var (steam, handler, _) = Build();
+        handler.Responder = _ => Json("{}", HttpStatusCode.NotFound);
+
+        var result = await steam.GetPlayerSummaryAsync("76561198000000001", CancellationToken.None);
+
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task GetPlayerSummary_HandlerThrows_RethrowsWithoutLeakingKey()
+    {
+        var (steam, handler, logs) = Build();
+        handler.Responder = _ => throw new HttpRequestException("network down");
+
+        var ex = await Assert.ThrowsAsync<HttpRequestException>(
+            () => steam.GetPlayerSummaryAsync("76561198000000001", CancellationToken.None));
+
+        Assert.DoesNotContain(ApiFactory.TestSteamKey, ex.ToString());
+        Assert.DoesNotContain(logs.Entries, e => e.Text.Contains(ApiFactory.TestSteamKey));
+    }
 }

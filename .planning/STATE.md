@@ -5,15 +5,15 @@ milestone_name: milestone
 current_phase: 05
 current_phase_name: regression-testing-full-stack-verification
 status: executing
-stopped_at: Completed 05-01-PLAN.md
-last_updated: "2026-10-24T21:31:55.881Z"
+stopped_at: Completed 05-02-PLAN.md
+last_updated: "2026-10-24T21:44:19.127Z"
 last_activity: 2026-10-24
 last_activity_desc: Phase 05 execution started
 progress:
   total_phases: 5
   completed_phases: 4
   total_plans: 23
-  completed_plans: 18
+  completed_plans: 19
 ---
 
 # Project State
@@ -28,11 +28,11 @@ See: .planning/PROJECT.md (updated 2026-10-24)
 ## Current Position
 
 Phase: 05 (regression-testing-full-stack-verification) — EXECUTING
-Plan: 2 of 6
+Plan: 3 of 6
 Status: Ready to execute
 Last activity: 2026-10-24 — Phase 05 execution started
 
-Progress: [████████░░] 78% (4/5 phases)
+Progress: [████████░░] 83% (4/5 phases)
 
 ## Performance Metrics
 
@@ -79,6 +79,7 @@ Progress: [████████░░] 78% (4/5 phases)
 | Phase 04 P02 | 20min | 2 tasks | 5 files |
 | Phase 04 P03 | 35min | 3 tasks | 4 files |
 | Phase 05 P01 | n/a | 2 tasks | 8 files |
+| Phase 05 P02 | ~2h | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -131,6 +132,8 @@ Recent decisions affecting current work:
 - [Phase ?]: 04-03: Half-Life/Half-Life 2 same-user IGDBId duplicate discovered incidentally during checkpoint fact-gathering, logged as new pending todo rather than fixed -- out of scope for this plan
 - [Phase ?]: 04-03: folded todo 2026-08-29-igdbid-upsert-deactivates-games-across-users.md stays pending -- resolution contingent on human-check B (live sync-worker re-verification), deferred to end-of-phase UAT per human_verify_mode: end-of-phase
 - [Phase ?]: 05-01: Jwt:Secret and other test secrets delivered to the in-process host via builder.UseSetting; only GamePlanner.API.Workers hosted services removed
+- [Phase ?]: 05-02: Half-Life and Half-Life 2 both corrected (231 / 233); user-approved SP-only exemption for script 38
+- [Phase ?]: 05-02: Cover left NULL on 107683/107687 - image worker skips cover when IGDBUpdatedAt already set; logged as todo, 05-06 will not self-heal
 
 ### Pending Todos
 
@@ -150,6 +153,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-10-24T21:31:55.855Z
-Stopped at: Completed 05-01-PLAN.md
+Last session: 2026-10-24T21:44:19.101Z
+Stopped at: Completed 05-02-PLAN.md
 Resume file: None

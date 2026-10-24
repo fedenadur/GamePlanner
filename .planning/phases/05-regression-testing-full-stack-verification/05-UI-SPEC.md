@@ -33,7 +33,7 @@ Existing design tokens live in `game-planner-ui/src/styles.css` `:root` (CSS cus
 
 ## Spacing Scale
 
-Not modified by this phase. No new spacing tokens, no layout changes.
+Not modified by this phase. No new spacing tokens, no layout changes. All existing spacing values (padding, margins, gaps in `styles.css` and `*.component.css`) are unchanged by Phase 5.
 
 Exceptions: none
 
@@ -41,13 +41,15 @@ Exceptions: none
 
 ## Typography
 
-Not modified by this phase. No new type sizes or weights.
+Not modified by this phase. No new type sizes or weights. The existing type scale is unchanged by Phase 5.
+
+Observed in `src/styles.css` (recorded as-is, NOT new tokens): base `font-size: 15px`; sizes in use include `1.6rem`, `1.15rem`, `1rem`, `0.9rem`, `0.875rem`, `0.75rem`, `0.72rem`, `0.7rem`; weights in use include 500, 600, 700, 800. This existing scale is not normalized or reduced here.
 
 ---
 
 ## Color
 
-Not modified by this phase. Existing tokens remain as-is (`--bg #0a0a0f`, `--surface #13131a`, `--accent #7c3aed`, `--danger #ef4444`, etc., in `src/styles.css`). No new colors, no accent reassignment.
+Not modified by this phase. Existing tokens remain as-is (`--bg #0a0a0f`, `--surface #13131a`, `--accent #7c3aed`, `--danger #ef4444`, etc., in `src/styles.css`). No new colors, no accent reassignment. Existing accent uses are unchanged by Phase 5: `--accent #7c3aed` (with `--accent-h #9d5bff` hover and `--accent-glow` focus/hover glow) continues to apply only to the elements that already use it in `styles.css` (primary buttons, active/selected states, input focus ring, logo gradient). No 60/30/10 re-audit is performed in this phase.
 
 ---
 
@@ -62,6 +64,8 @@ Not modified by this phase. Existing tokens remain as-is (`--bg #0a0a0f`, `--sur
 | Dependency bump (D-07) | `@angular/*` move to `^22.2.3`; after the bump the UI must render identically — the UAT run is the visual regression check |
 
 If a UAT step cannot be written without modifying a template, record it as a todo and make it a manual step; do not edit the template.
+
+Focal points / visuals: unchanged by Phase 5. Existing focal elements (primary CTAs such as `Sign in`, `+ Add Game`, `▶ Run now`; page headings; the 🎮 empty-state glyph) keep their current hierarchy and placement. No new focal element, icon, or illustration is introduced.
 
 ---
 
@@ -87,8 +91,9 @@ Existing strings that tests and UAT assert on. These are a freeze list: changing
 | Login (unauth landing) | `/login` | Heading `Sign in`; inputs by placeholder `Email`, `Password`; submit button `Sign in` (label becomes `Signing in...` while loading, and is disabled until both fields filled); Steam button `Sign in with Steam`; link `Create one` ("No account?") |
 | Login failure | `/login` | `Invalid email or password.` (HTTP 401); `Could not connect to server.` (no usable error body) |
 | Route guard | `/games` etc. unauthenticated | redirects to `/login` |
-| Games list | `/games` | Heading `My Games`; add button `+ Add Game`; empty state `No games match your filters.` (with 🎮 icon) |
-| Games list load failure | `/games` | `Could not load games. Is the API running?` |
+| Games list | `/games` | Heading `My Games`; add button `+ Add Game`; empty state `No games match your filters.` (with 🎮 icon). Existing behavior, unchanged this phase: this same copy also shows for a fresh account with zero games (no separate "no games yet" state exists), so UAT on the fresh test account can assert it |
+| Games list load failure | `/games` | `Could not load games. Is the API running?` (`game-list.component.ts:36`) |
+| Now Playing load failure | `/now-playing` | `Could not load Now Playing. Is the API running?` (`now-playing.component.ts:44`) |
 | Games list delete failure | `/games` | `Could not delete game. Please try again.` |
 | IGDB search (add game) | `/games` modal | search input placeholder `Search IGDB by title...` |
 | Now Playing | `/now-playing` | Heading `Now Playing` |
@@ -116,9 +121,10 @@ The existing login page already handles the `steam_failed` redirect, so the D-09
 | Element | Copy |
 |---------|------|
 | Primary CTA | none introduced by this phase (existing: `Sign in`, `+ Add Game`, `▶ Run now`) |
-| Empty state heading | none introduced (existing: `No games match your filters.`) |
+| Empty state heading | none introduced (existing: `No games match your filters.`, also shown for a fresh zero-game account; unchanged) |
 | Empty state body | none introduced |
-| Error state | none introduced; existing strings frozen above |
+| Error state | none introduced; existing strings frozen above. One accepted exception is recorded in the row below |
+| Error state — accepted copy exception | `Could not connect to server.` — fallback error shown when the login/register request fails with no usable `err.error?.message` and a non-401/non-handled status. Sources: `login.component.ts:52` and `register.component.ts:39`. It states the problem but gives the user no next step (no solution path). **Kept unchanged in Phase 5** because this milestone is hardening-only with a visual/copy change lock and no feature work (explicit user decision, PROJECT.md constraints; Visual Change Lock above forbids touching `*.component.ts` templates/copy). **Accepted copy risk:** low severity — single-user personal app, no production users, string only appears when the API is unreachable. **Where it gets fixed:** a follow-up todo (to be captured in `.planning/todos/` as "Add next-step copy to auth fallback error, e.g. `Could not connect to server. Check your connection and try again.`") for a future UX/feature phase after this hardening milestone. Not to be fixed or reworded during Phase 5; if a spec/UAT asserts it, it asserts the current exact string |
 | Destructive confirmation | none introduced. The only destructive UI action exercised is game delete (soft delete, UAT test account only); no confirmation dialog exists in the current UI and none is added |
 
 ---

@@ -47,3 +47,21 @@ games as one entry for this user.
 3. No code change is expected to be required unless the same bad-match pattern turns up
    for other titles — if it does, revisit the IGDB search-result selection UX in the "Add
    Game" flow.
+
+## Resolution
+
+Resolved 2026-10-24 in Phase 5 plan 05-02 (D-08) by `Database/38_FixHalfLifeIgdbId.sql`,
+applied manually in SSMS by the user.
+
+- Both rows were wrong, not one: 107683 and 107687 each carried IGDBId 267639
+  ("Half-Life 2: MMod - Half-Life 2: Update", 2018-12-25), which matches neither title.
+- Half-Life (107683): IGDBId 267639 -> 231 (1998-11-19).
+- Half-Life 2 (107687): IGDBId 267639 -> 233 (2004-11-16).
+- Verification: UserId 2 duplicate-title scan returns 0 groups; a rolled-back second pass of the
+  script body reports `IDEMPOTENT_CHANGED=0`; non-force `GameSyncWorker` and `GameImageSyncWorker`
+  runs ended `Completed` with `LastError` NULL; FirstReleaseDate years 1998 / 2004, genres 3 / 1,
+  screenshots and artworks re-synced.
+- Not re-derived: `CoverImageUrl` stays NULL on both rows. Cause is an unrelated cover-selection
+  quirk (see `2026-10-24-cover-skipped-when-igdbupdatedat-set.md`), not the ID correction.
+- No application code changed. The bad-match root cause (IGDB search result picked at creation
+  time) was not investigated further.

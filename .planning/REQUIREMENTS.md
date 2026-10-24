@@ -48,7 +48,7 @@ Requirements for this hardening milestone. Each maps to roadmap phases.
 
 ### Testing (TEST)
 
-- [ ] **TEST-01**: Targeted tests added covering hardening-touched paths (auth, `GameManager`, `IgdbService`, `SteamService`, `SteamTokenStore`)
+- [x] **TEST-01**: Targeted tests added covering hardening-touched paths (auth, `GameManager`, `IgdbService`, `SteamService`, `SteamTokenStore`)
 - [ ] **TEST-02**: Full-stack manual UAT pass validating the combined frontend+backend contract after all hardening phases
 
 ## v2 Requirements
@@ -102,7 +102,7 @@ Explicitly excluded. Documented to prevent scope creep.
 | REL-02 | Phase 4 | Complete |
 | AUDIT-01 | Phase 4 | Complete |
 | AUDIT-02 | Phase 4 | Complete |
-| TEST-01 | Phase 5 | Pending |
+| TEST-01 | Phase 5 | Complete |
 | TEST-02 | Phase 5 | Pending |
 
 **Coverage:**

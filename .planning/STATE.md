@@ -2,18 +2,18 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 5
-current_phase_name: Regression Testing & Full-Stack Verification
+current_phase: 05
+current_phase_name: regression-testing-full-stack-verification
 status: executing
-stopped_at: Phase 5 UI-SPEC approved
-last_updated: "2026-10-24T20:26:33.953Z"
+stopped_at: Completed 05-01-PLAN.md
+last_updated: "2026-10-24T21:31:55.881Z"
 last_activity: 2026-10-24
-last_activity_desc: Phase 04 complete, transitioned to Phase 5
+last_activity_desc: Phase 05 execution started
 progress:
   total_phases: 5
   completed_phases: 4
   total_plans: 23
-  completed_plans: 17
+  completed_plans: 18
 ---
 
 # Project State
@@ -23,16 +23,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-10-24)
 
 **Core value:** Close the concrete security and reliability gaps already identified in the codebase (credential handling, CORS/rate limiting, resource leaks, missing audit trail) without breaking existing functionality.
-**Current focus:** Phase 5 — Regression Testing & Full-Stack Verification
+**Current focus:** Phase 05 — regression-testing-full-stack-verification
 
 ## Current Position
 
-Phase: 5 — Regression Testing & Full-Stack Verification
-Plan: Not started
+Phase: 05 (regression-testing-full-stack-verification) — EXECUTING
+Plan: 2 of 6
 Status: Ready to execute
-Last activity: 2026-10-24 — Phase 04 complete, transitioned to Phase 5
+Last activity: 2026-10-24 — Phase 05 execution started
 
-Progress: [████████░░] 80% (4/5 phases)
+Progress: [████████░░] 78% (4/5 phases)
 
 ## Performance Metrics
 
@@ -78,6 +78,7 @@ Progress: [████████░░] 80% (4/5 phases)
 | Phase 04 P01 | 20min | 2 tasks | 7 files |
 | Phase 04 P02 | 20min | 2 tasks | 5 files |
 | Phase 04 P03 | 35min | 3 tasks | 4 files |
+| Phase 05 P01 | n/a | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -129,6 +130,7 @@ Recent decisions affecting current work:
 - [Phase ?]: 04-03: Task 1 checkpoint decision 'proceed' independently re-verified (all 4 live-DB facts re-confirmed) before dropping UX_Games_IGDBId; sp_UpsertIGDBGame rewritten UPDATE-only per D-02, with SET ANSI_NULLS ON / SET QUOTED_IDENTIFIER ON added ahead of CREATE (Rule 1 fix, matching 04-01's filtered-index precedent)
 - [Phase ?]: 04-03: Half-Life/Half-Life 2 same-user IGDBId duplicate discovered incidentally during checkpoint fact-gathering, logged as new pending todo rather than fixed -- out of scope for this plan
 - [Phase ?]: 04-03: folded todo 2026-08-29-igdbid-upsert-deactivates-games-across-users.md stays pending -- resolution contingent on human-check B (live sync-worker re-verification), deferred to end-of-phase UAT per human_verify_mode: end-of-phase
+- [Phase ?]: 05-01: Jwt:Secret and other test secrets delivered to the in-process host via builder.UseSetting; only GamePlanner.API.Workers hosted services removed
 
 ### Pending Todos
 
@@ -148,6 +150,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-10-24T17:32:08.966Z
-Stopped at: Phase 5 UI-SPEC approved
-Resume file: .planning/phases/05-regression-testing-full-stack-verification/05-UI-SPEC.md
+Last session: 2026-10-24T21:31:55.855Z
+Stopped at: Completed 05-01-PLAN.md
+Resume file: None

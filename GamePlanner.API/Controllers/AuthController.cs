@@ -49,18 +49,19 @@ public class AuthController(AuthService auth, SteamAuthService steamAuth, SteamT
         catch { return false; }
     }
 
+    private string SteamCallbackUrl => $"{config["App:BaseUrl"]}/api/auth/steam/callback";
+
     [HttpGet("steam")]
     public IActionResult SteamLogin()
     {
-        var callbackUrl = $"{config["App:BaseUrl"]}/api/auth/steam/callback";
-        var redirectUrl = steamAuth.BuildRedirectUrl(callbackUrl);
+        var redirectUrl = steamAuth.BuildRedirectUrl(SteamCallbackUrl);
         return Redirect(redirectUrl);
     }
 
     [HttpGet("steam/callback")]
     public async Task<IActionResult> SteamCallback()
     {
-        var result = await steamAuth.HandleCallbackAsync(Request.Query);
+        var result = await steamAuth.HandleCallbackAsync(Request.Query, SteamCallbackUrl);
         if (result is null)
             return Redirect($"{config["App:FrontendUrl"]}/login?error=steam_failed");
 

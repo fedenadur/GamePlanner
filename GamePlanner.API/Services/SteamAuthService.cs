@@ -10,7 +10,8 @@ public class SteamAuthService(
     GamePlannerDbContext db,
     AuthService auth,
     SteamService steam,
-    IHttpClientFactory httpFactory)
+    IHttpClientFactory httpFactory,
+    ILogger<SteamAuthService> logger)
 {
     private const string SteamOpenIdUrl  = "https://steamcommunity.com/openid/login";
     private const string SteamIdPrefix   = "https://steamcommunity.com/openid/id/";
@@ -33,10 +34,10 @@ public class SteamAuthService(
         return $"{SteamOpenIdUrl}?{query}";
     }
 
-    public async Task<AuthResponse?> HandleCallbackAsync(IQueryCollection queryParams)
+    public async Task<AuthResponse?> HandleCallbackAsync(IQueryCollection queryParams, string expectedReturnTo)
     {
         // 1. Validate with Steam
-        var steamId = await ValidateAndExtractSteamIdAsync(queryParams);
+        var steamId = await ValidateAndExtractSteamIdAsync(queryParams, expectedReturnTo);
         if (steamId is null) return null;
 
         // 2. Fetch Steam profile (name + avatar)
@@ -77,8 +78,15 @@ public class SteamAuthService(
         };
     }
 
-    private async Task<string?> ValidateAndExtractSteamIdAsync(IQueryCollection query)
+    private async Task<string?> ValidateAndExtractSteamIdAsync(IQueryCollection query, string expectedReturnTo)
     {
+        // The assertion must be addressed to this app's own callback (OpenID 2.0 section 11.1)
+        if (!string.Equals(query["openid.return_to"].ToString(), expectedReturnTo, StringComparison.Ordinal))
+        {
+            logger.LogWarning("Steam callback rejected: {Reason}", "return_to does not match this app's callback URL");
+            return null;
+        }
+
         // Build validation request (same params but mode = check_authentication)
         var args = query.ToDictionary(k => k.Key, v => v.Value.ToString());
         args["openid.mode"] = "check_authentication";

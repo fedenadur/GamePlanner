@@ -66,8 +66,10 @@ public class AuthService(GamePlannerDbContext db, IConfiguration config, ILogger
         var claims = new List<Claim>
         {
             new(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new(ClaimTypes.Email, user.Email),
         };
+
+        if (!string.IsNullOrEmpty(user.Email))
+            claims.Add(new Claim(ClaimTypes.Email, user.Email));
 
         if (!string.IsNullOrEmpty(user.SteamId))
             claims.Add(new Claim("steamId", user.SteamId));

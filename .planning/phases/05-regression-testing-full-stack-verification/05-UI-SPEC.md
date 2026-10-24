@@ -1,7 +1,7 @@
 ---
 phase: 5
 slug: regression-testing-full-stack-verification
-status: draft
+status: approved
 shadcn_initialized: false
 preset: none
 created: 2026-10-24
@@ -131,14 +131,29 @@ The existing login page already handles the `steam_failed` redirect, so the D-09
 
 ## UI Considerations
 
-Applicable state considerations resolved: none applicable (no new UI elements; existing error/empty copy is recorded in the Copywriting Contract above and covered by the specs/UAT listed there).
+Probe run 2026-10-24 (`ui-consideration-probe.cjs`) over 4 existing surfaces: E1 login form, E2 games list, E3 game delete action, E4 workers page. 28 applicable considerations; resolved by user batch decision: 8 covered, 20 dismissed (with reason), 0 backstop, 0 unresolved. Empty/error COPY lives in the Copywriting Contract above; rows here reference it.
 
-| Category | Element(s) | Status | Resolution / Reason |
-|----------|------------|--------|---------------------|
-| error | game-list delete failure | ✅ covered | Karma spec asserts the fixed message `Could not delete game. Please try again.` with no server-derived text |
-| error | Steam login failure redirect | ✅ covered | Existing login handling renders `Steam login failed. Please try again.`; controller-level test asserts the `?error=steam_failed` redirect |
-| empty | games list | ✅ covered | Existing copy `No games match your filters.` frozen; UAT may assert it for the fresh test account |
-| loading | workers `Run now` | ✅ covered | UAT polls `GET /api/worker` JSON until `status != 'Running'` rather than reading UI text |
+### Covered (lift into plan `must_haves.truths`)
+
+| # | Element | Category | Truth |
+|---|---------|----------|-------|
+| C1 | E1 login | error | Login with wrong credentials shows exactly `Invalid email or password.`; `/login?error=steam_failed` shows exactly `Steam login failed. Please try again.` (UAT) |
+| C2 | E1 login | loading | Submitting valid credentials for `uat-test@gameplanner.local` lands on an authenticated route (button passes through `Signing in...`); UAT asserts the post-login route, not the transient label |
+| C3 | E2 games list | error | On load failure the games list shows `Could not load games. Is the API running?` (copy frozen; not re-tested unless a spec targets it) |
+| C4 | E2 games list | empty | With zero matching games the list shows `No games match your filters.` (UAT may assert on the fresh test account) |
+| C5 | E2 games list | populated | After adding a game via IGDB search, it appears under heading `My Games` (UAT) |
+| C6 | E3 delete | error | `GameListComponent.deleteGame` failure sets `error` to exactly `Could not delete game. Please try again.` with no status code or server text (Karma) |
+| C7 | E4 workers | loading | After `▶ Run now`, UAT polls `GET /api/worker` until the worker's `status != 'Running'` and asserts `lastError === null`; does not read timestamp text |
+| C8 | E4 workers | populated | `/workers` shows heading `Workers` with `▶ Run now` for `GameSyncWorker`, `GameImageSyncWorker`, `GameHLTBSyncWorker` (UAT) |
+
+### Dismissed (reason: pre-existing UI, unchanged by hardening-only Phase 5; the full UAT run after the D-07 dependency bump is the visual regression check)
+
+| Element | Categories dismissed |
+|---------|----------------------|
+| E1 login | empty, partial, long-text |
+| E2 games list | loading, partial, overflow, zero-one-many |
+| E3 delete | empty, loading, populated, partial, overflow, zero-one-many, long-text |
+| E4 workers | empty, error, partial, overflow, zero-one-many, long-text |
 
 ---
 
@@ -153,11 +168,11 @@ Applicable state considerations resolved: none applicable (no new UI elements; e
 
 ## Checker Sign-Off
 
-- [ ] Dimension 1 Copywriting: PASS
-- [ ] Dimension 2 Visuals: PASS
-- [ ] Dimension 3 Color: PASS
-- [ ] Dimension 4 Typography: PASS
-- [ ] Dimension 5 Spacing: PASS
-- [ ] Dimension 6 Registry Safety: PASS
+- [ ] Dimension 1 Copywriting: BLOCK (accepted by user override)
+- [x] Dimension 2 Visuals: PASS
+- [ ] Dimension 3 Color: FLAG (accepted)
+- [ ] Dimension 4 Typography: BLOCK (accepted by user override)
+- [ ] Dimension 5 Spacing: FLAG (accepted)
+- [x] Dimension 6 Registry Safety: PASS
 
-**Approval:** pending
+**Approval:** force-approved by user 2026-10-24 after revision 1. Remaining BLOCKs concern pre-existing UI that Phase 5 does not touch: (1) `Could not connect to server.` has no next step, (2) `No games match your filters.` doubles as the zero-games state, (3) the existing stylesheet uses 8 font sizes / 4 weights. Kept under the Visual Change Lock (hardening-only milestone); tracked in `.planning/todos/pending/2026-10-24-ui-copy-and-type-scale-cleanup.md` for a future UX phase.

@@ -14,12 +14,20 @@ GamePlanner is a personal game-tracking web app (Angular 22 SPA + ASP.NET Core 8
 - Atomic `GameManager` writes, SQL-side `ModifiedAt`/`DeletedAt` stamps, bounded `SteamTokenStore`
 - 61 backend xUnit tests, 8 Angular specs, 16-test Playwright full-stack UAT
 
-## Next Milestone Goals
+## Current Milestone: v1.1 Cleanup + Platform Analysis
 
-Not yet defined. Run `/gsd-new-milestone`. Candidates carried from v1.0:
+**Goal:** Close the 5 pending todos plus the in-progress image fix, and document how viable it is to integrate other game stores the way Steam is integrated.
 
-- 4 deferred minor todos (image-worker cover skip, Portal IGDBId, Steam OpenID S5–S7, UI copy/type-scale)
-- Feature work deferred during the hardening-only milestone
+**Target features:**
+- Image worker fetches covers even when `IGDBUpdatedAt` is set and `CoverImageUrl` is NULL
+- Images saved to every local game sharing an IGDBId (finish + verify the uncommitted `GameImageManager` / game-detail WIP)
+- Portal IGDBId corrected via guarded, reversible SQL script
+- Steam OpenID follow-ups S5 (state binding), S6 (rate limit), S7 (SteamId/Email uniqueness)
+- UI copy and type-scale cleanup
+- Manual playtime entry for games Steam can't sync (family-shared, non-Steam)
+- Platform viability analysis — one `.md` per platform (GOG, Epic, Xbox/Game Pass), written in Spanish: login, library, metadata, images/covers, playtime, API/auth, limits/ToS, verdict
+
+**Key context:** The platform analysis is documentation only — any actual integration goes to a later milestone.
 
 ## Core Value
 
@@ -55,7 +63,7 @@ Close the concrete security and reliability gaps already identified in the codeb
 
 ### Active
 
-(none — to be defined in the next milestone)
+v1.1 Cleanup + Platform Analysis — see [REQUIREMENTS.md](REQUIREMENTS.md).
 
 ### Out of Scope
 
@@ -113,4 +121,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-10-27 after v1.0 milestone*
+*Last updated: 2026-10-27 at v1.1 milestone start*

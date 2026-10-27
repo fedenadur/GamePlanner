@@ -32,9 +32,9 @@
 
 ### Platform Analysis (PLAT)
 
-- [ ] **PLAT-01**: `.planning/research/platforms/GOG.md` documents (in Spanish) login, library, metadata, screenshots, covers and playtime viability for GOG, with sources and a verdict
-- [ ] **PLAT-02**: `.planning/research/platforms/EPIC.md` documents the same for the Epic Games Store
-- [ ] **PLAT-03**: `.planning/research/platforms/XBOX.md` documents the same for Xbox / Game Pass, including achievements and Game Pass catalog vs user library
+- [x] **PLAT-01**: `.planning/research/platforms/GOG.md` documents (in Spanish) login, library, metadata, screenshots, covers and playtime viability for GOG, with sources and a verdict
+- [x] **PLAT-02**: `.planning/research/platforms/EPIC.md` documents the same for the Epic Games Store
+- [x] **PLAT-03**: `.planning/research/platforms/XBOX.md` documents the same for Xbox / Game Pass, including achievements and Game Pass catalog vs user library
 - [ ] **PLAT-04**: A short comparison and recommendation (which platform, if any, to integrate next) is recorded in PROJECT.md Key Decisions
 
 ## Future Requirements

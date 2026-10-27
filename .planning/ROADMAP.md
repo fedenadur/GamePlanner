@@ -17,7 +17,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: Credential & Secrets Hardening** - Stop leaking IGDB/Steam credentials via URLs/logs/committed config, rotate exposed secrets, and stop swallowing external-API failures silently (completed 2026-08-30)
 - [x] **Phase 3: Auth, CORS & Rate Limiting Hardening** - Tighten JWT lifetime/validation, lock down CORS to the real frontend contract, extend rate limiting to data-mutation endpoints, and log security-relevant rejections (completed 2026-08-31)
 - [x] **Phase 4: Data Layer Reliability & Audit Trail** - Make `GameManager` writes atomic, add `ModifiedAt`/`DeletedAt` audit fields, and stop unbounded `SteamTokenStore` growth (completed 2026-10-24)
-- [ ] **Phase 5: Regression Testing & Full-Stack Verification** - Add targeted tests for every hardening-touched path and validate the combined frontend+backend contract end-to-end
+- [x] **Phase 5: Regression Testing & Full-Stack Verification** - Add targeted tests for every hardening-touched path and validate the combined frontend+backend contract end-to-end (completed 2026-10-27)
 
 ## Phase Details
 
@@ -161,7 +161,7 @@ Plans:
   2. A full manual UAT pass through every major user workflow (login, backlog CRUD, session tracking, journal, IGDB/Steam/HLTB sync) succeeds with the upgraded Angular client and hardened backend running together
   3. A dependency vulnerability scan (`npm audit` / `dotnet list package --vulnerable`) shows no known-EOL or high-severity vulnerable packages remaining from the pre-hardening baseline
 
-**Plans:** 6/6 plans executed
+**Plans:** 6/6 plans complete
 
 Plans:
 **Wave 1**
@@ -190,4 +190,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 2. Credential & Secrets Hardening | 5/5 | Complete    | 2026-08-30 |
 | 3. Auth, CORS & Rate Limiting Hardening | 3/3 | Complete    | 2026-08-31 |
 | 4. Data Layer Reliability & Audit Trail | 3/3 | Complete    | 2026-10-24 |
-| 5. Regression Testing & Full-Stack Verification | 6/6 | In Progress|  |
+| 5. Regression Testing & Full-Stack Verification | 6/6 | Complete    | 2026-10-27 |

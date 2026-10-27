@@ -1,14 +1,15 @@
 ---
 phase: 05-regression-testing-full-stack-verification
-verified: 2026-10-24T22:40:00Z
-status: gaps_found
-score: 2/3 roadmap success criteria fully verified (SC1 verified, SC3 verified with accepted residual, SC2 partial pending owner-only Steam checks); 1 plan-level must-have FAILED (05-02 Half-Life cover)
+verified: 2026-10-27T20:20:00Z
+status: passed
+score: 3/3 roadmap success criteria verified (SC3 with accepted vite residual); all plan must-haves met after re-verification on 2026-10-27
 behavior_unverified: 0
 overrides_applied: 0
-re_verification: false
+re_verification: true
 gaps:
   - truth: "05-02: each corrected Half-Life row has a non-NULL CoverImageUrl different from its pre-fix value after non-force GameSync + GameImageSync runs"
-    status: failed
+    status: resolved
+    resolution: "2026-10-27: a non-force GameImageSyncWorker run at 20:08:31 (after IGDB re-stamped IGDBUpdatedAt on 2026-10-27) filled the covers: 107683 -> coc2ea.jpg, 107687 -> co1nmw.jpg (pre-fix co779u.jpg). No data workaround was applied (the attempted UPDATE matched 0 rows). The underlying SaveCoverAsync skip bug remains open as a todo."
     reason: "Rows 107683 and 107687 keep CoverImageUrl NULL. GameImageManager.SaveCoverAsync skips with 'Cover up-to-date' because GameSyncWorker re-stamps IGDBUpdatedAt first (igdbUpdatedAt <= currentUpdatedAt) even though the cover is NULL. Pre-existing bug, not introduced by Phase 5. Genres, release dates, ratings, screenshots and artworks did re-derive. Logged as todo; the user has not yet decided on the fix. It does not block ROADMAP success criteria 1-3 but it is an unmet plan must-have."
     artifacts:
       - path: "GamePlanner.API/Managers/GameImageManager.cs"
@@ -31,7 +32,7 @@ human_verification:
 
 **Phase Goal:** The hardening changes across frontend and backend are proven correct together, not just individually.
 **Verified:** 2026-10-24
-**Status:** gaps_found (one narrow plan-level gap plus two owner-only human items; no ROADMAP success criterion is FAILED)
+**Status:** passed (re-verified 2026-10-27: H1, H2 passed; Half-Life cover gap resolved)
 **Re-verification:** No - initial verification
 
 ## Goal Achievement
@@ -119,3 +120,15 @@ Nothing blocks proceeding in terms of code quality: tests, build and dependency 
 
 _Verified: 2026-10-24_
 _Verifier: Claude (gsd-verifier)_
+
+## Re-verification (2026-10-27)
+
+All open items closed; status moved from `gaps_found` to `passed`.
+
+| Item | Result | Evidence |
+|------|--------|----------|
+| H1 - Steam login (owner) | PASSED | Owner signed in with Steam on the running stack (API built 2026-10-27 17:07 from the current tree, including the 05-04 checks). `SELECT COUNT(*) FROM Users WHERE SteamId='76561198115372977'` = 1; `Users WHERE Email IS NULL` = 0 (no duplicate user). The successful login shows the fail-closed checks accept a real Steam assertion, so assumption A4 holds. The API console of this process was not readable by Claude, so the "no key in logs" check rests on the 05-03 config fix and its pipeline test. |
+| H2 - Steam library import (owner) | PASSED | UI showed "Import completed — 480 games processed successfully." Newest `ImportJobs` row for UserId 2: Id 4, `Completed`, `ErrorMessage` NULL. Active games for UserId 2: 485 (baseline 481). |
+| 05-02 Half-Life covers | RESOLVED | See the `gaps` frontmatter entry: both rows have new non-NULL covers from a non-force image run. |
+
+TEST-02 is satisfied: the automated Playwright UAT plus owner checks H1/H2 cover every major workflow.

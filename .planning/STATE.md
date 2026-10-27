@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-10-27)
 Phase: Milestone v1.0 complete
 Plan: —
 Status: Awaiting next milestone
-Last activity: 2026-10-27 — Milestone v1.0 completed and archived
+Last activity: 2026-10-27 - Completed quick task 261027-qhu: fix 404 al ejecutar SteamPlaytimeSyncWorker desde Workers
 
 ## Performance Metrics
 
@@ -97,6 +97,12 @@ Full decision log for v1.0 is in PROJECT.md Key Decisions and the archived phase
 ### Blockers/Concerns
 
 None.
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 261027-qhu | fix 404 al ejecutar SteamPlaytimeSyncWorker desde Workers | 2026-10-27 | ba7bc88 | [261027-qhu-fix-404-al-ejecutar-steamplaytimesyncwor](./quick/261027-qhu-fix-404-al-ejecutar-steamplaytimesyncwor/) |
 
 ## Deferred Items
 

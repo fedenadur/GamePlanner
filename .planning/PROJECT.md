@@ -1,12 +1,29 @@
-# GamePlanner — Security Hardening Milestone
+# GamePlanner
 
 ## What This Is
 
-GamePlanner is a personal game-tracking web app (Angular SPA + ASP.NET Core 8 API + SQL Server) that lets a user manage their game backlog, track now-playing sessions, journal entries, and sync metadata from IGDB, Steam, and HowLongToBeat. This milestone is a dedicated security hardening pass over the existing app before any further feature work.
+GamePlanner is a personal game-tracking web app (Angular 22 SPA + ASP.NET Core 8 API + SQL Server) that lets a user manage their game backlog, track now-playing sessions, journal entries, and sync metadata from IGDB, Steam, and HowLongToBeat. As of v1.0 it has been through a dedicated security hardening pass and has targeted automated test coverage.
+
+## Current State
+
+**Shipped:** v1.0 Security Hardening (2026-10-27). See [MILESTONES.md](MILESTONES.md).
+
+- Frontend on Angular 22 / TypeScript 6.0 (was EOL Angular 13.3.0)
+- Secrets out of source control and rotated; gitleaks pre-commit hook in place
+- 24h JWT with explicit validation, config-sourced CORS, per-user write rate limiting, security events logged
+- Atomic `GameManager` writes, SQL-side `ModifiedAt`/`DeletedAt` stamps, bounded `SteamTokenStore`
+- 61 backend xUnit tests, 8 Angular specs, 16-test Playwright full-stack UAT
+
+## Next Milestone Goals
+
+Not yet defined. Run `/gsd-new-milestone`. Candidates carried from v1.0:
+
+- 4 deferred minor todos (image-worker cover skip, Portal IGDBId, Steam OpenID S5–S7, UI copy/type-scale)
+- Feature work deferred during the hardening-only milestone
 
 ## Core Value
 
-Close the concrete security and reliability gaps already identified in the codebase (credential handling, CORS/rate limiting, resource leaks, missing audit trail) without breaking existing functionality.
+Close the concrete security and reliability gaps already identified in the codebase (credential handling, CORS/rate limiting, resource leaks, missing audit trail) without breaking existing functionality. *(v1.0 core value, achieved; revisit at `/gsd-new-milestone`.)*
 
 ## Requirements
 
@@ -38,11 +55,11 @@ Close the concrete security and reliability gaps already identified in the codeb
 
 ### Active
 
-(none — all milestone requirements validated)
+(none — to be defined in the next milestone)
 
 ### Out of Scope
 
-- New feature development or improvements to existing features (backlog prioritizer, session planner, journal UX, etc.) — deferred to a follow-up milestone; this milestone is hardening-only
+- New feature development or improvements to existing features (backlog prioritizer, session planner, journal UX, etc.) — was out of scope for v1.0 (hardening-only); eligible for the next milestone
 - Migrating SQL scripts to EF Core migrations — reliability/process improvement, not a security fix; not blocking hardening
 - Distributed/scaled deployment concerns (Redis-backed token store, distributed job scheduler for workers) — app runs single-instance for personal use; no current scaling need
 - Full test suite / high coverage target — only tests directly verifying hardening changes are in scope
@@ -53,8 +70,9 @@ Close the concrete security and reliability gaps already identified in the codeb
 - Brownfield project; full codebase map exists at `.planning/codebase/` (ARCHITECTURE.md, STACK.md, CONCERNS.md, CONVENTIONS.md, INTEGRATIONS.md, STRUCTURE.md, TESTING.md), refreshed 2026-08-28.
 - `.planning/codebase/CONCERNS.md` already contains a structured security/reliability audit (credentials in URLs, CORS, resource leaks, missing tests, EOL dependencies, missing audit logging, no rate limiting on writes). This milestone's "identify problems" phase builds on and deepens those findings rather than re-auditing from scratch.
 - App is used personally/locally, not deployed publicly with real users — lowers urgency of production-grade concerns (WAF, secrets manager, distributed scaling) but does not reduce urgency of fixing credential-in-URL and dependency EOL issues, since those are exploitable regardless of deployment scale.
-- Stack: ASP.NET Core 8.0 API (EF Core for reads, stored procedures for writes, Dapper in places), Angular 13.3.0 SPA (EOL), SQL Server, JWT Bearer auth, BCrypt password hashing, external integrations with IGDB, Steam, HowLongToBeat.
-- No existing test coverage anywhere in the codebase (backend or frontend) prior to this milestone.
+- Stack: ASP.NET Core 8.0 API (EF Core for reads, stored procedures for writes, Dapper in places), Angular 22 SPA (TypeScript 6.0, Karma/Jasmine), SQL Server, JWT Bearer auth, BCrypt password hashing, external integrations with IGDB, Steam, HowLongToBeat.
+- Test coverage was zero before v1.0; now targeted xUnit (in-process `WebApplicationFactory` + real SQL Server), Karma specs, and a re-runnable Playwright UAT run as the `uat-test@gameplanner.local` account.
+- Known tech debt after v1.0: residual dev-only npm advisories (vite, image-size, uuid) blocked by the Angular peer range; JwtBearer 8.0.32 bump not applied; `GetUserId()` duplicated across controllers.
 
 ## Constraints
 
@@ -67,11 +85,13 @@ Close the concrete security and reliability gaps already identified in the codeb
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Hardening-only milestone; feature improvements deferred | User wants security prioritized before any feature work | — Pending |
-| Build on existing CONCERNS.md audit rather than re-auditing from scratch | Prior codebase mapping already surfaced concrete, file-specific security findings | — Pending |
-| Include Angular EOL upgrade in this milestone | Angular 13 has been unpatched for 2+ years; treated as a security fix, not a feature/maintenance task | — Pending |
-| Add targeted tests alongside hardening fixes | Auth/external-service code has zero existing test coverage; changes here risk silent regressions without tests | — Pending |
-| Scope limited to personal/local use, not production-hardening | App is not publicly deployed; distributed/scaling concerns and infra-level hardening excluded | — Pending |
+| Hardening-only milestone; feature improvements deferred | User wants security prioritized before any feature work | ✓ Good — v1.0 shipped with no feature creep; cross-user bugs found along the way were folded in |
+| Build on existing CONCERNS.md audit rather than re-auditing from scratch | Prior codebase mapping already surfaced concrete, file-specific security findings | ✓ Good — every CONCERNS.md item mapped to a requirement |
+| Include Angular EOL upgrade in this milestone | Angular 13 has been unpatched for 2+ years; treated as a security fix, not a feature/maintenance task | ✓ Good — 13 → 22 in nine bisectable hops, UAT approved |
+| Add targeted tests alongside hardening fixes | Auth/external-service code has zero existing test coverage; changes here risk silent regressions without tests | ✓ Good — tests caught the Steam key HttpClient log leak and the `DeleteAsync` bug |
+| Scope limited to personal/local use, not production-hardening | App is not publicly deployed; distributed/scaling concerns and infra-level hardening excluded | ✓ Good — still valid |
+| EF + Dapper share one EF-owned transaction; audit stamps set SQL-side | Keeps the stored-proc-for-writes convention while making writes atomic | ✓ Good — proven by injected-failure rollback test |
+| UAT via Playwright automation instead of manual walkthroughs | User request; re-runnable and faster | ✓ Good — adopted as the default UAT approach |
 | Fixed cross-user session-planner data leak inside Phase 3 rather than deferring | Folded todo's reproduction traced the leak to both `SessionManager` and `SessionPlannerManager`; fixing while already in the auth/session trust-boundary code was lower-risk than a separate follow-up phase | ✓ Closed — Phase 3 (03-02), live-verified no cross-user leak |
 | Rate-limit backstop (concurrent-load atomicity) and CORS browser-walkthrough closed via Playwright MCP live testing at end-of-phase human verification, not left as open gaps | Both were marked `verification: backstop`/deferred-to-human in the phase's own plans; automated sequential testing during the phase couldn't prove concurrent-safety or real browser CORS enforcement | ✓ Closed — Phase 3 UAT, 2026-08-31 |
 
@@ -93,4 +113,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-10-27 after Phase 5 (regression-testing-full-stack-verification) completion*
+*Last updated: 2026-10-27 after v1.0 milestone*

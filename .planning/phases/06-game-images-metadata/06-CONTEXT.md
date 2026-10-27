@@ -74,6 +74,12 @@ The phase starts by reviewing and committing the WIP. It finishes and verifies t
 
   After the owner applies script 39, Claude triggers non-force worker runs through the API and checks the rows with SQL and the game-detail pages (Playwright). The owner's only manual step is applying the script.
 
+### Added at plan time (owner answers to research open questions, 2026-10-27)
+- **D-18:** Manager xUnit tests run against a throwaway `GamePlannerDB_Test` database built from the numbered scripts, chosen through `ConnectionStrings__DefaultConnection`. A guard refuses to run when the DB name lacks the `_Test` suffix. Owner data (UserId 2) is never touched by tests.
+- **D-19:** Fix the duplicate-screenshot defect on the server: `GET /api/gameimages` gets an optional `gameId` filter that stays user-scoped, and the game-detail page passes `game.id`, so a shared IGDBId does not show each screenshot twice or make the counter read "N / 2M".
+- **D-20:** Raise `IgdbService.SearchGameAsync` from `limit 3` to `limit 10` so exact-name matches ranked lower are found.
+- **D-21:** Page the screenshot/artwork fetch in `GameImageManager` instead of a single `limit 500` per 50-game batch, so image-rich batches are not cut off.
+
 ### Claude's Discretion
 - Exact SQL heuristics for the D-07 suspect scan.
 - How the IGDB external-games lookup is shaped in `IgdbService` (single vs batch), following existing method conventions.

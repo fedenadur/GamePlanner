@@ -32,11 +32,13 @@ Close the concrete security and reliability gaps already identified in the codeb
 - ✓ `ModifiedAt`/`DeletedAt` audit fields set by `GETUTCDATE()` in stored procedures; repeat soft-delete is a no-op — validated Phase 4, 2026-10-24
 - ✓ Periodic `SteamTokenStore` cleanup (`SteamTokenCleanupWorker`, 10-min sweep, count-only logging) — validated Phase 4, 2026-10-24
 - ✓ `Games.IGDBId` no longer globally unique; `sp_UpsertIGDBGame` UPDATE-only and user-scoped (cross-user deactivation bug fixed) — validated Phase 4, 2026-10-24
+- ✓ Steam OpenID trust boundary reviewed and fixed (first-login crash, `return_to` binding, fail-closed callback, strict signed-field / `is_valid` checks; S5-S7 logged as todo) — validated Phase 5 (regression-testing-full-stack-verification), 2026-10-27
+- ✓ Targeted tests for hardening-touched areas (61 backend xUnit, 8 Angular specs, 16-test Playwright full-stack UAT) plus live owner Steam login/import checks — validated Phase 5, 2026-10-27
+- ✓ Steam API key no longer written to logs by HttpClient request logging — validated Phase 5, 2026-10-27
 
 ### Active
 
-- [ ] Steam OpenID trust boundary review (not covered by Phase 3's JWT/CORS/rate-limiting scope)
-- [ ] Targeted unit/integration tests covering the areas touched by hardening (auth, `GameManager`, `IgdbService`, `SteamService`, `SteamTokenStore`) — not full coverage, just enough to catch regressions from these fixes
+(none — all milestone requirements validated)
 
 ### Out of Scope
 
@@ -91,4 +93,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-10-24 after Phase 4 (data-layer-reliability-audit-trail) completion*
+*Last updated: 2026-10-27 after Phase 5 (regression-testing-full-stack-verification) completion*

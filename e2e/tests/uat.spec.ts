@@ -243,8 +243,8 @@ test.describe.serial('GamePlanner UAT', () => {
       });
     }
 
-    // SteamPlaytimeSyncWorker has no run-now trigger; the user accepted the API restart as its
-    // trigger (recorded D-04 deviation, decision of 2026-10-24).
+    // Still asserts the restart-initiated run (recorded D-04 deviation, decision of 2026-10-24);
+    // a run-now trigger for this worker was added later in quick task 261027-qhu.
     test('SteamPlaytimeSyncWorker restart-initiated run (accepted D-04 deviation, 05-06 Task 2)', async ({ request }) => {
       await expect.poll(async () => (await worker(request, 'SteamPlaytimeSyncWorker')).status, {
         timeout: 5 * 60_000, intervals: [2_000],

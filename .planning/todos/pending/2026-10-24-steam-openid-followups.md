@@ -3,6 +3,7 @@ created: 2026-10-24T22:30:00.000Z
 title: Steam OpenID follow-ups (S5 state binding, S6 rate limit, S7 SteamId/Email uniqueness)
 area: auth
 severity: minor
+resolves_phase: 7
 files:
   - GamePlanner.API/Controllers/AuthController.cs
   - GamePlanner.API/Services/SteamAuthService.cs

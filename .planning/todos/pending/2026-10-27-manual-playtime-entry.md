@@ -3,6 +3,7 @@ created: 2026-10-27T22:45:00.000Z
 title: Allow manual playtime entry for games Steam can't sync (family-shared, non-Steam)
 area: api
 severity: minor
+resolves_phase: 8
 files:
   - GamePlanner.API/Managers/SteamPlaytimeSyncManager.cs
   - game-planner-ui/src/app/components/game-detail/game-detail.component.html

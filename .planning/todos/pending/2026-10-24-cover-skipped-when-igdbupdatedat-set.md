@@ -3,6 +3,7 @@ created: 2026-10-24T22:00:00.000Z
 title: Image worker skips cover fetch when IGDBUpdatedAt is already set and CoverImageUrl is NULL
 area: api
 severity: minor
+resolves_phase: 6
 files:
   - GamePlanner.API/Managers/GameImageManager.cs
   - GamePlanner.API/Managers/GameSyncManager.cs

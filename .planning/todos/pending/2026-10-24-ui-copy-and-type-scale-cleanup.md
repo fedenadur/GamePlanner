@@ -3,6 +3,7 @@ created: 2026-10-24T00:00:00.000Z
 title: UI copy and type-scale cleanup (deferred from Phase 5 UI-SPEC)
 area: frontend
 severity: minor
+resolves_phase: 9
 files:
   - game-planner-ui/src/app/components/login/login.component.ts
   - game-planner-ui/src/app/components/register/register.component.ts

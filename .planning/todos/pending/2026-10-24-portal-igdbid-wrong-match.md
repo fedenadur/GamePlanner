@@ -3,6 +3,7 @@ created: 2026-10-24T22:00:00.000Z
 title: Portal carries a likely wrong IGDBId (14546, 1986 release date)
 area: database
 severity: minor
+resolves_phase: 6
 files:
   - GamePlanner.API/Managers/GameEnrichmentManager.cs
 ---

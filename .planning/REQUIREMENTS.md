@@ -52,3 +52,30 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
+| IMG-01 | Phase 6 | Pending |
+| IMG-02 | Phase 6 | Pending |
+| IMG-03 | Phase 6 | Pending |
+| UI-01 | Phase 6 | Pending |
+| AUTH-03 | Phase 7 | Pending |
+| AUTH-04 | Phase 7 | Pending |
+| AUTH-05 | Phase 7 | Pending |
+| AUTH-06 | Phase 7 | Pending |
+| PLAY-01 | Phase 8 | Pending |
+| PLAY-02 | Phase 8 | Pending |
+| UI-02 | Phase 9 | Pending |
+| UI-03 | Phase 9 | Pending |
+| UI-04 | Phase 9 | Pending |
+| PLAT-01 | Phase 10 | Complete |
+| PLAT-02 | Phase 10 | Complete |
+| PLAT-03 | Phase 10 | Complete |
+| PLAT-04 | Phase 10 | Pending |
+
+**Coverage:**
+
+- v1 requirements: 17 total
+- Mapped to phases: 17
+- Unmapped: 0
+
+---
+*Requirements defined: 2026-10-27*
+*Last updated: 2026-10-27 after v1.1 roadmap creation (Phases 6-10)*

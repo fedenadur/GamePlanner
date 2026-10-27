@@ -3,10 +3,10 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Cleanup + Platform Analysis
 status: planning
-last_updated: "2026-10-27T22:39:23.385Z"
+last_updated: "2026-10-27T22:52:13.000Z"
 last_activity: 2026-10-27
 progress:
-  total_phases: 0
+  total_phases: 5
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -19,15 +19,17 @@ progress:
 
 See: .planning/PROJECT.md (updated 2026-10-27)
 
-**Core value:** Close the concrete security and reliability gaps already identified in the codebase (credential handling, CORS/rate limiting, resource leaks, missing audit trail) without breaking existing functionality. (v1.0 — achieved)
-**Current focus:** Planning next milestone
+**Core value:** Close the backlog left after v1.0 (data, auth and UI todos plus in-progress work) and decide, with evidence, whether other game stores can be integrated like Steam. (v1.1, from REQUIREMENTS.md; PROJECT.md Core Value still states the achieved v1.0 value)
+**Current focus:** Phase 6 — Game Images & Metadata
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-10-27 — Milestone v1.1 started
+Phase: 6 (Game Images & Metadata) — first of 5 v1.1 phases (6-10)
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-10-27 — v1.1 roadmap created (Phases 6-10, 17/17 requirements mapped)
+
+Progress: [░░░░░░░░░░] 0%
 
 ## Performance Metrics
 
@@ -87,13 +89,28 @@ Last activity: 2026-10-27 — Milestone v1.1 started
 
 Full decision log for v1.0 is in PROJECT.md Key Decisions and the archived phase summaries (`.planning/milestones/v1.0-phases/`).
 
+v1.1 roadmap decisions:
+
+- [v1.1 roadmap]: Phase 6 owns the uncommitted WIP (`GameImageManager.cs` for IMG-02, `game-detail` lightbox for UI-01). It starts by reviewing and committing that work, not rewriting it.
+- [v1.1 roadmap]: Phase 8 (manual playtime) depends on Phase 6 because both edit the `game-detail` component.
+- [v1.1 roadmap]: UI-04 (type scale) runs in Phase 9, after the Phase 6 and Phase 8 UI changes, so the consolidated scale covers them.
+- [v1.1 roadmap]: Numbered SQL scripts take the next free number when each phase runs. 39 is free now; expected order is 39 Portal IGDBId fix (Phase 6), 40 `UQ_Users_Email` filtered index (Phase 7), 41 playtime write SP (Phase 8).
+- [v1.1 roadmap]: PLAT-01..03 are already complete (commits 408c1ea, 865eea1). Phase 10's remaining work is PLAT-04: record the confirmed recommendation in PROJECT.md Key Decisions.
+
 ### Pending Todos
 
-4 minor todos in `.planning/todos/pending/` — deferred at v1.0 close (see Deferred Items).
+5 todos in `.planning/todos/pending/`, all scheduled as v1.1 requirements. Move each to done when its phase completes:
+
+- `2026-10-24-cover-skipped-when-igdbupdatedat-set` → IMG-01 (Phase 6)
+- `2026-10-24-portal-igdbid-wrong-match` → IMG-03 (Phase 6)
+- `2026-10-24-steam-openid-followups` → AUTH-03..06 (Phase 7)
+- `2026-10-27-manual-playtime-entry` → PLAY-01..02 (Phase 8)
+- `2026-10-24-ui-copy-and-type-scale-cleanup` → UI-02..04 (Phase 9)
 
 ### Blockers/Concerns
 
-None.
+- Until Phase 6 commits it, the IMG-02/UI-01 WIP exists only in the working tree. Avoid stash, checkout or reset operations that would discard working-tree changes.
+- The IMG-03 and AUTH-03 SQL scripts change live data and the schema. The owner applies them manually in SSMS, and IMG-03 needs the owner's go-ahead first.
 
 ### Quick Tasks Completed
 
@@ -112,12 +129,15 @@ Items acknowledged and deferred at milestone close on 2026-10-27:
 | todo | 2026-10-24-steam-openid-followups | pending | v1.0 close |
 | todo | 2026-10-24-ui-copy-and-type-scale-cleanup | pending | v1.0 close |
 
+All four are now scheduled in v1.1 (Phases 6, 7 and 9). See Pending Todos above.
+
 ## Session Continuity
 
-Last session: 2026-10-24T22:18:15.714Z
-Stopped at: Completed 05-06-PLAN.md
+Last session: 2026-10-27T22:52:13.000Z
+Stopped at: v1.1 roadmap created (Phases 6-10)
 Resume file: None
 
 ## Operator Next Steps
 
-- Start the next milestone with /gsd-new-milestone
+- Review `.planning/ROADMAP.md` (v1.1 Phases 6-10)
+- Start Phase 6 with /gsd-discuss-phase 6 (then /gsd-plan-phase 6). Phase 6 has a UI hint, so /gsd-ui-phase 6 is available for the lightbox work

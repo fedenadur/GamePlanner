@@ -80,6 +80,11 @@ The phase starts by reviewing and committing the WIP. It finishes and verifies t
 - **D-20:** Raise `IgdbService.SearchGameAsync` from `limit 3` to `limit 10` so exact-name matches ranked lower are found.
 - **D-21:** Page the screenshot/artwork fetch in `GameImageManager` instead of a single `limit 500` per 50-game batch, so image-rich batches are not cut off.
 
+- **D-22:** (supersedes D-03's proof rows) Half-Life 107683 and Half-Life 2 107687 already hold covers, so D-03's proof cannot run on them. The required live IMG-01 proof is a UAT row that reproduces the bug (cover NULL, `IGDBUpdatedAt` set) and gets a cover after one non-force `GameImageSyncWorker` run. The Half-Life check stays only as a non-discriminating regression check (covers intact). NieR 107889 counts as extra proof only when IGDB has a cover for it; a "not applicable" result is not a pass.
+- **D-23:** Raw INSERT/UPDATE/DELETE in the test harness (`TestDatabase`, `build-test-db.ps1`) is an owner-approved exception to the SP-only write rule, valid only on databases with the `_Test` suffix. Production code keeps writing only through stored procedures.
+- **D-24:** Execution pauses at the script 39 checkpoint (06-02) and again, with a confirmation checkpoint, before the restart that runs workers on owner data (06-05 Task 1). Everything else runs autonomously.
+- **D-25:** Migrate the existing `SteamAuthServiceTests` to the `GamePlannerDB_Test` harness so no test touches `GamePlannerDB`.
+
 ### Claude's Discretion
 - Exact SQL heuristics for the D-07 suspect scan.
 - How the IGDB external-games lookup is shaped in `IgdbService` (single vs batch), following existing method conventions.

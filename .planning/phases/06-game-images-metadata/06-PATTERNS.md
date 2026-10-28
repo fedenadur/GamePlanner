@@ -91,7 +91,7 @@ public async Task<List<IgdbImage>> FetchScreenshotsByGameIdsAsync(IEnumerable<lo
     return await PostQueryAsync<IgdbImage>(ScreenshotsUrl, query, ct);
 }
 ```
-New method follows the same body: inline interpolated query, `int` interpolation (no injection), `return await PostQueryAsync<IgdbExternalGame>(ExternalGamesUrl, query, ct);` returning `List<IgdbExternalGame>` (no selection in the service). Query per RESEARCH: `fields uid,game; where uid = "{steamAppId}" & external_game_source = 1 & game != null; limit 5;` (uid quoted; `external_game_source = 1` mandatory; never use `category`). Place it in the `// ── Queries ──` region next to the other fetchers.
+New method follows the same body: inline interpolated query, `int` interpolation (no injection), `return await PostQueryAsync<IgdbExternalGame>(ExternalGamesUrl, query, ct);` returning `List<IgdbExternalGame>` (no selection in the service). Query (revision 2 adds `sort game asc` so the 5-row window always holds the lowest ids): `fields uid,game; where uid = "{steamAppId}" & external_game_source = 1 & game != null; sort game asc; limit 5;` (uid quoted; `external_game_source = 1` mandatory; never use `category`). Place it in the `// ── Queries ──` region next to the other fetchers.
 
 **Do not touch** `SearchGameAsync` (lines 65-73): it already does exact case-insensitive name match then first hit (`results.FirstOrDefault(r => string.Equals(r.Name, name, StringComparison.OrdinalIgnoreCase)) ?? results.FirstOrDefault()`), which covers D-09 steps 2-3.
 
@@ -146,7 +146,7 @@ else
     result ??= await igdb.SearchGameAsync(name, ct);
 }
 ```
-Needs `using GamePlanner.API.Domain;` (not currently imported in this file; line 1-4 imports Context, Entities, Services, EF). Existing persistence stays: `game.IGDBId ??= result.Id;` (line 152). Error handling stays: outer `catch (OperationCanceledException) { throw; } catch (Exception ex) { logger.LogWarning(ex, "Failed to enrich '{Name}', skipping.", name); return false; }` (lines 167-172). Do not alter the `Skip(offset)` paging (RESEARCH Pitfall 3, out of scope).
+Needs `using GamePlanner.API.Domain;` (not currently imported in this file; line 1-4 imports Context, Entities, Services, EF). Existing persistence stays: `game.IGDBId ??= result.Id;` (line 152). Error handling stays: outer `catch (OperationCanceledException) { throw; } catch (Exception ex) { logger.LogWarning(ex, "Failed to enrich '{Name}', skipping.", name); return false; }` (lines 167-172). Revision 2: the `Skip(offset)` paging is replaced by an Id cursor (`g.Id > lastId`, `lastId = batch[^1].Id`) in 06-04 Task 2, because rows that leave the filter make offset paging skip unprocessed rows (RESEARCH Pitfall 3) and 06-05's MATCHER_OK depends on one run reaching every row.
 
 ---
 

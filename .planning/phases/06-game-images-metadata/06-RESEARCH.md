@@ -408,15 +408,17 @@ This phase is a data correction (Portal) rather than a rename, but the same ques
 | A3 | Owner accepts that the first matcher-enabled non-force `GameSyncWorker` run assigns IGDBIds to ~16 rows | Pitfall 7 | Surprise data change; mitigated by telling the owner at the Portal checkpoint |
 | A4 | The counter clipping at short viewports is a cosmetic risk only | Code State | Cosmetic |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Test database vs. live DB for manager tests**
+All four were answered by the owner at plan time (2026-10-27) and recorded as locked decisions in `06-CONTEXT.md` ("Added at plan time").
+
+1. **Test database vs. live DB for manager tests** - **RESOLVED by D-18:** manager tests run against a throwaway `GamePlannerDB_Test` built from the numbered scripts, chosen through `ConnectionStrings__DefaultConnection`, with a guard that refuses any database name without the `_Test` suffix. The `InternalsVisibleTo` fallback is not used.
    - Known: managers scan all users; existing tests hit the live dev DB for probe rows only.
-   - Unclear: owner appetite for a `GamePlannerDB_Test` database.
-   - Recommendation: create it (Wave 0), guard by name suffix. Ask the owner once if unsure; the fallback has side effects on owner rows.
-2. **F1 fix location**: server `gameId` filter (recommended) vs. de-duplicating on the client. Server is smaller and keeps the counter correct.
-3. **Should `SearchGameAsync` use `limit 10` instead of 3?** Optional; not needed for any success criterion.
-4. **Screenshot batch `limit 500` truncation (Pitfall 4)**: out of the locked scope; planner may add a small paging loop only if the owner wants "full set" guaranteed.
+   - Unclear (at research time): owner appetite for a `GamePlannerDB_Test` database.
+   - Recommendation (adopted): create it, guard by name suffix.
+2. **F1 fix location** - **RESOLVED by D-19:** server-side `gameId` filter on `GET /api/gameimages`, kept user-scoped; the game-detail page passes `game.id`. Client-side de-duplication is not used.
+3. **Should `SearchGameAsync` use `limit 10` instead of 3?** - **RESOLVED by D-20:** yes, raise `limit 3` to `limit 10`.
+4. **Screenshot batch `limit 500` truncation (Pitfall 4)** - **RESOLVED by D-21:** page the screenshot/artwork fetch (offset paging until a short page) instead of a single `limit 500` per 50-game batch.
 
 ## Environment Availability
 

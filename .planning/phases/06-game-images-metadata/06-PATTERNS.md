@@ -12,7 +12,7 @@ Line numbers refer to the working tree as read (including the uncommitted WIP). 
 |-------------------|------|-----------|----------------|---------------|
 | `GamePlanner.API/Managers/GameImageManager.cs` (M: D-01, D-02) | manager | batch | itself (`SyncScreenshotsAndArtworksAsync` is the cursor-less sibling; `GameSyncManager.RunAsync` for paging) | exact |
 | `GamePlanner.API/Managers/GameSyncManager.cs` (M: matcher) | manager | batch / request-response | itself (`EnrichGameAsync` lines 85-93) | exact |
-| `GamePlanner.API/Services/IgdbService.cs` (M: `FindGameIdBySteamAppIdAsync`) | service (external API) | request-response | `FetchScreenshotsByGameIdsAsync` (lines 114-119, non-`games` endpoint) | exact |
+| `GamePlanner.API/Services/IgdbService.cs` (M: `FetchExternalGamesBySteamAppIdAsync`) | service (external API) | request-response | `FetchScreenshotsByGameIdsAsync` (lines 114-119, non-`games` endpoint) | exact |
 | `GamePlanner.API/Domain/IgdbModels.cs` (M: `IgdbExternalGame`) | model (DTO) | transform | `IgdbImage` (lines 89-108) | exact |
 | `GamePlanner.API/Controllers/GameImagesController.cs` (M: `gameId` filter, F1) | controller | request-response (read, EF LINQ) | itself (lines 14-35) | exact |
 | `game-planner-ui/src/app/services/game.service.ts` (M: `gameId` param) | service (HTTP client) | request-response | itself (`getGameImages`, lines 117-121) | exact |
@@ -67,7 +67,9 @@ Pattern notes to preserve: writes only through `sp_*` via Dapper `conn.ExecuteAs
 
 ---
 
-### `GamePlanner.API/Services/IgdbService.cs` (service, request-response) - `FindGameIdBySteamAppIdAsync`
+### `GamePlanner.API/Services/IgdbService.cs` (service, request-response) - `FetchExternalGamesBySteamAppIdAsync`
+
+> Revised at plan revision 1 (D-09): the service method returns the raw `List<IgdbExternalGame>` rows and makes no choice between them. The "lowest non-null game" selection lives in `GameSyncManager.EnrichGameAsync`. The earlier name `FindGameIdBySteamAppIdAsync` returning `long?` is superseded; `06-04-PLAN.md` is authoritative.
 
 **Analog:** `FetchScreenshotsByGameIdsAsync` (lines 114-119): a non-`games` endpoint reached through the generic `PostQueryAsync<T>(url, query, ct)`.
 
@@ -89,7 +91,7 @@ public async Task<List<IgdbImage>> FetchScreenshotsByGameIdsAsync(IEnumerable<lo
     return await PostQueryAsync<IgdbImage>(ScreenshotsUrl, query, ct);
 }
 ```
-New method follows the same body: inline interpolated query, `int` interpolation (no injection), `PostQueryAsync<IgdbExternalGame>(ExternalGamesUrl, query, ct)`, return `long?`. Query per RESEARCH: `fields uid,game; where uid = "{steamAppId}" & external_game_source = 1 & game != null; limit 5;` (uid quoted; `external_game_source = 1` mandatory; never use `category`). Place it in the `// ── Queries ──` region next to the other fetchers.
+New method follows the same body: inline interpolated query, `int` interpolation (no injection), `return await PostQueryAsync<IgdbExternalGame>(ExternalGamesUrl, query, ct);` returning `List<IgdbExternalGame>` (no selection in the service). Query per RESEARCH: `fields uid,game; where uid = "{steamAppId}" & external_game_source = 1 & game != null; limit 5;` (uid quoted; `external_game_source = 1` mandatory; never use `category`). Place it in the `// ── Queries ──` region next to the other fetchers.
 
 **Do not touch** `SearchGameAsync` (lines 65-73): it already does exact case-insensitive name match then first hit (`results.FirstOrDefault(r => string.Equals(r.Name, name, StringComparison.OrdinalIgnoreCase)) ?? results.FirstOrDefault()`), which covers D-09 steps 2-3.
 
@@ -137,7 +139,8 @@ else
     result = null;
     if (steamAppId.HasValue)
     {
-        var mapped = await igdb.FindGameIdBySteamAppIdAsync(steamAppId.Value, ct);
+        var mappings = await igdb.FetchExternalGamesBySteamAppIdAsync(steamAppId.Value, ct);
+        var mapped = mappings.Where(m => m.Game.HasValue).OrderBy(m => m.Game).Select(m => m.Game).FirstOrDefault();
         if (mapped.HasValue) result = await igdb.FetchEnrichmentByIdAsync(mapped.Value, ct);
     }
     result ??= await igdb.SearchGameAsync(name, ct);

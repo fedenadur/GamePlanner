@@ -56,10 +56,10 @@ v1.1 closes the backlog left after v1.0 and settles, with evidence, whether anot
 
 Plans:
 
-- [ ] 06-01-PLAN.md — Commit the WIP, build the GamePlannerDB_Test harness, fix cover sync (D-01/D-02), sync images before covers, page image fetches (D-21) [wave 1]
-- [ ] 06-02-PLAN.md — Portal script 39 with dry-run and REVERSAL proof, D-07 suspect scan, matcher preview, owner checkpoint (apply in SSMS + restart heads-up) [wave 1, checkpoint]
-- [ ] 06-03-PLAN.md — Per-game screenshot read (`gameId`, D-19), Escape (D-12), Karma specs, lightbox e2e test (D-16) [wave 2]
-- [ ] 06-04-PLAN.md — Steam AppId matcher via IGDB external_games (D-08..D-10), search limit 10 (D-20) [wave 2]
+- [ ] 06-01-PLAN.md — Commit the WIP, build the GamePlannerDB_Test harness, fix cover sync (D-01/D-02, per-row retry of a failed batch), sync images before covers [wave 1]
+- [ ] 06-02-PLAN.md — Portal script 39 with dry-run and REVERSAL proof, D-07 suspect scan, matcher preview with expected ids, owner checkpoint (apply in SSMS + restart heads-up) [wave 2, checkpoint]
+- [ ] 06-03-PLAN.md — Per-game screenshot read (`gameId`, D-19), Escape (D-12), Karma specs, lightbox e2e test with timed swap (D-16, D-14) [wave 2]
+- [ ] 06-04-PLAN.md — Steam AppId matcher via IGDB external_games (D-08..D-10, selection in the manager), search limit 10 (D-20), paged image fetch (D-21) [wave 2]
 - [ ] 06-05-PLAN.md — Single controlled restart after the owner go-ahead, live verification of all success criteria (D-17), e2e run, close todos [wave 3]
 
 **UI hint**: yes

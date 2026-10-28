@@ -85,6 +85,10 @@ The phase starts by reviewing and committing the WIP. It finishes and verifies t
 - **D-24:** Execution pauses at the script 39 checkpoint (06-02) and again, with a confirmation checkpoint, before the restart that runs workers on owner data (06-05 Task 1). Everything else runs autonomously.
 - **D-25:** Migrate the existing `SteamAuthServiceTests` to the `GamePlannerDB_Test` harness so no test touches `GamePlannerDB`.
 
+- **D-26:** (extends D-17) Owner game-detail pages (Portal 107693, Dark Messiah SP/MP 107697/107698) are checked by the owner at a checkpoint after the re-sync, once Claude has verified the rows with SQL and the API. Claude never logs in as the owner.
+- **D-27:** (extends D-14) Success criterion 4 is gated: after both neighbor preloads finish, the next/previous image must complete within 250 ms of the click. One retry is allowed for machine noise; a second miss fails the test.
+- **D-28:** (amends D-02) When a whole cover batch fails at IGDB, its rows are retried one by one in the same run (project retry-individually convention). Rows IGDB simply has no cover for are still tried once per run.
+
 ### Claude's Discretion
 - Exact SQL heuristics for the D-07 suspect scan.
 - How the IGDB external-games lookup is shaped in `IgdbService` (single vs batch), following existing method conventions.

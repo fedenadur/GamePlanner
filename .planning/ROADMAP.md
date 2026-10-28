@@ -57,11 +57,11 @@ v1.1 closes the backlog left after v1.0 and settles, with evidence, whether anot
 Plans:
 
 - [ ] 06-01-PLAN.md — Commit the WIP, build the GamePlannerDB_Test harness and move every DB test onto it (D-18, D-23, D-25), fix cover sync (D-01/D-02, per-row retry of a failed batch), sync images before covers [wave 1]
-- [ ] 06-02-PLAN.md — Portal script 39 with dry-run and REVERSAL proof, D-07 suspect scan, matcher preview with expected ids, owner checkpoint (apply in SSMS + restart heads-up) [wave 2, checkpoint]
+- [ ] 06-02-PLAN.md — Portal script 39 with dry-run and REVERSAL proof, D-07 suspect scan, matcher preview with expected ids from the committed 06-04 queries, sibling-pair gate, owner checkpoint (apply in SSMS + restart heads-up) [wave 3, checkpoint]
 - [ ] 06-03-PLAN.md — Per-game screenshot read (`gameId`, D-19), Escape (D-12), Karma specs, lightbox e2e test with timed swap (D-16, D-14) [wave 2]
 - [ ] 06-04-PLAN.md — Steam AppId matcher via IGDB external_games (D-08..D-10, sorted query, selection in the manager), search limit 10 (D-20), Id-cursor sync loop, paged image fetch (D-21) [wave 2]
-- [ ] 06-05-PLAN.md — Owner confirmation checkpoint (D-24), single controlled restart, live data verification of SC1-SC3 (D-17, D-22) [wave 3, checkpoint]
-- [ ] 06-06-PLAN.md — Lightbox e2e twice and full suite on the running stack, repro page check, close the folded todos [wave 4]
+- [ ] 06-05-PLAN.md — Owner confirmation checkpoint (D-24), single controlled restart, live data verification of SC1-SC3 recomputed with live SQL (D-17, D-22) [wave 4, checkpoint]
+- [ ] 06-06-PLAN.md — Lightbox e2e twice with the 250 ms gate (D-27), UAT-side API and repro page check, owner page checkpoint (D-26), full suite gated on exit code, close confirmed todos [wave 5, checkpoint]
 
 **UI hint**: yes
 

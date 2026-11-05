@@ -1,0 +1,19 @@
+<div class="backdrop" (click)="cancelled.emit()">
+  <div class="dialog" (click)="$event.stopPropagation()">
+    <h4>Session — {{ gameName }}</h4>
+    <p>{{ deviceLabel }}</p>
+    <label class="field">Hours played
+      <input class="in" type="text" inputmode="decimal" [(ngModel)]="hoursText" name="hours" />
+    </label>
+    <div class="err" *ngIf="hoursError">{{ hoursError }}</div>
+    <label class="field">How did it go? (optional)
+      <textarea class="in" rows="2" maxlength="500" [(ngModel)]="note" name="note"></textarea>
+    </label>
+    <label class="field">Date
+      <input class="in" type="date" [max]="today" [(ngModel)]="playedOn" name="playedOn" />
+    </label>
+    <div class="err" *ngIf="!dateValid">Date can't be in the future.</div>
+    <button class="btn p" [disabled]="!canSave" (click)="save()">Save session</button>
+    <button class="btn" (click)="cancelled.emit()">Cancel</button>
+  </div>
+</div>

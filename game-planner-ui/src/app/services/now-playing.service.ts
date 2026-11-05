@@ -23,12 +23,6 @@ export interface RemoveNowPlayingRequest {
   rating?: number | null;
 }
 
-// Legacy 3-slot shape used by the current component until Task 12 rewrites it.
-export interface LegacyNowPlayingSlot {
-  slot: number;
-  game: Game | null;
-}
-
 @Injectable({ providedIn: 'root' })
 export class NowPlayingService {
   private api = `${environment.apiUrl}/api/now-playing`;
@@ -45,17 +39,5 @@ export class NowPlayingService {
 
   remove(device: string, req: RemoveNowPlayingRequest): Observable<void> {
     return this.http.post<void>(`${this.api}/${device}/remove`, req);
-  }
-
-  getLegacySlots(): Observable<LegacyNowPlayingSlot[]> {
-    return this.http.get<LegacyNowPlayingSlot[]>(this.api);
-  }
-
-  setSlot(slot: number, gameId: number): Observable<void> {
-    return this.http.put<void>(`${this.api}/${slot}`, { gameId });
-  }
-
-  clearSlot(slot: number): Observable<void> {
-    return this.http.delete<void>(`${this.api}/${slot}`);
   }
 }

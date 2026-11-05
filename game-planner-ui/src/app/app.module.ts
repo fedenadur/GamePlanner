@@ -25,6 +25,8 @@ import { StatsDashboardComponent } from './components/stats-dashboard/stats-dash
 import { DashboardComponent } from './components/dashboard/dashboard.component';
 import { SidebarComponent } from './components/sidebar/sidebar.component';
 import { TrackedGamesComponent } from './components/tracked-games/tracked-games.component';
+import { FinishGameDialogComponent } from './components/finish-game-dialog/finish-game-dialog.component';
+import { LogSessionDialogComponent } from './components/log-session-dialog/log-session-dialog.component';
 
 @NgModule({ declarations: [
         AppComponent,
@@ -46,7 +48,9 @@ import { TrackedGamesComponent } from './components/tracked-games/tracked-games.
         JournalComponent,
         StatsDashboardComponent,
         DashboardComponent,
-        TrackedGamesComponent
+        TrackedGamesComponent,
+        FinishGameDialogComponent,
+        LogSessionDialogComponent
     ],
     bootstrap: [AppComponent], imports: [BrowserModule,
         AppRoutingModule,

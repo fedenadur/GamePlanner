@@ -167,15 +167,16 @@
         <span *ngIf="sessions.length">{{ loggedLabel }}</span>
         <span *ngIf="steamLabel">{{ steamLabel }}</span>
       </div>
-      <p class="sessions-empty" *ngIf="!sessions.length">No sessions yet. Log one from Now Playing or here.</p>
+      <p class="sessions-error" *ngIf="sessionsError">{{ sessionsError }}</p>
+      <p class="sessions-empty" *ngIf="!sessions.length && !sessionsError">No sessions yet. Log one from Now Playing or here.</p>
       <ul class="session-list" *ngIf="sessions.length">
         <li *ngFor="let s of sessions" class="session-row">
           <span class="s-date">{{ s.playedOn | date:'mediumDate' }}</span>
           <span class="s-device">{{ deviceIcons[s.device] }} {{ deviceLabels[s.device] || s.device }}</span>
           <span class="s-hours">{{ s.hours }} h</span>
           <span class="s-note">{{ s.note }}</span>
-          <button class="s-btn" (click)="editing = s">Edit</button>
-          <button class="s-btn s-del" (click)="deleting = s">Delete</button>
+          <button class="s-btn" (click)="openEdit(s)">Edit</button>
+          <button class="s-btn s-del" (click)="openDelete(s)">Delete</button>
         </li>
       </ul>
     </div>
@@ -184,13 +185,14 @@
 </div>
 
 <app-log-session-dialog *ngIf="logOpen && game"
-  [gameName]="game.name" [device]="logDevice" [devices]="logDevices"
-  (saved)="onLogSaved($event)" (cancelled)="logOpen = false"></app-log-session-dialog>
+  [gameName]="game.name" [device]="logDevice" [devices]="logDevices" [saving]="saving" [error]="saveError"
+  (saved)="onLogSaved($event)" (cancelled)="closeDialogs()"></app-log-session-dialog>
 <app-log-session-dialog *ngIf="editing && game"
   [gameName]="game.name" [device]="editing.device"
+  [saving]="saving" [error]="saveError"
   [initial]="{ hours: editing.hours, note: editing.note, playedOn: editing.playedOn.substring(0, 10), device: editing.device }"
-  (saved)="onEditSaved($event)" (cancelled)="editing = null"></app-log-session-dialog>
+  (saved)="onEditSaved($event)" (cancelled)="closeDialogs()"></app-log-session-dialog>
 <app-confirm-dialog *ngIf="deleting"
-  title="Delete this session?" message="This session will be removed from your history."
+  title="Delete this session?" [message]="deleteError || 'This session will be removed from your history.'"
   confirmLabel="Delete"
-  (confirmed)="confirmDelete()" (cancelled)="deleting = null"></app-confirm-dialog>
+  (confirmed)="confirmDelete()" (cancelled)="closeDialogs()"></app-confirm-dialog>

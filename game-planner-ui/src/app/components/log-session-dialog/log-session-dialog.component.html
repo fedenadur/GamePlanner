@@ -18,6 +18,7 @@
       <input class="in" type="date" [max]="today" [(ngModel)]="playedOn" name="playedOn" />
     </label>
     <div class="err" *ngIf="!dateValid">Date can't be in the future.</div>
+    <div class="err" *ngIf="error">{{ error }}</div>
     <button class="btn p" [disabled]="!canSave" (click)="save()">Save session</button>
     <button class="btn" (click)="cancelled.emit()">Cancel</button>
   </div>

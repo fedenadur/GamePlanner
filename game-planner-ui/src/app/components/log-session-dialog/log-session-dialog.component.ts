@@ -26,6 +26,8 @@ export class LogSessionDialogComponent implements OnInit {
   @Input() gameName = '';
   @Input() device = '';
   @Input() devices: string[] | null = null;
+  @Input() saving = false;
+  @Input() error = '';
   @Input() initial: InitialSession | null = null;
   @Output() saved = new EventEmitter<LogSessionResult>();
   @Output() cancelled = new EventEmitter<void>();
@@ -64,11 +66,11 @@ export class LogSessionDialogComponent implements OnInit {
 
   get dateValid(): boolean { return !!this.playedOn && this.playedOn <= this.today; }
 
-  get canSave(): boolean { return parseHours(this.hoursText) !== null && this.dateValid; }
+  get canSave(): boolean { return parseHours(this.hoursText) !== null && this.dateValid && !this.saving; }
 
   save() {
     const hours = parseHours(this.hoursText);
-    if (hours === null || !this.dateValid) return;
+    if (hours === null || !this.dateValid || this.saving) return;
     this.saved.emit({ hours, note: this.note.trim() || null, playedOn: this.playedOn,
       device: this.devices ? this.selectedDevice : this.device });
   }

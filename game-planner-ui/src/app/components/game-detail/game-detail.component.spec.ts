@@ -1,5 +1,5 @@
 import { ActivatedRoute, convertToParamMap } from '@angular/router';
-import { NEVER, of } from 'rxjs';
+import { NEVER, of, throwError } from 'rxjs';
 import { GameDetail, GameImage, GameService } from '../../services/game.service';
 import { JournalService } from '../../services/journal.service';
 import { PlaySession, PlaySessionService } from '../../services/play-session.service';
@@ -143,6 +143,7 @@ describe('GameDetailComponent play sessions', () => {
     cmp.onLogSaved({ hours: 1, note: null, playedOn: '2026-01-01', device: 'General' });
     expect(sessions.log).toHaveBeenCalledWith(42, { device: 'General', hours: 1, note: null, playedOn: '2026-01-01' });
     expect(cmp.logOpen).toBeFalse();
+    expect(sessions.list).toHaveBeenCalledTimes(2);
   });
 
   it('updates the edited session', () => {
@@ -153,6 +154,66 @@ describe('GameDetailComponent play sessions', () => {
     cmp.onEditSaved({ hours: 2, note: 'x', playedOn: '2026-01-02', device: 'PC' });
     expect(sessions.update).toHaveBeenCalledWith(5, { device: 'PC', hours: 2, note: 'x', playedOn: '2026-01-02' });
     expect(cmp.editing).toBeNull();
+    expect(sessions.list).toHaveBeenCalledTimes(2);
+  });
+
+  it('ignores a second save while one is in flight', () => {
+    const { cmp, sessions } = buildComponent();
+    sessions.log.and.returnValue(NEVER);
+    cmp.ngOnInit();
+    cmp.openLog();
+    const r = { hours: 1, note: null, playedOn: '2026-01-01', device: 'PC' };
+    cmp.onLogSaved(r);
+    cmp.onLogSaved(r);
+    expect(sessions.log).toHaveBeenCalledTimes(1);
+    expect(cmp.saving).toBeTrue();
+  });
+
+  it('keeps the dialog open and shows the error when save fails', () => {
+    const { cmp, sessions } = buildComponent();
+    sessions.log.and.returnValue(throwError(() => new Error('x')));
+    cmp.ngOnInit();
+    cmp.openLog();
+    cmp.onLogSaved({ hours: 1, note: null, playedOn: '2026-01-01', device: 'PC' });
+    expect(cmp.logOpen).toBeTrue();
+    expect(cmp.saveError).toBe('Could not save. Try again.');
+    expect(cmp.saving).toBeFalse();
+  });
+
+  it('keeps the edit dialog open when update fails', () => {
+    const { cmp, sessions } = buildComponent();
+    sessions.update.and.returnValue(throwError(() => new Error('x')));
+    cmp.ngOnInit();
+    cmp.editing = sess(5, 1);
+    cmp.onEditSaved({ hours: 2, note: null, playedOn: '2026-01-02', device: 'PC' });
+    expect(cmp.editing).not.toBeNull();
+    expect(cmp.saveError).toBe('Could not save. Try again.');
+  });
+
+  it('keeps the confirm open and shows the error when delete fails', () => {
+    const { cmp, sessions } = buildComponent();
+    sessions.delete.and.returnValue(throwError(() => new Error('x')));
+    cmp.ngOnInit();
+    cmp.deleting = sess(5, 1);
+    cmp.confirmDelete();
+    expect(cmp.deleting).not.toBeNull();
+    expect(cmp.deleteError).toBe('Could not delete. Try again.');
+  });
+
+  it('shows a load error when the session list fails', () => {
+    const { cmp, sessions } = buildComponent();
+    sessions.list.and.returnValue(throwError(() => new Error('x')));
+    cmp.ngOnInit();
+    expect(cmp.sessionsError).toBe('Could not load sessions. Check that the API is running, then reload.');
+  });
+
+  it('still saves the journal when Now Playing fails to load', () => {
+    const { cmp, journal, nowPlaying } = buildComponent();
+    journal.upsert = jasmine.createSpy().and.returnValue(of({}));
+    nowPlaying.getSlots.and.returnValue(throwError(() => new Error('x')));
+    cmp.ngOnInit();
+    expect(() => cmp.saveJournal()).not.toThrow();
+    expect(cmp.removedNotice).toBe('');
   });
 });
 

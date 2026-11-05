@@ -38,6 +38,10 @@ export class GameDetailComponent implements OnInit, OnDestroy {
   sessions: PlaySession[] = [];
   nowPlayingDevice: string | null = null;
   removedNotice = '';
+  saving = false;
+  saveError = '';
+  deleteError = '';
+  sessionsError = '';
   logOpen = false;
   logDevice = '';
   logDevices: string[] | null = null;
@@ -67,6 +71,7 @@ export class GameDetailComponent implements OnInit, OnDestroy {
       this.journalSaved = false;
       this.hoverRating = null;
       this.sessions = [];
+      this.sessionsError = '';
       this.nowPlayingDevice = null;
       this.removedNotice = '';
       this.gameService.getGameDetail(id).subscribe({
@@ -173,7 +178,10 @@ export class GameDetailComponent implements OnInit, OnDestroy {
   }
 
   private loadSessions(gameId: number) {
-    this.sessionService.list(gameId).subscribe({ next: (list) => { this.sessions = list; } });
+    this.sessionService.list(gameId).subscribe({
+      next: (list) => { this.sessions = list; this.sessionsError = ''; },
+      error: () => { this.sessionsError = 'Could not load sessions. Check that the API is running, then reload.'; }
+    });
   }
 
   private loadNowPlaying(gameId: number, done?: () => void) {
@@ -181,7 +189,8 @@ export class GameDetailComponent implements OnInit, OnDestroy {
       next: (slots) => {
         this.nowPlayingDevice = slots.find(s => s.game?.id === gameId)?.device ?? null;
         done?.();
-      }
+      },
+      error: () => { done?.(); }
     });
   }
 
@@ -209,30 +218,41 @@ export class GameDetailComponent implements OnInit, OnDestroy {
     });
   }
 
+  closeDialogs() {
+    this.logOpen = false; this.editing = null; this.deleting = null;
+    this.saveError = ''; this.deleteError = '';
+  }
+
+  openEdit(s: PlaySession) { this.saveError = ''; this.editing = s; }
+  openDelete(s: PlaySession) { this.deleteError = ''; this.deleting = s; }
+
   onLogSaved(r: LogSessionResult) {
-    if (!this.game) return;
+    if (!this.game || this.saving) return;
+    this.saving = true; this.saveError = '';
     const gameId = this.game.id;
     this.sessionService.log(gameId, { device: r.device, hours: r.hours, note: r.note, playedOn: r.playedOn }).subscribe({
-      next: () => { this.logOpen = false; this.loadSessions(gameId); },
-      error: () => { this.logOpen = false; }
+      next: () => { this.saving = false; this.closeDialogs(); this.loadSessions(gameId); },
+      error: () => { this.saving = false; this.saveError = 'Could not save. Try again.'; }
     });
   }
 
   onEditSaved(r: LogSessionResult) {
-    if (!this.game || !this.editing) return;
+    if (!this.game || !this.editing || this.saving) return;
+    this.saving = true; this.saveError = '';
     const gameId = this.game.id;
     this.sessionService.update(this.editing.id, { device: r.device, hours: r.hours, note: r.note, playedOn: r.playedOn }).subscribe({
-      next: () => { this.editing = null; this.loadSessions(gameId); },
-      error: () => { this.editing = null; }
+      next: () => { this.saving = false; this.closeDialogs(); this.loadSessions(gameId); },
+      error: () => { this.saving = false; this.saveError = 'Could not save. Try again.'; }
     });
   }
 
   confirmDelete() {
-    if (!this.game || !this.deleting) return;
+    if (!this.game || !this.deleting || this.saving) return;
+    this.saving = true; this.deleteError = '';
     const gameId = this.game.id;
     this.sessionService.delete(this.deleting.id).subscribe({
-      next: () => { this.deleting = null; this.loadSessions(gameId); },
-      error: () => { this.deleting = null; }
+      next: () => { this.saving = false; this.closeDialogs(); this.loadSessions(gameId); },
+      error: () => { this.saving = false; this.deleteError = 'Could not delete. Try again.'; }
     });
   }
 

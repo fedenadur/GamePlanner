@@ -59,6 +59,14 @@ describe('LogSessionDialogComponent', () => {
     expect(saved[0].device).toBe('General');
   });
 
+  it('does not emit and disables saving while saving', () => {
+    cmp.hoursText = '1';
+    cmp.saving = true;
+    expect(cmp.canSave).toBeFalse();
+    cmp.save();
+    expect(saved.length).toBe(0);
+  });
+
   describe('device selector', () => {
     function render(devices: string[] | null) {
       TestBed.configureTestingModule({ declarations: [LogSessionDialogComponent], imports: [FormsModule] });

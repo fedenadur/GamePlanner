@@ -460,3 +460,4 @@
 .s-btn:hover { color: var(--text); }
 .s-del:hover { color: var(--danger); border-color: var(--danger); }
 .removed-notice { font-size: 12px; color: var(--muted); margin-top: 8px; }
+.sessions-error { font-size: 13px; color: var(--danger); margin: 4px 0; }

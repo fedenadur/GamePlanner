@@ -197,6 +197,148 @@ test.describe.serial('GamePlanner UAT', () => {
     });
   });
 
+  // Runs as the UAT account only; triggers the image worker only when no fixture game with 2+ screenshots exists.
+  test.describe('lightbox', () => {
+    interface ImageRow { id: number; gameId: number; gameName: string; url: string; imageType: string }
+
+    // Owner decision D-27: the WIP's 20 ms class toggle plus the 180 ms opacity fade end at about 200 ms,
+    // so an image served from the preload cache completes inside the budget.
+    const NAV_BUDGET_MS = 250;
+
+    const big = (u: string) => u.replace('t_screenshot_big', 't_1080p');
+
+    async function shotsFor(request: APIRequestContext, gameId: number): Promise<ImageRow[]> {
+      const res = await request.get(`${API}/api/gameimages?type=screenshot&gameId=${gameId}`, { headers: bearer() });
+      expect(res.status()).toBe(200);
+      const rows = (await res.json()) as ImageRow[];
+      for (const r of rows) expect(r.gameId).toBe(gameId);
+      return rows;
+    }
+
+    async function lightboxFixture(request: APIRequestContext): Promise<{ gameId: number; shots: ImageRow[] }> {
+      const all = await request.get(`${API}/api/gameimages?type=screenshot`, { headers: bearer() });
+      expect(all.status()).toBe(200);
+      const counts = new Map<number, number>();
+      for (const r of (await all.json()) as ImageRow[]) counts.set(r.gameId, (counts.get(r.gameId) ?? 0) + 1);
+      const best = [...counts.entries()].filter(([, n]) => n >= 2).sort((a, b) => b[1] - a[1])[0];
+      if (best) return { gameId: best[0], shots: await shotsFor(request, best[0]) };
+
+      const created = await request.post(`${API}/api/games/from-igdb`, {
+        headers: bearer(),
+        data: { igdbId: 113112, name: 'uat-lightbox-fixture', estimatedMinutes: 60, genres: [], coverUrl: null },
+      });
+      expect(created.ok(), 'POST /api/games/from-igdb for the lightbox fixture').toBeTruthy();
+      const body = await created.json();
+      const gameId = Number(body.id ?? body.gameId);
+      const exists = await request.get(`${API}/api/games/${gameId}`, { headers: bearer() });
+      expect(exists.status(), `lightbox fixture game ${gameId} is not readable (soft-deleted?)`).toBe(200);
+
+      const run = await request.post(`${API}/api/worker/GameImageSyncWorker/run`, { headers: bearer() });
+      expect([200, 202, 409]).toContain(run.status());
+      await expect.poll(async () => (await shotsFor(request, gameId)).length, {
+        timeout: 15 * 60_000, intervals: [2_000],
+      }).toBeGreaterThanOrEqual(2);
+      return { gameId, shots: await shotsFor(request, gameId) };
+    }
+
+    // Clicks the element inside the page and resolves with the ms until .lightbox-img shows expectedSrc, fully loaded.
+    async function timedNav(page: Page, selector: string, expectedSrc: string): Promise<number> {
+      return page.evaluate(({ selector, expectedSrc }) => new Promise<number>((resolve, reject) => {
+        const t0 = performance.now();
+        (document.querySelector(selector) as HTMLElement).click();
+        const check = () => {
+          const img = document.querySelector('.lightbox-img') as HTMLImageElement | null;
+          if (img && img.src === expectedSrc && img.complete && img.naturalWidth > 0) {
+            resolve(performance.now() - t0);
+          } else if (performance.now() - t0 > 5_000) {
+            reject(new Error(`lightbox image never reached ${expectedSrc}`));
+          } else {
+            requestAnimationFrame(check);
+          }
+        };
+        requestAnimationFrame(check);
+      }), { selector, expectedSrc });
+    }
+
+    // D-27: one retry per swap for machine noise; a second miss fails the test.
+    async function gatedNav(
+      page: Page, selector: string, expectedSrc: string,
+      undoKey: 'ArrowLeft' | 'ArrowRight', label: 'next' | 'prev', counterBefore: string,
+    ): Promise<number> {
+      const ms1 = await timedNav(page, selector, expectedSrc);
+      console.log(`NAV_IMAGE_MS ${label} attempt=1 ms=${ms1.toFixed(1)} budget=${NAV_BUDGET_MS}`);
+      if (ms1 <= NAV_BUDGET_MS) return ms1;
+
+      await page.keyboard.press(undoKey);
+      await expect(page.locator('.lightbox-counter')).toHaveText(counterBefore);
+      const ms2 = await timedNav(page, selector, expectedSrc);
+      console.log(`NAV_IMAGE_MS ${label} attempt=2 ms=${ms2.toFixed(1)} budget=${NAV_BUDGET_MS}`);
+      expect(ms2, `${label} swap missed the ${NAV_BUDGET_MS} ms budget twice (D-27)`).toBeLessThanOrEqual(NAV_BUDGET_MS);
+      return ms2;
+    }
+
+    test('lightbox: buttons, arrow keys, wrap, counter, Escape, preload', async ({ page, request }) => {
+      test.setTimeout(20 * 60_000);
+      const { gameId, shots } = await lightboxFixture(request);
+      const M = shots.length;
+
+      const requested: string[] = [];
+      const finished: string[] = [];
+      page.on('request', r => requested.push(r.url()));
+      page.on('requestfinished', r => finished.push(r.url()));
+
+      await page.goto('/games/' + gameId);
+      await expect(page.locator('.carousel-item')).toHaveCount(M);
+
+      await page.locator('.carousel-item').first().click();
+      await expect(page.locator('.lightbox-overlay')).toBeVisible();
+      await expect(page.locator('.lightbox-counter')).toHaveText(`1 / ${M}`);
+
+      const neighbors = [big(shots[1].url), big(shots[M - 1].url)];
+      await expect.poll(() => neighbors.every(u => requested.includes(u))).toBe(true);
+      await expect.poll(() => neighbors.every(u => finished.includes(u))).toBe(true);
+      expect(requested.filter(u => u.includes('type=artwork'))).toEqual([]);
+
+      await gatedNav(page, '.lightbox-arrow-next', big(shots[1].url), 'ArrowLeft', 'next', `1 / ${M}`);
+      await expect(page.locator('.lightbox-counter')).toHaveText(`2 / ${M}`);
+
+      await page.keyboard.press('ArrowLeft');
+      await expect(page.locator('.lightbox-counter')).toHaveText(`1 / ${M}`);
+      await page.keyboard.press('ArrowRight');
+      await expect(page.locator('.lightbox-counter')).toHaveText(`2 / ${M}`);
+      await page.locator('.lightbox-arrow-prev').click();
+      await expect(page.locator('.lightbox-counter')).toHaveText(`1 / ${M}`);
+
+      await gatedNav(page, '.lightbox-arrow-prev', big(shots[M - 1].url), 'ArrowRight', 'prev', `1 / ${M}`);
+      await expect(page.locator('.lightbox-counter')).toHaveText(`${M} / ${M}`);
+
+      await page.keyboard.press('ArrowRight');
+      await expect(page.locator('.lightbox-counter')).toHaveText(`1 / ${M}`);
+
+      await page.keyboard.press('Escape');
+      await expect(page.locator('.lightbox-overlay')).toHaveCount(0);
+
+      await page.locator('.carousel-item').first().click();
+      await expect(page.locator('.lightbox-overlay')).toBeVisible();
+      await page.locator('.lightbox-overlay').click({ position: { x: 5, y: 5 } });
+      await expect(page.locator('.lightbox-overlay')).toHaveCount(0);
+
+      expect(requested.filter(u => u.includes('type=artwork'))).toEqual([]);
+    });
+
+    test('lightbox: counter stays visible on a short viewport', async ({ page, request }) => {
+      test.setTimeout(20 * 60_000);
+      const { gameId } = await lightboxFixture(request);
+      await page.setViewportSize({ width: 1280, height: 600 });
+      await page.goto('/games/' + gameId);
+      await page.locator('.carousel-item').first().click();
+      const box = await page.locator('.lightbox-counter').boundingBox();
+      expect(box, 'lightbox counter is rendered').not.toBeNull();
+      expect(box!.y).toBeGreaterThanOrEqual(0);
+      expect(box!.y + box!.height).toBeLessThanOrEqual(600);
+    });
+  });
+
   test.describe('workers', () => {
     interface WorkerRow { name: string; status: string; lastRunAt: string | null; lastError: string | null }
 

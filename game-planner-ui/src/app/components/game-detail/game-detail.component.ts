@@ -94,6 +94,7 @@ export class GameDetailComponent implements OnInit, OnDestroy {
     if (this.lightboxIndex === null) return;
     if (event.key === 'ArrowRight') this.nextImage();
     else if (event.key === 'ArrowLeft') this.prevImage();
+    else if (event.key === 'Escape') this.closeLightbox();
   }
 
   private setLightboxIndex(index: number) {

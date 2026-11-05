@@ -13,7 +13,7 @@
 
 ### Game Detail (UI)
 
-- [ ] **UI-01**: User can navigate screenshots in the game-detail lightbox with prev/next controls and arrow keys, with neighbor images preloaded (finish and verify the uncommitted game-detail change)
+- [x] **UI-01**: User can navigate screenshots in the game-detail lightbox with prev/next controls and arrow keys, with neighbor images preloaded (finish and verify the uncommitted game-detail change)
 - [ ] **UI-02**: When the server is unreachable, login and register show "Could not connect to server. Check your connection and try again." (or equivalent with a next step)
 - [ ] **UI-03**: A user with zero games sees a distinct empty state with a next step (e.g. "No games yet. Add your first game to get started."), separate from "No games match your filters."
 - [ ] **UI-04**: The stylesheet uses a consolidated type scale (fewer than the current 8 font sizes and 4 weights), with no visual regressions on existing screens
@@ -55,7 +55,7 @@
 | IMG-01 | Phase 6 | Complete |
 | IMG-02 | Phase 6 | Complete |
 | IMG-03 | Phase 6 | Pending |
-| UI-01 | Phase 6 | Pending |
+| UI-01 | Phase 6 | Complete |
 | AUTH-03 | Phase 7 | Pending |
 | AUTH-04 | Phase 7 | Pending |
 | AUTH-05 | Phase 7 | Pending |

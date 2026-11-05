@@ -5,8 +5,8 @@ milestone_name: Cleanup + Platform Analysis
 current_phase: 06
 current_phase_name: game-images-metadata
 status: executing
-stopped_at: Plan 06-02 Tasks 1-2 done; awaiting Task 3 owner checkpoint (apply script 39 in SSMS)
-last_updated: "2026-11-05T17:18:53.460Z"
+stopped_at: Completed 06-02-PLAN.md (owner applied script 39); next 06-05
+last_updated: "2026-11-05T17:40:14.304Z"
 last_activity: 2026-11-05
 last_activity_desc: Phase 06 execution started
 progress:
@@ -29,11 +29,11 @@ See: .planning/PROJECT.md (updated 2026-10-27)
 ## Current Position
 
 Phase: 06 (game-images-metadata) — EXECUTING
-Plan: 4 of 6
+Plan: 5 of 6
 Status: Ready to execute
 Last activity: 2026-11-05 — Phase 06 execution started
 
-Progress: [█████░░░░░] 50%
+Progress: [███████░░░] 67%
 
 ## Performance Metrics
 
@@ -108,6 +108,7 @@ v1.1 roadmap decisions:
 - [Phase 06]: 06-03: GET /api/gameimages gameId filter (user-scoped) replaces igdbId read on game-detail; Escape closes lightbox; lightbox e2e authored, run in 06-06
 - [Phase 06]: 06-04 D-09 split: IgdbService returns raw external_games rows, GameSyncManager picks the lowest mapped game id; freshness skip only for rows with an IGDBId; sync loop uses an Id cursor
 - [Phase 06]: 06-02: Portal IGDB id is 71 (Valve 2007) via Steam external_games mapping; script 39 authored and dry-run proven, owner applies it
+- [Phase 06]: 06-02: Portal IGDBId corrected 14546 -> 71 via guarded, reversible Database/39_FixPortalIgdbId.sql (raw UPDATE/DELETE, convention exemption approved); owner applied in SSMS 2026-11-05 and re-verified read-only; 48 D-07 suspects logged, none changed
 
 ### Pending Todos
 
@@ -145,9 +146,9 @@ All four are now scheduled in v1.1 (Phases 6, 7 and 9). See Pending Todos above.
 
 ## Session Continuity
 
-Last session: 2026-11-05T17:18:53.045Z
-Stopped at: Plan 06-02 Tasks 1-2 done; awaiting Task 3 owner checkpoint (apply script 39 in SSMS)
-Resume file: .planning/phases/06-game-images-metadata/06-02-SUMMARY.md
+Last session: 2026-11-05T17:40:14.290Z
+Stopped at: Completed 06-02-PLAN.md (owner applied script 39); next 06-05
+Resume file: None
 
 ## Operator Next Steps
 

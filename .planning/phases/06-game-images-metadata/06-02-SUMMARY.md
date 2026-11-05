@@ -3,10 +3,10 @@ phase: 06-game-images-metadata
 plan: 02
 subsystem: database
 tags: [igdb, portal, data-fix, sql, external-games, survey]
-status: checkpoint-pending
+status: complete
 requires: [06-01, 06-04]
 provides:
-  - "Database/39_FixPortalIgdbId.sql: guarded, transactional, reversible Portal IGDBId fix 14546 -> 71 (authored, dry-run proven, NOT applied)"
+  - "Database/39_FixPortalIgdbId.sql: guarded, transactional, reversible Portal IGDBId fix 14546 -> 71 (authored, dry-run proven, applied by the owner in SSMS 2026-11-05)"
   - "D-07 suspect todo (48 suspects, none changed)"
   - "Pre-restart survey for 06-05: PREVIEW lines, SIBLING_PAIR, NIER_IGDB_COVER, NULL-cover list"
 affects: [06-05, 06-06]
@@ -18,16 +18,16 @@ key-decisions:
   - "D-05: Portal's correct IGDB id is 71 (Valve, 2007-10-10), resolved by the Steam external_games mapping (uid 400, source 1), not by name search"
   - "D-06: script 39 mirrors script 38; GameTags (TagId 15 Action) is kept"
   - "D-07: suspects are logged only; no suspect row was changed"
-requirements-completed: []
+requirements-completed: [IMG-03]
 ---
 
 # Phase 6 Plan 02: Portal IGDBId fix script 39 and pre-restart survey Summary
 
-Script 39 (Portal 14546 -> 71) is authored, committed and proven by two rolled-back dry runs; the read-only D-07 scan, matcher preview and IMG-01 survey are done. The plan is paused at its blocking owner checkpoint (Task 3); nothing was written to GamePlannerDB.
+Script 39 (Portal 14546 -> 71) was authored, proven by two rolled-back dry runs, and applied by the owner in SSMS on 2026-11-05; the read-only D-07 scan, matcher preview and IMG-01 survey are done. Claude itself never wrote to GamePlannerDB.
 
 ## Status
 
-Tasks 1 and 2 are complete and committed. Task 3 (`checkpoint:decision`, blocking) is awaiting the owner. Plan 06-05 must not start until the checkpoint outcome below is recorded.
+All three tasks are complete. The Task 3 owner checkpoint resolved as `apply-user` and the post-apply state was re-verified read-only. Plan 06-05 may now proceed (it is a separate plan and was not started here).
 
 ## Tasks and commits
 
@@ -35,7 +35,7 @@ Tasks 1 and 2 are complete and committed. Task 3 (`checkpoint:decision`, blockin
 |------|--------|--------|
 | 1 (tracer): script 39 | `15738e4` | `Database/39_FixPortalIgdbId.sql`; `DRYRUN_PORTAL` and `REVERSAL_DIFF=0` dry runs passed |
 | 2: survey + suspect todo | `dcfdced` | `.planning/todos/pending/2026-10-27-igdbid-suspect-rematch.md` (48 suspects); survey sections below |
-| 3: owner checkpoint | pending | see "Checkpoint decision" |
+| 3: owner checkpoint | (this docs commit) | `apply-user`, owner replied "applied" 2026-11-05; post-apply state verified read-only |
 
 ## IGDB evidence (Task 1, read-only, 2026-11-05)
 
@@ -262,7 +262,21 @@ Shown at the Task 3 checkpoint, as written here:
 
 ## Checkpoint decision (Task 3)
 
-Pending. Options: `apply-user` (confirm IGDB 71 and the convention exemption, acknowledge the heads-up, apply script 39 in SSMS, reply "applied"), `revise` (supply a different id), `hold`. To be recorded here with option, date and the "applied" reply time. Sibling pair presented: `SIBLING_PAIR=107697,107698 igdb=2369`.
+- **Option chosen:** `apply-user` (blocking `checkpoint:decision`; alternatives were `revise` and `hold`).
+- **Date:** 2026-11-05.
+- **Owner confirmed:** IGDB id 71 (Valve, 2007-10-10) for Portal; the convention exemption (raw IF EXISTS-guarded UPDATE/DELETE, no stored procedure, for this one-off correction); the 06-05 restart heads-up above (all workers run once on all users' rows, including the matcher preview rows).
+- **Owner action and reply:** applied `Database/39_FixPortalIgdbId.sql` in SSMS on GamePlannerDB and replied "applied".
+- **Sibling pair presented:** `SIBLING_PAIR=107697,107698 igdb=2369`.
+
+Read-only verification after the owner applied the script (sqlcmd SELECTs only, CRLF stripped; run by the orchestrator and re-run by this agent):
+
+```
+Games 107693: Id 107693 | UserId 2 | Portal | IGDBId 71 | FirstReleaseDate NULL | AggregatedRating NULL | AggregatedRatingCount NULL | CoverImageUrl NULL | IGDBUpdatedAt NULL | LastIGDBSyncAt NULL | LastImageSyncDate NULL | ModifiedAt 2026-11-05T17:39:09.190
+GameGenres=0 GameThemes=0 GamePlayerPerspectives=0 GameModesRelation=0 GameImages=0 GameTags=1
+GameTags: 107693 | TagId 15 (Action, kept per D-06)
+```
+
+The row now holds IGDBId 71 with every cleared column NULL and no IGDB-derived child rows; only the kept GameTags "Action" row remains. `ModifiedAt` was stamped by the script's `GETUTCDATE()`. The re-derivation from IGDB 71 (release date 2007-10-10, genres, themes, cover, screenshots) happens in plan 06-05's worker run, not here.
 
 ## Deviations from Plan
 
@@ -279,4 +293,4 @@ None.
 ## Self-Check: PASSED
 
 - `Database/39_FixPortalIgdbId.sql` exists (commit `15738e4`); `.planning/todos/pending/2026-10-27-igdbid-suspect-rematch.md` exists (commit `dcfdced`).
-- Live Portal still reads IGDBId 14546; no write ran against GamePlannerDB.
+- Live Portal reads IGDBId 71 with cleared columns NULL and 0 genre/theme/perspective/mode/image rows (GameTags 15 kept), re-verified read-only 2026-11-05; the only write to GamePlannerDB was the owner's SSMS apply.

@@ -42,3 +42,14 @@ export function statusColor(status: string): string {
   };
   return map[status] ?? 'muted';
 }
+
+export const STORE_DEFAULT_DEVICES: Record<string, string[]> = {
+  Steam: ['PC', 'SteamDeck'],
+  Epic: ['PC'],
+  GOG: ['PC'],
+  NintendoEShop: ['Switch'],
+  PlayStationStore: ['PlayStation'],
+  XboxStore: ['Xbox', 'PC'],
+  Physical: [],
+  Other: []
+};

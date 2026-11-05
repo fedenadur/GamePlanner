@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { Game, GameService } from '../../services/game.service';
-import { DEVICE_ICONS, DEVICE_LABELS, SELECTABLE_DEVICES, STORE_LABELS } from '../../shared/mvp-constants';
+import { DEVICE_ICONS, DEVICE_LABELS, SELECTABLE_DEVICES, STORE_DEFAULT_DEVICES, STORE_LABELS } from '../../shared/mvp-constants';
 
 @Component({
     selector: 'app-game-edit-dialog',
@@ -22,6 +22,8 @@ export class GameEditDialogComponent implements OnInit {
   name = '';
   coverImageUrl = '';
   store = '';
+  private originalStore = '';
+  private originalHours: number | null = null;
   selectedDevices = new Set<string>();
   hours: number | null = null;
   genresText = '';
@@ -36,10 +38,27 @@ export class GameEditDialogComponent implements OnInit {
     this.name = g.name;
     this.coverImageUrl = g.coverImageUrl ?? '';
     this.store = g.store;
+    this.originalStore = g.store;
     this.selectedDevices = new Set(g.playableDevices);
     this.hours = g.estimatedMinutes ? Math.round((g.estimatedMinutes / 60) * 10) / 10 : null;
+    this.originalHours = this.hours;
     this.genresText = g.genres.join(', ');
     this.isFavorite = g.isFavorite;
+  }
+
+  private sameAsDefault(store: string): boolean {
+    const def = STORE_DEFAULT_DEVICES[store] ?? [];
+    return def.length === this.selectedDevices.size && def.every(d => this.selectedDevices.has(d));
+  }
+
+  get invalidHours(): boolean { return this.hours !== null && this.hours < 0; }
+
+  onStoreChange(newStore: string) {
+    if (this.sameAsDefault(this.originalStore)) {
+      this.selectedDevices = new Set(STORE_DEFAULT_DEVICES[newStore] ?? []);
+    }
+    this.originalStore = newStore;
+    this.store = newStore;
   }
 
   toggleDevice(d: string) {
@@ -48,16 +67,17 @@ export class GameEditDialogComponent implements OnInit {
 
   save() {
     const name = this.name.trim();
+    if (this.invalidHours) return;
     if (!name) { this.error = 'Name is required.'; return; }
     this.saving = true;
     this.error = '';
     this.gameService.updateGame(this.game.id, {
       name,
       genres: this.genresText.split(',').map(x => x.trim()).filter(x => !!x),
-      estimatedMinutes: Math.round((this.hours ?? 0) * 60),
+      estimatedMinutes: this.hours === this.originalHours ? this.game.estimatedMinutes : Math.round((this.hours ?? 0) * 60),
       tags: this.game.tags,
       store: this.store,
-      playableDevices: [...this.selectedDevices],
+      playableDevices: this.sameAsDefault(this.store) ? [] : [...this.selectedDevices],
       isFavorite: this.isFavorite,
       coverImageUrl: this.coverImageUrl.trim() || null
     }).subscribe({

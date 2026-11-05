@@ -9,7 +9,7 @@
     <input [(ngModel)]="coverImageUrl" name="cover" placeholder="https://..." />
 
     <label>Store</label>
-    <select [(ngModel)]="store" name="store">
+    <select [ngModel]="store" (ngModelChange)="onStoreChange($event)" name="store">
       <option *ngFor="let s of storeCodes" [value]="s">{{ storeLabels[s] }}</option>
     </select>
 
@@ -30,7 +30,7 @@
     <p class="error" *ngIf="error">{{ error }}</p>
     <div class="actions">
       <button class="btn-ghost" (click)="cancelled.emit()">Cancel</button>
-      <button class="btn-primary" [disabled]="saving" (click)="save()">Save</button>
+      <button class="btn-primary" [disabled]="saving || invalidHours" (click)="save()">Save</button>
     </div>
   </div>
 </div>

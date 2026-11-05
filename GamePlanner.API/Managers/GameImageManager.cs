@@ -224,7 +224,7 @@ public class GameImageManager(
 
             try
             {
-                screenshots = await igdb.FetchScreenshotsByGameIdsAsync(igdbIds, ct);
+                screenshots = await FetchAllImagePagesAsync(offset => igdb.FetchScreenshotsByGameIdsAsync(igdbIds, offset, ct), ct);
             }
             catch (OperationCanceledException) { throw; }
             catch (Exception ex)
@@ -237,7 +237,7 @@ public class GameImageManager(
 
             try
             {
-                artworks = await igdb.FetchArtworksByGameIdsAsync(igdbIds, ct);
+                artworks = await FetchAllImagePagesAsync(offset => igdb.FetchArtworksByGameIdsAsync(igdbIds, offset, ct), ct);
             }
             catch (OperationCanceledException) { throw; }
             catch (Exception ex)
@@ -278,6 +278,24 @@ public class GameImageManager(
 
         logger.LogInformation("GameImageManager: screenshot/artwork sync complete.");
         return (failedCount, failedNames);
+    }
+
+    private static async Task<List<IgdbImage>> FetchAllImagePagesAsync(
+        Func<int, Task<List<IgdbImage>>> fetchPage, CancellationToken ct)
+    {
+        var all = new List<IgdbImage>();
+        var offset = 0;
+
+        while (true)
+        {
+            ct.ThrowIfCancellationRequested();
+            var page = await fetchPage(offset);
+            all.AddRange(page);
+            offset += page.Count;
+            if (page.Count < IgdbService.ImagePageSize) break;
+        }
+
+        return all;
     }
 
     private async Task SaveImagesAsync(

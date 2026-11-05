@@ -13,6 +13,8 @@ public class IgdbService(IHttpClientFactory httpFactory, IConfiguration config, 
     private const string ArtworksUrl    = "https://api.igdb.com/v4/artworks";
     private const string ExternalGamesUrl = "https://api.igdb.com/v4/external_games";
 
+    public const int ImagePageSize = 500;
+
     private string? _cachedToken;
     private DateTime _tokenExpiry = DateTime.MinValue;
 
@@ -119,17 +121,17 @@ public class IgdbService(IHttpClientFactory httpFactory, IConfiguration config, 
         return await PostQueryAsync(query, ct);
     }
 
-    public async Task<List<IgdbImage>> FetchScreenshotsByGameIdsAsync(IEnumerable<long> igdbIds, CancellationToken ct)
+    public async Task<List<IgdbImage>> FetchScreenshotsByGameIdsAsync(IEnumerable<long> igdbIds, int offset, CancellationToken ct)
     {
         var ids   = string.Join(",", igdbIds);
-        var query = $"fields id,image_id,url,width,height,game; where game = ({ids}); limit 500;";
+        var query = $"fields id,image_id,url,width,height,game; where game = ({ids}); sort id asc; limit {ImagePageSize}; offset {offset};";
         return await PostQueryAsync<IgdbImage>(ScreenshotsUrl, query, ct);
     }
 
-    public async Task<List<IgdbImage>> FetchArtworksByGameIdsAsync(IEnumerable<long> igdbIds, CancellationToken ct)
+    public async Task<List<IgdbImage>> FetchArtworksByGameIdsAsync(IEnumerable<long> igdbIds, int offset, CancellationToken ct)
     {
         var ids   = string.Join(",", igdbIds);
-        var query = $"fields id,image_id,url,width,height,game; where game = ({ids}); limit 500;";
+        var query = $"fields id,image_id,url,width,height,game; where game = ({ids}); sort id asc; limit {ImagePageSize}; offset {offset};";
         return await PostQueryAsync<IgdbImage>(ArtworksUrl, query, ct);
     }
 

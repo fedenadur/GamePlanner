@@ -5,15 +5,15 @@ milestone_name: Cleanup + Platform Analysis
 current_phase: 06
 current_phase_name: game-images-metadata
 status: executing
-stopped_at: Completed 06-03-PLAN.md
-last_updated: "2026-11-05T17:04:04.574Z"
+stopped_at: Completed 06-04-PLAN.md
+last_updated: "2026-11-05T17:11:13.230Z"
 last_activity: 2026-11-05
 last_activity_desc: Phase 06 execution started
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 6
-  completed_plans: 2
+  completed_plans: 3
   percent: 0
 ---
 
@@ -29,11 +29,11 @@ See: .planning/PROJECT.md (updated 2026-10-27)
 ## Current Position
 
 Phase: 06 (game-images-metadata) — EXECUTING
-Plan: 3 of 6
+Plan: 4 of 6
 Status: Ready to execute
 Last activity: 2026-11-05 — Phase 06 execution started
 
-Progress: [███░░░░░░░] 33%
+Progress: [█████░░░░░] 50%
 
 ## Performance Metrics
 
@@ -88,6 +88,7 @@ Progress: [███░░░░░░░] 33%
 | Phase 05 P06 | ~20min | 5 tasks | 8 files |
 | Phase 06 P01 | 10min | 3 tasks | 11 files |
 | Phase 06 P03 | 12 min | 2 tasks | 6 files |
+| Phase 06 P04 | 12 min | 3 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -105,6 +106,7 @@ v1.1 roadmap decisions:
 - [Phase 06]: Phase 06-01: cover sync fetches every NULL cover once per run (D-01 no timestamp skip, D-02 Id cursor, D-28 per-row retry of failed batch); images sync before covers
 - [Phase 06]: Phase 06-01: all DB tests and ApiFactory pinned to GamePlannerDB_Test (D-18/D-23/D-25); env var must be exported in the same Bash call as dotnet test
 - [Phase 06]: 06-03: GET /api/gameimages gameId filter (user-scoped) replaces igdbId read on game-detail; Escape closes lightbox; lightbox e2e authored, run in 06-06
+- [Phase 06]: 06-04 D-09 split: IgdbService returns raw external_games rows, GameSyncManager picks the lowest mapped game id; freshness skip only for rows with an IGDBId; sync loop uses an Id cursor
 
 ### Pending Todos
 
@@ -142,8 +144,8 @@ All four are now scheduled in v1.1 (Phases 6, 7 and 9). See Pending Todos above.
 
 ## Session Continuity
 
-Last session: 2026-11-05T17:04:04.560Z
-Stopped at: Completed 06-03-PLAN.md
+Last session: 2026-11-05T17:11:13.216Z
+Stopped at: Completed 06-04-PLAN.md
 Resume file: None
 
 ## Operator Next Steps

@@ -333,4 +333,45 @@ public class GameImageManagerTests
             await TestDatabase.PurgeProbeRowsAsync(Prefix);
         }
     }
+
+    [Fact]
+    public async Task ImageRichBatch_PagesScreenshotsUntilAShortPage()
+    {
+        await TestDatabase.PurgeProbeRowsAsync(Prefix);
+        try
+        {
+            var userId = await TestDatabase.EnsureUserAsync(UserEmail);
+            var x = NewIgdbId();
+            var gameId = await NewProbeAsync(userId, x, DummyCover, null, null);
+            var tag = Guid.NewGuid().ToString("N")[..8];
+
+            string Page(int from, int count) =>
+                "[" + string.Join(",", Enumerable.Range(from, count).Select(i => ImageJson($"ss{tag}{i:D4}", x))) + "]";
+
+            var (igdb, handler) = IgdbStub.Create((path, body) =>
+            {
+                if (!body.Contains(x.ToString())) return "[]";
+                if (path == "/v4/screenshots")
+                    return body.Contains("offset 500;") ? Page(500, 3) : body.Contains("offset 0;") ? Page(0, 500) : "[]";
+                return "[]";
+            });
+
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+            await CreateManager(igdb).RunAsync(cts.Token);
+
+            await using var db = TestDatabase.CreateContext();
+            Assert.Equal(503, await db.GameImages.CountAsync(i => i.GameId == gameId && i.ImageType == "screenshot"));
+
+            var screenshotRequests = handler.Requests
+                .Where(r => r.Uri.AbsolutePath == "/v4/screenshots" && r.Body.Contains(x.ToString())).ToList();
+            Assert.Equal(2, screenshotRequests.Count);
+            Assert.Contains("offset 0;", screenshotRequests[0].Body);
+            Assert.Contains("offset 500;", screenshotRequests[1].Body);
+            Assert.Equal(1, handler.Requests.Count(r => r.Uri.AbsolutePath == "/v4/artworks" && r.Body.Contains(x.ToString())));
+        }
+        finally
+        {
+            await TestDatabase.PurgeProbeRowsAsync(Prefix);
+        }
+    }
 }

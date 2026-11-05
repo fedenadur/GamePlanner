@@ -74,7 +74,7 @@ public class IgdbServiceContractTests
         var (igdb, handler, _) = Build();
 
         await igdb.SearchMultipleAsync("Celeste", CancellationToken.None);
-        await igdb.FetchScreenshotsByGameIdsAsync([1942], CancellationToken.None);
+        await igdb.FetchScreenshotsByGameIdsAsync([1942], 0, CancellationToken.None);
 
         Assert.NotEmpty(handler.Requests);
         foreach (var request in handler.Requests)
@@ -131,11 +131,27 @@ public class IgdbServiceContractTests
     {
         var (igdb, handler, _) = Build();
 
-        await igdb.FetchScreenshotsByGameIdsAsync([1942], CancellationToken.None);
+        await igdb.FetchScreenshotsByGameIdsAsync([1942], 0, CancellationToken.None);
 
         var query = Assert.Single(handler.Requests, r => r.Uri.Host == "api.igdb.com");
         Assert.Equal("https://api.igdb.com/v4/screenshots", query.Uri.ToString());
         Assert.Contains("where game = (1942)", query.Body);
+        Assert.Contains("sort id asc;", query.Body);
+        Assert.Contains("limit 500;", query.Body);
+        Assert.Contains("offset 0;", query.Body);
+    }
+
+    [Fact]
+    public async Task FetchArtworks_SendsTheRequestedOffset()
+    {
+        var (igdb, handler, _) = Build();
+
+        await igdb.FetchArtworksByGameIdsAsync([1942], 500, CancellationToken.None);
+
+        var query = Assert.Single(handler.Requests, r => r.Uri.Host == "api.igdb.com");
+        Assert.Equal("https://api.igdb.com/v4/artworks", query.Uri.ToString());
+        Assert.Contains("where game = (1942)", query.Body);
+        Assert.Contains("offset 500;", query.Body);
     }
 
     [Fact]

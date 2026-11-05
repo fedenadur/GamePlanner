@@ -111,4 +111,226 @@ public class GameImageManagerTests
             await TestDatabase.PurgeProbeRowsAsync(Prefix);
         }
     }
+
+    [Fact]
+    public async Task NullCover_WithIgdbUpdatedAtSet_GetsCover_EvenWhenIgdbTimestampIsNotNewer()
+    {
+        await TestDatabase.PurgeProbeRowsAsync(Prefix);
+        try
+        {
+            var userId = await TestDatabase.EnsureUserAsync(UserEmail);
+            var older = NewIgdbId();
+            var equal = older + 1;
+            var igdbUpdated = DateTimeOffset.FromUnixTimeSeconds(StubUpdatedAt).UtcDateTime;
+            var recent = DateTime.UtcNow;
+
+            // IGDB updated_at (1700000000) is older than the stored value here...
+            var gOlder = await NewProbeAsync(userId, older, null, new DateTime(2026, 6, 11, 0, 0, 0, DateTimeKind.Utc), recent);
+            // ...and exactly equal to it here.
+            var gEqual = await NewProbeAsync(userId, equal, null, igdbUpdated, recent);
+
+            var (igdb, _) = IgdbStub.Create((path, body) =>
+            {
+                if (!IsCoverByIdRequest(path, body)) return "[]";
+                var ids = RequestedIds(body).Where(i => i == older || i == equal).ToList();
+                return "[" + string.Join(",", ids.Select(i => CoverJson(i))) + "]";
+            });
+
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            await CreateManager(igdb).RunAsync(cts.Token);
+
+            await using var db = TestDatabase.CreateContext();
+            foreach (var gid in new[] { gOlder, gEqual })
+            {
+                var g = await db.Games.AsNoTracking().SingleAsync(x => x.Id == gid);
+                Assert.StartsWith("https:", g.CoverImageUrl);
+                Assert.Contains("t_cover_big", g.CoverImageUrl);
+                Assert.Equal(igdbUpdated, g.IGDBUpdatedAt);
+            }
+        }
+        finally
+        {
+            await TestDatabase.PurgeProbeRowsAsync(Prefix);
+        }
+    }
+
+    [Fact]
+    public async Task RowWithCover_IsNeverRequestedForACover()
+    {
+        await TestDatabase.PurgeProbeRowsAsync(Prefix);
+        try
+        {
+            var userId = await TestDatabase.EnsureUserAsync(UserEmail);
+            var z = NewIgdbId();
+            var gid = await NewProbeAsync(userId, z, DummyCover, null, DateTime.UtcNow);
+
+            var (igdb, handler) = IgdbStub.Create((_, _) => "[]");
+
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            await CreateManager(igdb).RunAsync(cts.Token);
+
+            Assert.DoesNotContain(handler.Requests, r => r.Uri.AbsolutePath == "/v4/games" && r.Body.Contains(z.ToString()));
+            await using var db = TestDatabase.CreateContext();
+            Assert.Equal(DummyCover, (await db.Games.AsNoTracking().SingleAsync(g => g.Id == gid)).CoverImageUrl);
+        }
+        finally
+        {
+            await TestDatabase.PurgeProbeRowsAsync(Prefix);
+        }
+    }
+
+    [Fact]
+    public async Task CoverLoop_RequestsEachRowOnce_WhenIgdbHasNoCovers()
+    {
+        await TestDatabase.PurgeProbeRowsAsync(Prefix);
+        try
+        {
+            var userId = await TestDatabase.EnsureUserAsync(UserEmail);
+
+            // Strays (active NULL-cover rows outside this fact's prefix) are deactivated first (test arrange, D-23).
+            await using (var conn = new SqlConnection(TestDatabase.ConnectionString))
+            {
+                await conn.ExecuteAsync("UPDATE Games SET IsActive = 0 WHERE IsActive = 1 AND CoverImageUrl IS NULL AND Name NOT LIKE @p", new { p = Prefix + "%" });
+                Assert.Equal(0, await conn.ExecuteScalarAsync<int>(
+                    "SELECT COUNT(*) FROM Games WHERE IsActive = 1 AND CoverImageUrl IS NULL AND Name NOT LIKE @p", new { p = Prefix + "%" }));
+            }
+
+            var probeIds = new List<long>();
+            var baseId = NewIgdbId();
+            for (var i = 0; i < 120; i++)
+            {
+                var igdbId = baseId + i;
+                probeIds.Add(igdbId);
+                await NewProbeAsync(userId, igdbId, null, null, DateTime.UtcNow);
+            }
+
+            var (igdb, handler) = IgdbStub.Create((_, _) => "[]");
+
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            await CreateManager(igdb).RunAsync(cts.Token);
+
+            var probeSet = probeIds.ToHashSet();
+            var coverRequests = handler.Requests
+                .Where(r => IsCoverByIdRequest(r.Uri.AbsolutePath, r.Body) && RequestedIds(r.Body).Any(probeSet.Contains))
+                .Select(r => RequestedIds(r.Body))
+                .ToList();
+
+            Assert.Equal(3, coverRequests.Count);
+            Assert.Equal(probeIds.Count, coverRequests.SelectMany(c => c).Count());
+            for (var k = 0; k < 3; k++)
+                Assert.Equal(probeIds.Skip(k * 50).Take(50), coverRequests[k]);
+        }
+        finally
+        {
+            await TestDatabase.PurgeProbeRowsAsync(Prefix);
+        }
+    }
+
+    [Fact]
+    public async Task NewlyCoveredRow_GetsScreenshotsInTheSameRun()
+    {
+        await TestDatabase.PurgeProbeRowsAsync(Prefix);
+        try
+        {
+            var userId = await TestDatabase.EnsureUserAsync(UserEmail);
+            var x = NewIgdbId();
+            var gid = await NewProbeAsync(userId, x, null, null, null);
+            var s1 = $"s1-{Guid.NewGuid():N}";
+            var s2 = $"s2-{Guid.NewGuid():N}";
+
+            var (igdb, _) = IgdbStub.Create((path, body) =>
+            {
+                if (!body.Contains(x.ToString())) return "[]";
+                if (IsCoverByIdRequest(path, body)) return "[" + CoverJson(x) + "]";
+                return path == "/v4/screenshots" ? $"[{ImageJson(s1, x)},{ImageJson(s2, x)}]" : "[]";
+            });
+
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            await CreateManager(igdb).RunAsync(cts.Token);
+
+            await using var db = TestDatabase.CreateContext();
+            var g = await db.Games.AsNoTracking().SingleAsync(v => v.Id == gid);
+            Assert.Contains("t_cover_big", g.CoverImageUrl);
+            Assert.Equal(2, await db.GameImages.CountAsync(i => i.GameId == gid && i.ImageType == "screenshot"));
+        }
+        finally
+        {
+            await TestDatabase.PurgeProbeRowsAsync(Prefix);
+        }
+    }
+
+    [Fact]
+    public async Task CoverBatchFailure_RetriesEachRowOnItsOwn()
+    {
+        await TestDatabase.PurgeProbeRowsAsync(Prefix);
+        try
+        {
+            var userId = await TestDatabase.EnsureUserAsync(UserEmail);
+            var p = NewIgdbId();
+            var q = p + 1;
+            var nameQ = NewName();
+            var gp = await NewProbeAsync(userId, p, null, null, DateTime.UtcNow);
+            var gq = await NewProbeAsync(userId, q, null, null, DateTime.UtcNow, nameQ);
+
+            var (igdb, handler) = IgdbStub.Create((path, body) =>
+            {
+                if (!IsCoverByIdRequest(path, body)) return "[]";
+                var ids = RequestedIds(body);
+                var hasP = ids.Contains(p);
+                var hasQ = ids.Contains(q);
+                if (hasP && hasQ) return null;
+                if (hasP) return "[" + CoverJson(p) + "]";
+                if (hasQ) return null;
+                return "[]";
+            });
+
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            var (failedCount, failureDetail) = await CreateManager(igdb).RunAsync(cts.Token);
+
+            await using var db = TestDatabase.CreateContext();
+            Assert.Contains("t_cover_big", (await db.Games.AsNoTracking().SingleAsync(g => g.Id == gp)).CoverImageUrl);
+            Assert.Null((await db.Games.AsNoTracking().SingleAsync(g => g.Id == gq)).CoverImageUrl);
+
+            var refs = handler.Requests.Count(r =>
+                IsCoverByIdRequest(r.Uri.AbsolutePath, r.Body) && RequestedIds(r.Body).Any(i => i == p || i == q));
+            Assert.Equal(3, refs);
+            Assert.Equal(1, failedCount);
+            Assert.Contains(nameQ, failureDetail);
+        }
+        finally
+        {
+            await TestDatabase.PurgeProbeRowsAsync(Prefix);
+        }
+    }
+
+    [Fact]
+    public async Task NullCoverWithoutIgdbId_UsesNameSearch_AndGetsCover()
+    {
+        await TestDatabase.PurgeProbeRowsAsync(Prefix);
+        try
+        {
+            var userId = await TestDatabase.EnsureUserAsync(UserEmail);
+            var name = NewName();
+            // Stored IGDBUpdatedAt (2030) is newer than the IGDB updated_at (1700000000): D-01 must still save the cover.
+            var gid = await NewProbeAsync(userId, null, null, new DateTime(2030, 1, 1, 0, 0, 0, DateTimeKind.Utc), null, name);
+
+            var (igdb, handler) = IgdbStub.Create((path, body) =>
+                path == "/v4/games" && body.StartsWith("search \"") && body.Contains(name)
+                    ? $$"""[{"id":1,"name":"{{name}}","cover":{"id":1,"url":"//images.igdb.com/igdb/image/upload/t_thumb/conamesearch.jpg"},"updated_at":{{StubUpdatedAt}}}]"""
+                    : "[]");
+
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            await CreateManager(igdb).RunAsync(cts.Token);
+
+            await using var db = TestDatabase.CreateContext();
+            var g = await db.Games.AsNoTracking().SingleAsync(v => v.Id == gid);
+            Assert.Contains("t_cover_big", g.CoverImageUrl);
+            Assert.Null(g.IGDBId);
+            Assert.Equal(1, handler.Requests.Count(r => r.Body.StartsWith("search \"") && r.Body.Contains(name)));
+        }
+        finally
+        {
+            await TestDatabase.PurgeProbeRowsAsync(Prefix);
+        }
+    }
 }

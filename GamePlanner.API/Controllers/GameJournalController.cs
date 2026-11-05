@@ -35,7 +35,7 @@ public class GameJournalController(GameJournalManager manager) : ControllerBase
     {
         var userId = GetUserId();
         if (userId is null) return Unauthorized();
-        await manager.UpsertAsync(userId.Value, gameId, request);
+        if (!await manager.UpsertAsync(userId.Value, gameId, request)) return NotFound();
         return CreatedAtAction(nameof(GetEntry), new { gameId }, null);
     }
 
@@ -45,7 +45,7 @@ public class GameJournalController(GameJournalManager manager) : ControllerBase
     {
         var userId = GetUserId();
         if (userId is null) return Unauthorized();
-        await manager.UpsertAsync(userId.Value, gameId, request);
+        if (!await manager.UpsertAsync(userId.Value, gameId, request)) return NotFound();
         return NoContent();
     }
 

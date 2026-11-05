@@ -5,15 +5,15 @@ milestone_name: Cleanup + Platform Analysis
 current_phase: 06
 current_phase_name: game-images-metadata
 status: executing
-stopped_at: Completed 06-04-PLAN.md
-last_updated: "2026-11-05T17:11:13.230Z"
+stopped_at: Plan 06-02 Tasks 1-2 done; awaiting Task 3 owner checkpoint (apply script 39 in SSMS)
+last_updated: "2026-11-05T17:18:53.460Z"
 last_activity: 2026-11-05
 last_activity_desc: Phase 06 execution started
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 6
-  completed_plans: 3
+  completed_plans: 4
   percent: 0
 ---
 
@@ -107,6 +107,7 @@ v1.1 roadmap decisions:
 - [Phase 06]: Phase 06-01: all DB tests and ApiFactory pinned to GamePlannerDB_Test (D-18/D-23/D-25); env var must be exported in the same Bash call as dotnet test
 - [Phase 06]: 06-03: GET /api/gameimages gameId filter (user-scoped) replaces igdbId read on game-detail; Escape closes lightbox; lightbox e2e authored, run in 06-06
 - [Phase 06]: 06-04 D-09 split: IgdbService returns raw external_games rows, GameSyncManager picks the lowest mapped game id; freshness skip only for rows with an IGDBId; sync loop uses an Id cursor
+- [Phase 06]: 06-02: Portal IGDB id is 71 (Valve 2007) via Steam external_games mapping; script 39 authored and dry-run proven, owner applies it
 
 ### Pending Todos
 
@@ -144,9 +145,9 @@ All four are now scheduled in v1.1 (Phases 6, 7 and 9). See Pending Todos above.
 
 ## Session Continuity
 
-Last session: 2026-11-05T17:11:13.216Z
-Stopped at: Completed 06-04-PLAN.md
-Resume file: None
+Last session: 2026-11-05T17:18:53.045Z
+Stopped at: Plan 06-02 Tasks 1-2 done; awaiting Task 3 owner checkpoint (apply script 39 in SSMS)
+Resume file: .planning/phases/06-game-images-metadata/06-02-SUMMARY.md
 
 ## Operator Next Steps
 

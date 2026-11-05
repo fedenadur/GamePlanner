@@ -233,8 +233,10 @@ public class GameImageManager(
                 failedNames.AddRange(batch.Select(g => g.Name).Take(3));
             }
 
-            // Map IGDB game ID → local game ID
-            var igdbToLocal = batch.ToDictionary(g => g.IGDBId!.Value, g => g.Id);
+            // Map IGDB game ID → local game IDs (an IGDBId can be shared by multiple local games)
+            var igdbToLocal = batch
+                .GroupBy(g => g.IGDBId!.Value)
+                .ToDictionary(gr => gr.Key, gr => gr.Select(g => g.Id).ToList());
 
             await SaveImagesAsync(conn, screenshots, "screenshot", igdbToLocal, ct);
             await SaveImagesAsync(conn, artworks,    "artwork",    igdbToLocal, ct);
@@ -262,14 +264,14 @@ public class GameImageManager(
         SqlConnection conn,
         List<IgdbImage> images,
         string imageType,
-        Dictionary<long, int> igdbToLocal,
+        Dictionary<long, List<int>> igdbToLocal,
         CancellationToken ct)
     {
         foreach (var image in images)
         {
             ct.ThrowIfCancellationRequested();
 
-            if (!igdbToLocal.TryGetValue(image.Game, out var localGameId))
+            if (!igdbToLocal.TryGetValue(image.Game, out var localGameIds))
                 continue;
 
             if (string.IsNullOrEmpty(image.ImageId))
@@ -277,17 +279,20 @@ public class GameImageManager(
 
             var url = IgdbService.OptimizeImageUrl(image.Url);
 
-            await conn.ExecuteAsync("sp_UpsertGameImage",
-                new
-                {
-                    GameId      = localGameId,
-                    IgdbImageId = image.ImageId,
-                    ImageType   = imageType,
-                    Url         = url,
-                    Width       = image.Width,
-                    Height      = image.Height
-                },
-                commandType: System.Data.CommandType.StoredProcedure);
+            foreach (var localGameId in localGameIds)
+            {
+                await conn.ExecuteAsync("sp_UpsertGameImage",
+                    new
+                    {
+                        GameId      = localGameId,
+                        IgdbImageId = image.ImageId,
+                        ImageType   = imageType,
+                        Url         = url,
+                        Width       = image.Width,
+                        Height      = image.Height
+                    },
+                    commandType: System.Data.CommandType.StoredProcedure);
+            }
         }
     }
 }

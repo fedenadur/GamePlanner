@@ -28,6 +28,16 @@ describe('AuthService.isAdmin', () => {
     expect(service.isAdmin()).toBeTrue();
   });
 
+  it('handles base64url payloads with - or _ and no padding', () => {
+    const json = JSON.stringify({ x: '???>>>', [ROLE]: 'Admin' });
+    const std = btoa(json);
+    expect(std).toMatch(/[+/]/);
+    const url = std.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    expect(url).toMatch(/[-_]/);
+    service.saveToken(`h.${url}.s`);
+    expect(service.isAdmin()).toBeTrue();
+  });
+
   it('is false without the role or without a token', () => {
     expect(service.isAdmin()).toBeFalse();
     service.saveToken(fakeToken({ sub: '1' }));

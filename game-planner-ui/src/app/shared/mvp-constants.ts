@@ -28,7 +28,7 @@ export const STORE_LABELS: Record<string, string> = {
   GOG: 'GOG',
   NintendoEShop: 'Nintendo eShop',
   PlayStationStore: 'PlayStation Store',
-  XboxStore: 'Xbox Store',
+  XboxStore: 'Xbox / Microsoft Store',
   Physical: 'Physical',
   Other: 'Other'
 };

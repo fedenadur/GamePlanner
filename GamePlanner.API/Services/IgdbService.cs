@@ -11,6 +11,7 @@ public class IgdbService(IHttpClientFactory httpFactory, IConfiguration config, 
     private const string GamesUrl       = "https://api.igdb.com/v4/games";
     private const string ScreenshotsUrl = "https://api.igdb.com/v4/screenshots";
     private const string ArtworksUrl    = "https://api.igdb.com/v4/artworks";
+    private const string ExternalGamesUrl = "https://api.igdb.com/v4/external_games";
 
     private string? _cachedToken;
     private DateTime _tokenExpiry = DateTime.MinValue;
@@ -91,6 +92,13 @@ public class IgdbService(IHttpClientFactory httpFactory, IConfiguration config, 
         var query = $"fields name,genres.name,themes.name,player_perspectives.name,game_modes.name,aggregated_rating,aggregated_rating_count,first_release_date,updated_at; where id = {igdbId}; limit 1;";
         var results = await PostQueryAsync(query, ct);
         return results.FirstOrDefault();
+    }
+
+    public async Task<List<IgdbExternalGame>> FetchExternalGamesBySteamAppIdAsync(int steamAppId, CancellationToken ct)
+    {
+        // external_game_source = 1 is Steam; uid is a string, so it must be quoted.
+        var query = $"fields uid,game; where uid = \"{steamAppId}\" & external_game_source = 1 & game != null; sort game asc; limit 5;";
+        return await PostQueryAsync<IgdbExternalGame>(ExternalGamesUrl, query, ct);
     }
 
     public async Task<IgdbGame?> SearchCoverByNameAsync(string name, CancellationToken ct)

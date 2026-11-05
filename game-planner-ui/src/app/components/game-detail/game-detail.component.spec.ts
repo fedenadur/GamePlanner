@@ -1,6 +1,6 @@
 import { ActivatedRoute, convertToParamMap } from '@angular/router';
 import { NEVER, of } from 'rxjs';
-import { GameDetail, GameService } from '../../services/game.service';
+import { GameDetail, GameImage, GameService } from '../../services/game.service';
 import { JournalService } from '../../services/journal.service';
 import { GameDetailComponent } from './game-detail.component';
 
@@ -23,5 +23,55 @@ describe('GameDetailComponent screenshots', () => {
     const { svc, cmp } = buildComponent();
     cmp.ngOnInit();
     expect(svc.getGameImages).toHaveBeenCalledWith('screenshot', 7, 42);
+  });
+});
+
+describe('GameDetailComponent lightbox keys', () => {
+  const key = (k: string) => new KeyboardEvent('keydown', { key: k });
+  let cmp: GameDetailComponent;
+
+  const shots = (n: number): GameImage[] =>
+    Array.from({ length: n }, (_, i) => ({
+      id: i + 1, gameId: 42, gameName: 'x', imageType: 'screenshot',
+      url: `https://images.igdb.com/t_screenshot_big/s${i}.jpg`
+    }));
+
+  beforeEach(() => {
+    cmp = buildComponent().cmp;
+  });
+
+  it('wraps ArrowLeft on the first and ArrowRight on the last screenshot', () => {
+    cmp.screenshots = shots(3);
+    cmp.openLightbox(0);
+    cmp.handleLightboxKeydown(key('ArrowLeft'));
+    expect(cmp.lightboxIndex).toBe(2);
+    cmp.handleLightboxKeydown(key('ArrowRight'));
+    expect(cmp.lightboxIndex).toBe(0);
+  });
+
+  it('closes the lightbox on Escape', () => {
+    cmp.screenshots = shots(3);
+    cmp.openLightbox(1);
+    cmp.handleLightboxKeydown(key('Escape'));
+    expect(cmp.lightboxIndex).toBeNull();
+  });
+
+  it('ignores keys while the lightbox is closed', () => {
+    cmp.screenshots = shots(3);
+    expect(() => {
+      cmp.handleLightboxKeydown(key('ArrowRight'));
+      cmp.handleLightboxKeydown(key('ArrowLeft'));
+      cmp.handleLightboxKeydown(key('Escape'));
+    }).not.toThrow();
+    expect(cmp.lightboxIndex).toBeNull();
+  });
+
+  it('keeps index 0 with a single screenshot', () => {
+    cmp.screenshots = shots(1);
+    cmp.openLightbox(0);
+    cmp.nextImage();
+    expect(cmp.lightboxIndex).toBe(0);
+    cmp.prevImage();
+    expect(cmp.lightboxIndex).toBe(0);
   });
 });

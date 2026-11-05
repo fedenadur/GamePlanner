@@ -1,5 +1,6 @@
 using GamePlanner.API.Context;
 using GamePlanner.API.Domain;
+using GamePlanner.API.Managers.WhatToPlay;
 using Microsoft.EntityFrameworkCore;
 
 namespace GamePlanner.API.Managers;
@@ -7,7 +8,7 @@ namespace GamePlanner.API.Managers;
 public class DashboardManager(
     GamePlannerDbContext db,
     NowPlayingManager nowPlayingManager,
-    BacklogPrioritizerManager backlogPrioritizerManager)
+    WhatToPlayManager whatToPlayManager)
 {
     public async Task<DashboardDto> GetDashboardAsync(int userId)
     {
@@ -24,18 +25,17 @@ public class DashboardManager(
             .Take(3)
             .ToList();
 
-        // Tonight Recommendation — reuse BacklogPrioritizerManager (top 1)
-        var topPick = (await backlogPrioritizerManager.PrioritizeAsync(userId, mode: null, limit: 1))
-            .FirstOrDefault();
+        // Tonight Recommendation — top pick from What to Play with default filters
+        var topPick = (await whatToPlayManager.RecommendAsync(userId, new WhatToPlayRequest(), 1, CancellationToken.None))
+            .Results.FirstOrDefault();
 
         TonightRecommendationDto? tonight = topPick is null ? null : new TonightRecommendationDto
         {
             GameId           = topPick.GameId,
             Name             = topPick.Name,
             CoverImageUrl    = topPick.CoverImageUrl,
-            Reason           = topPick.Reasons.FirstOrDefault(),
-            MainStoryHours   = topPick.MainStoryHours,
-            AggregatedRating = topPick.AggregatedRating
+            Reason           = (topPick.Reasons.FirstOrDefault(r => r.Kind == "Positive") ?? topPick.Reasons.FirstOrDefault())?.Text,
+            MainStoryHours   = topPick.LengthHours
         };
 
         // Upcoming This Week

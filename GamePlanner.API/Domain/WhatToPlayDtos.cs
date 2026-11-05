@@ -30,3 +30,9 @@ public class WhatToPlayResultDto
     public string Match { get; set; } = "Low";
     public List<WhatToPlayReasonDto> Reasons { get; set; } = [];
 }
+
+public class WhatToPlayResponseDto
+{
+    public string Device { get; set; } = "";
+    public List<WhatToPlayResultDto> Results { get; set; } = [];
+}

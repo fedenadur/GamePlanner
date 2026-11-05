@@ -36,6 +36,16 @@ public class NowPlayingManager(GamePlannerDbContext db, IConfiguration config)
             .Include(n => n.Game).ThenInclude(g => g.GameModes)
             .ToListAsync();
 
+        var gameIds = rows.Select(r => r.GameId).ToList();
+        var sessions = await db.PlaySessions
+            .Where(s => s.UserId == userId && gameIds.Contains(s.GameId))
+            .OrderByDescending(s => s.PlayedOn).ThenByDescending(s => s.Id)
+            .Select(s => new PlaySessionDto
+            {
+                Id = s.Id, GameId = s.GameId, Device = s.Device, PlayedOn = s.PlayedOn, Hours = s.Hours, Note = s.Note
+            })
+            .ToListAsync();
+
         return devices.Select(device =>
         {
             var row = rows.FirstOrDefault(r => r.Device == device);
@@ -43,7 +53,8 @@ public class NowPlayingManager(GamePlannerDbContext db, IConfiguration config)
             {
                 Device       = device,
                 Game         = row?.Game.ToDto(),
-                PlayingSince = row?.AddedAt
+                PlayingSince = row?.AddedAt,
+                RecentSessions = row is null ? [] : sessions.Where(s => s.GameId == row.GameId).Take(3).ToList()
             };
         }).ToList();
     }

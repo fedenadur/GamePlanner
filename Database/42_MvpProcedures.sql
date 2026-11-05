@@ -325,3 +325,66 @@ BEGIN
     COMMIT TRAN;
 END
 GO
+
+-- ── Play sessions ──────────────────────────────────────────────────────────
+CREATE OR ALTER PROCEDURE sp_InsertPlaySession
+    @UserId   INT,
+    @GameId   INT,
+    @Device   NVARCHAR(20),
+    @PlayedOn DATE,
+    @Hours    DECIMAL(4,2),
+    @Note     NVARCHAR(1000) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+
+    IF NOT EXISTS (SELECT 1 FROM Games WHERE Id = @GameId AND UserId = @UserId AND IsActive = 1)
+        RETURN -1;
+
+    DECLARE @NewId INT;
+    BEGIN TRAN;
+    INSERT INTO PlaySessions (UserId, GameId, Device, PlayedOn, Hours, Note)
+    VALUES (@UserId, @GameId, @Device, @PlayedOn, @Hours, @Note);
+    SET @NewId = SCOPE_IDENTITY();
+
+    IF EXISTS (SELECT 1 FROM GameJournalEntries WHERE UserId = @UserId AND GameId = @GameId)
+        UPDATE GameJournalEntries
+           SET LastPlayedAt = @PlayedOn, UpdatedAt = GETUTCDATE()
+         WHERE UserId = @UserId AND GameId = @GameId;
+    ELSE
+        INSERT INTO GameJournalEntries (UserId, GameId, Status, LastPlayedAt)
+        VALUES (@UserId, @GameId, 'Backlog', @PlayedOn);
+    COMMIT TRAN;
+
+    RETURN @NewId;
+END
+GO
+
+CREATE OR ALTER PROCEDURE sp_UpdatePlaySession
+    @Id       INT,
+    @UserId   INT,
+    @Device   NVARCHAR(20),
+    @PlayedOn DATE,
+    @Hours    DECIMAL(4,2),
+    @Note     NVARCHAR(1000) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+    UPDATE PlaySessions
+       SET Device = @Device, PlayedOn = @PlayedOn, Hours = @Hours, Note = @Note, ModifiedAt = GETUTCDATE()
+     WHERE Id = @Id AND UserId = @UserId;
+    RETURN @@ROWCOUNT;
+END
+GO
+
+CREATE OR ALTER PROCEDURE sp_DeletePlaySession
+    @Id     INT,
+    @UserId INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DELETE FROM PlaySessions WHERE Id = @Id AND UserId = @UserId;
+    RETURN @@ROWCOUNT;
+END
+GO

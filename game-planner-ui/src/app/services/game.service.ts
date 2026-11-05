@@ -15,6 +15,14 @@ export interface Game {
   coverImageUrl?: string;
   playtimeHours: number;
   source: string;
+  store: string;
+  isFavorite: boolean;
+  playableDevices: string[];
+  status: string;
+  loggedHours: number;
+  sessionCount: number;
+  totalHours: number;
+  releaseYear?: number | null;
 }
 
 export interface GameDetail extends Game {
@@ -33,6 +41,18 @@ export interface CreateGameRequest {
   genres: string[];
   estimatedMinutes: number;
   tags: string[];
+  store?: string;
+}
+
+export interface UpdateGameRequest {
+  name: string;
+  genres: string[];
+  estimatedMinutes: number;
+  tags: string[];
+  store: string;
+  playableDevices: string[];
+  isFavorite: boolean;
+  coverImageUrl?: string | null;
 }
 
 export interface IgdbSearchResult {
@@ -49,6 +69,7 @@ export interface CreateGameFromIgdbRequest {
   estimatedMinutes: number;
   coverUrl?: string;
   genres: string[];
+  store?: string;
 }
 
 export interface SessionRequest {
@@ -92,6 +113,14 @@ export class GameService {
 
   createGame(request: CreateGameRequest): Observable<any> {
     return this.http.post(`${this.api}/games`, request);
+  }
+
+  updateGame(id: number, request: UpdateGameRequest): Observable<any> {
+    return this.http.put(`${this.api}/games/${id}`, request);
+  }
+
+  setFavorite(id: number, isFavorite: boolean): Observable<any> {
+    return this.http.put(`${this.api}/games/${id}/favorite`, { isFavorite });
   }
 
   deleteGame(id: number): Observable<any> {

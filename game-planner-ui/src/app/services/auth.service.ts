@@ -62,6 +62,18 @@ export class AuthService {
     }
   }
 
+  isAdmin(): boolean {
+    const token = this.getToken();
+    if (!token) return false;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const role = payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
+      return Array.isArray(role) ? role.includes('Admin') : role === 'Admin';
+    } catch {
+      return false;
+    }
+  }
+
   exchangeSteamCode(code: string): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.api}/steam/exchange`, { code })
       .pipe(tap(res => this.saveToken(res.token)));

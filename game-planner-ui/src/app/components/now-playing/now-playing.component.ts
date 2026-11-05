@@ -35,7 +35,7 @@ export class NowPlayingComponent implements OnInit {
       error: () => { this.loadingGames = false; }
     });
 
-    this.nowPlayingService.getSlots().subscribe({
+    this.nowPlayingService.getLegacySlots().subscribe({
       next: (slots) => {
         slots.forEach(s => { this.nowPlaying[s.slot] = s.game; });
         this.loadingSlots = false;

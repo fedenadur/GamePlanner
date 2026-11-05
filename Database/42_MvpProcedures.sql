@@ -350,7 +350,8 @@ BEGIN
 
     IF EXISTS (SELECT 1 FROM GameJournalEntries WHERE UserId = @UserId AND GameId = @GameId)
         UPDATE GameJournalEntries
-           SET LastPlayedAt = @PlayedOn, UpdatedAt = GETUTCDATE()
+           SET LastPlayedAt = CASE WHEN LastPlayedAt IS NULL OR LastPlayedAt < @PlayedOn THEN @PlayedOn ELSE LastPlayedAt END,
+               UpdatedAt = GETUTCDATE()
          WHERE UserId = @UserId AND GameId = @GameId;
     ELSE
         INSERT INTO GameJournalEntries (UserId, GameId, Status, LastPlayedAt)
@@ -371,10 +372,27 @@ CREATE OR ALTER PROCEDURE sp_UpdatePlaySession
 AS
 BEGIN
     SET NOCOUNT ON;
-    UPDATE PlaySessions
+    SET XACT_ABORT ON;
+
+    DECLARE @GameId INT, @Rows INT;
+    BEGIN TRAN;
+    UPDATE ps
        SET Device = @Device, PlayedOn = @PlayedOn, Hours = @Hours, Note = @Note, ModifiedAt = GETUTCDATE()
-     WHERE Id = @Id AND UserId = @UserId;
-    RETURN @@ROWCOUNT;
+      FROM PlaySessions ps
+      JOIN Games g ON g.Id = ps.GameId AND g.IsActive = 1
+     WHERE ps.Id = @Id AND ps.UserId = @UserId;
+    SET @Rows = @@ROWCOUNT;
+
+    IF @Rows > 0
+    BEGIN
+        SELECT @GameId = GameId FROM PlaySessions WHERE Id = @Id;
+        UPDATE GameJournalEntries
+           SET LastPlayedAt = (SELECT MAX(PlayedOn) FROM PlaySessions WHERE UserId = @UserId AND GameId = @GameId),
+               UpdatedAt = GETUTCDATE()
+         WHERE UserId = @UserId AND GameId = @GameId;
+    END
+    COMMIT TRAN;
+    RETURN @Rows;
 END
 GO
 
@@ -384,7 +402,25 @@ CREATE OR ALTER PROCEDURE sp_DeletePlaySession
 AS
 BEGIN
     SET NOCOUNT ON;
-    DELETE FROM PlaySessions WHERE Id = @Id AND UserId = @UserId;
-    RETURN @@ROWCOUNT;
+    SET XACT_ABORT ON;
+
+    DECLARE @GameId INT, @Rows INT;
+    BEGIN TRAN;
+    SELECT @GameId = ps.GameId
+      FROM PlaySessions ps
+      JOIN Games g ON g.Id = ps.GameId AND g.IsActive = 1
+     WHERE ps.Id = @Id AND ps.UserId = @UserId;
+
+    DELETE FROM PlaySessions WHERE Id = @Id AND UserId = @UserId AND GameId = @GameId;
+    SET @Rows = @@ROWCOUNT;
+
+    -- Recompute only when sessions remain; otherwise leave LastPlayedAt untouched.
+    IF @Rows > 0 AND EXISTS (SELECT 1 FROM PlaySessions WHERE UserId = @UserId AND GameId = @GameId)
+        UPDATE GameJournalEntries
+           SET LastPlayedAt = (SELECT MAX(PlayedOn) FROM PlaySessions WHERE UserId = @UserId AND GameId = @GameId),
+               UpdatedAt = GETUTCDATE()
+         WHERE UserId = @UserId AND GameId = @GameId;
+    COMMIT TRAN;
+    RETURN @Rows;
 END
 GO

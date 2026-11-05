@@ -15,10 +15,11 @@ public class PlaySessionManager(GamePlannerDbContext db, IConfiguration config)
 
     private static void Validate(LogSessionRequest r)
     {
-        if (r.Hours < 0.1m || r.Hours > 24m) throw new ArgumentException("Hours must be between 0.1 and 24.");
+        var hours = decimal.Round(r.Hours, 2);
+        if (hours < 0.1m || hours > 24m) throw new ArgumentException("Hours must be between 0.1 and 24.");
         if (r.Note is { Length: > MaxNoteLength }) throw new ArgumentException("Note must be 1000 characters or less.");
         if (r.PlayedOn?.Date > DateTime.UtcNow.Date) throw new ArgumentException("Date cannot be in the future.");
-        if (r.Device != DeviceTypes.General && !DeviceTypes.IsSelectable(r.Device)) throw new ArgumentException("Unknown device.");
+        if (r.Device is null || (r.Device != DeviceTypes.General && !DeviceTypes.IsSelectable(r.Device))) throw new ArgumentException("Unknown device.");
     }
 
     private static DynamicParameters ToParameters(int userId, LogSessionRequest r)
@@ -28,7 +29,7 @@ public class PlaySessionManager(GamePlannerDbContext db, IConfiguration config)
             UserId   = userId,
             r.Device,
             PlayedOn = (r.PlayedOn ?? DateTime.UtcNow).Date,
-            r.Hours,
+            Hours    = decimal.Round(r.Hours, 2),
             r.Note
         });
         p.Add("Result", dbType: System.Data.DbType.Int32, direction: System.Data.ParameterDirection.ReturnValue);

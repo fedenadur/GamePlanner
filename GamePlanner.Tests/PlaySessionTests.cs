@@ -214,4 +214,118 @@ public class PlaySessionTests
         }
         finally { await MvpTestData.CleanupAsync(prefix); }
     }
+
+    private static async Task DeactivateAsync(int game)
+    {
+        await using var conn = new SqlConnection(TestDatabase.ConnectionString);
+        await conn.ExecuteAsync("UPDATE Games SET IsActive = 0 WHERE Id = @game", new { game });
+    }
+
+    [Fact]
+    public async Task Update_SessionOfDeletedGame_ReturnsFalse()
+    {
+        var prefix = NewPrefix();
+        try
+        {
+            var user = await MvpTestData.CreateUserAsync(prefix);
+            var game = await MvpTestData.CreateGameAsync(user, prefix + "g");
+            var manager = CreateManager();
+            var id = (await manager.LogAsync(user, game, Req(1)))!.Value;
+            await DeactivateAsync(game);
+
+            Assert.False(await manager.UpdateAsync(user, id, Req(5)));
+            Assert.Equal(1m, await ScalarAsync<decimal>("SELECT Hours FROM PlaySessions WHERE Id=@id", new { id }));
+        }
+        finally { await MvpTestData.CleanupAsync(prefix); }
+    }
+
+    [Fact]
+    public async Task Delete_SessionOfDeletedGame_ReturnsFalse()
+    {
+        var prefix = NewPrefix();
+        try
+        {
+            var user = await MvpTestData.CreateUserAsync(prefix);
+            var game = await MvpTestData.CreateGameAsync(user, prefix + "g");
+            var manager = CreateManager();
+            var id = (await manager.LogAsync(user, game, Req(1)))!.Value;
+            await DeactivateAsync(game);
+
+            Assert.False(await manager.DeleteAsync(user, id));
+            Assert.Equal(1, await ScalarAsync<int>("SELECT COUNT(*) FROM PlaySessions WHERE Id=@id", new { id }));
+        }
+        finally { await MvpTestData.CleanupAsync(prefix); }
+    }
+
+    [Fact]
+    public async Task Log_Backdated_DoesNotMoveLastPlayedAtBack()
+    {
+        var prefix = NewPrefix();
+        try
+        {
+            var user = await MvpTestData.CreateUserAsync(prefix);
+            var game = await MvpTestData.CreateGameAsync(user, prefix + "g");
+            var manager = CreateManager();
+            var recent = DateTime.UtcNow.Date.AddDays(-1);
+            await manager.LogAsync(user, game, new LogSessionRequest { Device = DeviceTypes.PC, Hours = 1, PlayedOn = recent });
+            await manager.LogAsync(user, game, new LogSessionRequest { Device = DeviceTypes.PC, Hours = 1, PlayedOn = recent.AddDays(-10) });
+
+            Assert.Equal(recent, await ScalarAsync<DateTime>("SELECT LastPlayedAt FROM GameJournalEntries WHERE UserId=@user AND GameId=@game", new { user, game }));
+        }
+        finally { await MvpTestData.CleanupAsync(prefix); }
+    }
+
+    [Fact]
+    public async Task Delete_LatestSession_RecomputesLastPlayedAt()
+    {
+        var prefix = NewPrefix();
+        try
+        {
+            var user = await MvpTestData.CreateUserAsync(prefix);
+            var game = await MvpTestData.CreateGameAsync(user, prefix + "g");
+            var manager = CreateManager();
+            var older = DateTime.UtcNow.Date.AddDays(-5);
+            await manager.LogAsync(user, game, new LogSessionRequest { Device = DeviceTypes.PC, Hours = 1, PlayedOn = older });
+            var latest = (await manager.LogAsync(user, game, new LogSessionRequest { Device = DeviceTypes.PC, Hours = 1, PlayedOn = older.AddDays(3) }))!.Value;
+
+            Assert.True(await manager.DeleteAsync(user, latest));
+
+            Assert.Equal(older, await ScalarAsync<DateTime>("SELECT LastPlayedAt FROM GameJournalEntries WHERE UserId=@user AND GameId=@game", new { user, game }));
+        }
+        finally { await MvpTestData.CleanupAsync(prefix); }
+    }
+
+    [Theory]
+    [InlineData(0.1, true)]
+    [InlineData(24, true)]
+    [InlineData(0.05, false)]
+    [InlineData(0.054, false)]
+    public async Task Log_HoursBoundaries(double hours, bool accepted)
+    {
+        var prefix = NewPrefix();
+        try
+        {
+            var user = await MvpTestData.CreateUserAsync(prefix);
+            var game = await MvpTestData.CreateGameAsync(user, prefix + "g");
+            var task = CreateManager().LogAsync(user, game, Req((decimal)hours));
+            if (accepted) Assert.NotNull(await task);
+            else await Assert.ThrowsAsync<ArgumentException>(() => task);
+        }
+        finally { await MvpTestData.CleanupAsync(prefix); }
+    }
+
+    [Fact]
+    public async Task Log_NullDevice_IsUnknownDevice()
+    {
+        var prefix = NewPrefix();
+        try
+        {
+            var user = await MvpTestData.CreateUserAsync(prefix);
+            var game = await MvpTestData.CreateGameAsync(user, prefix + "g");
+            var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
+                CreateManager().LogAsync(user, game, new LogSessionRequest { Device = null!, Hours = 1 }));
+            Assert.Equal("Unknown device.", ex.Message);
+        }
+        finally { await MvpTestData.CleanupAsync(prefix); }
+    }
 }

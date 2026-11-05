@@ -5,7 +5,9 @@ namespace GamePlanner.API.Mapping;
 
 public static class GameMapping
 {
-    public static GameDto ToDto(this Game game) => new()
+    public static GameDto ToDto(this Game game) => game.ToDto(JournalStatuses.Backlog, 0, 0);
+
+    public static GameDto ToDto(this Game game, string status, double loggedHours, int sessionCount) => new()
     {
         Id             = game.Id,
         Name           = game.Name,
@@ -17,6 +19,16 @@ public static class GameMapping
         GameModes          = game.GameModes.Select(m => m.Name).ToList(),
         CoverImageUrl      = game.CoverImageUrl,
         PlaytimeHours      = game.PlaytimeHours,
-        Source             = game.Source
+        Source             = game.Source,
+        Store              = game.Store,
+        IsFavorite         = game.IsFavorite,
+        PlayableDevices    = game.PlayableDevices.Count > 0
+                             ? game.PlayableDevices.Select(d => d.Device).Order().ToList()
+                             : Stores.DefaultDevices(game.Store).ToList(),
+        Status             = status,
+        LoggedHours        = loggedHours,
+        SessionCount       = sessionCount,
+        TotalHours         = PlaytimeCalculator.TotalHours(game.PlaytimeHours, loggedHours),
+        ReleaseYear        = game.FirstReleaseDate?.Year
     };
 }

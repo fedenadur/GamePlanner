@@ -424,3 +424,62 @@ BEGIN
     RETURN @Rows;
 END
 GO
+
+-- ── Library: store, favorite, playable devices ──────────────────────────────
+-- @CoverImageUrl: NULL = keep the current cover; '' = clear it.
+CREATE OR ALTER PROCEDURE sp_UpdateGame
+    @Id               INT,
+    @Name             NVARCHAR(100),
+    @EstimatedMinutes INT,
+    @Store            NVARCHAR(30)  = 'Other',
+    @IsFavorite       BIT           = 0,
+    @CoverImageUrl    NVARCHAR(500) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+    UPDATE Games
+    SET Name             = @Name,
+        EstimatedMinutes = @EstimatedMinutes,
+        Store            = @Store,
+        IsFavorite       = @IsFavorite,
+        CoverImageUrl    = CASE WHEN @CoverImageUrl IS NULL THEN CoverImageUrl
+                                WHEN @CoverImageUrl = '' THEN NULL
+                                ELSE @CoverImageUrl END,
+        ModifiedAt       = GETUTCDATE()
+    WHERE Id = @Id AND IsActive = 1;
+END
+GO
+
+-- Returns the number of rows affected (0 = game not the user's or deleted).
+CREATE OR ALTER PROCEDURE sp_SetGameFavorite
+    @Id         INT,
+    @UserId     INT,
+    @IsFavorite BIT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    UPDATE Games
+    SET IsFavorite = @IsFavorite,
+        ModifiedAt = GETUTCDATE()
+    WHERE Id = @Id AND UserId = @UserId AND IsActive = 1;
+
+    SELECT @@ROWCOUNT AS RowsAffected;
+END
+GO
+
+-- @Devices: comma-separated device codes. Empty/NULL = no explicit rows (the store default applies at read time).
+CREATE OR ALTER PROCEDURE sp_SetGamePlayableDevices
+    @GameId  INT,
+    @Devices NVARCHAR(200) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+    BEGIN TRAN;
+    DELETE FROM GamePlayableDevices WHERE GameId = @GameId;
+    IF @Devices IS NOT NULL AND LEN(@Devices) > 0
+        INSERT INTO GamePlayableDevices (GameId, Device)
+        SELECT DISTINCT @GameId, LTRIM(RTRIM(value)) FROM STRING_SPLIT(@Devices, ',') WHERE LTRIM(RTRIM(value)) <> '';
+    COMMIT TRAN;
+END
+GO

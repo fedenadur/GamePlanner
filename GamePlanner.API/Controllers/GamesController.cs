@@ -63,8 +63,12 @@ public class GamesController(GameManager manager, IgdbService igdb) : Controller
     {
         var userId = GetUserId();
         if (userId is null) return Unauthorized();
-        var newId = await manager.CreateFromIgdbAsync(request, userId.Value);
-        return CreatedAtAction(nameof(GetById), new { id = newId }, new { id = newId });
+        try
+        {
+            var newId = await manager.CreateFromIgdbAsync(request, userId.Value);
+            return CreatedAtAction(nameof(GetById), new { id = newId }, new { id = newId });
+        }
+        catch (ArgumentException ex) { return BadRequest(new { message = ex.Message }); }
     }
 
     [HttpPost]
@@ -73,8 +77,12 @@ public class GamesController(GameManager manager, IgdbService igdb) : Controller
     {
         var userId = GetUserId();
         if (userId is null) return Unauthorized();
-        var newId = await manager.CreateAsync(request, userId.Value);
-        return CreatedAtAction(nameof(GetById), new { id = newId }, new { id = newId });
+        try
+        {
+            var newId = await manager.CreateAsync(request, userId.Value);
+            return CreatedAtAction(nameof(GetById), new { id = newId }, new { id = newId });
+        }
+        catch (ArgumentException ex) { return BadRequest(new { message = ex.Message }); }
     }
 
     [HttpPut("{id}")]
@@ -83,7 +91,21 @@ public class GamesController(GameManager manager, IgdbService igdb) : Controller
     {
         var userId = GetUserId();
         if (userId is null) return Unauthorized();
-        var updated = await manager.UpdateAsync(id, request, userId.Value);
+        try
+        {
+            var updated = await manager.UpdateAsync(id, request, userId.Value);
+            return updated ? NoContent() : NotFound();
+        }
+        catch (ArgumentException ex) { return BadRequest(new { message = ex.Message }); }
+    }
+
+    [HttpPut("{id}/favorite")]
+    [EnableRateLimiting("mutations")]
+    public async Task<IActionResult> SetFavorite(int id, [FromBody] SetFavoriteRequest request)
+    {
+        var userId = GetUserId();
+        if (userId is null) return Unauthorized();
+        var updated = await manager.SetFavoriteAsync(id, request.IsFavorite, userId.Value);
         return updated ? NoContent() : NotFound();
     }
 

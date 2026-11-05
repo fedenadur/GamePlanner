@@ -123,4 +123,220 @@ public class GameSyncManagerMatcherTests
             await TestDatabase.PurgeProbeRowsAsync(Prefix);
         }
     }
+
+    private static string QuotedSearchTerm(string body)
+    {
+        var m = System.Text.RegularExpressions.Regex.Match(body, "^search \"([^\"]*)\"");
+        return m.Success ? m.Groups[1].Value : string.Empty;
+    }
+
+    [Fact]
+    public async Task NoSteamAppId_ExactNameBeatsFirstHit()
+    {
+        await TestDatabase.PurgeProbeRowsAsync(Prefix);
+        try
+        {
+            var userId = await TestDatabase.EnsureUserAsync(UserEmail);
+            var name = NewName("b");
+            var gameId = await NewProbeAsync(userId, name);
+            var baseId = NewIgdbId();
+
+            var (igdb, _) = IgdbStub.Create((path, body) =>
+            {
+                if (path != "/v4/games" || QuotedSearchTerm(body) != name) return "[]";
+                // IGDB returns as many hits as the query asks for: the exact match is ranked 5th.
+                var take = body.Contains("limit 10;") ? 5 : 3;
+                var hits = Enumerable.Range(0, take)
+                    .Select(i => GameJson(baseId + i, i == 4 ? name.ToUpperInvariant() : $"Other {i}"));
+                return "[" + string.Join(",", hits) + "]";
+            });
+
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+            await CreateManager(igdb).RunAsync(cts.Token);
+
+            Assert.Equal(baseId + 4, (await ReadAsync(gameId)).IgdbId);
+        }
+        finally
+        {
+            await TestDatabase.PurgeProbeRowsAsync(Prefix);
+        }
+    }
+
+    [Fact]
+    public async Task NoSteamAppId_NoExactName_FallsBackToFirstHit()
+    {
+        await TestDatabase.PurgeProbeRowsAsync(Prefix);
+        try
+        {
+            var userId = await TestDatabase.EnsureUserAsync(UserEmail);
+            var name = NewName("c");
+            var gameId = await NewProbeAsync(userId, name);
+            var baseId = NewIgdbId();
+
+            var (igdb, _) = IgdbStub.Create((path, body) =>
+                path == "/v4/games" && QuotedSearchTerm(body) == name
+                    ? $"[{GameJson(baseId, "Alpha")},{GameJson(baseId + 1, "Beta")},{GameJson(baseId + 2, "Gamma")}]"
+                    : "[]");
+
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+            await CreateManager(igdb).RunAsync(cts.Token);
+
+            Assert.Equal(baseId, (await ReadAsync(gameId)).IgdbId);
+        }
+        finally
+        {
+            await TestDatabase.PurgeProbeRowsAsync(Prefix);
+        }
+    }
+
+    [Fact]
+    public async Task SteamAppIdUnmapped_FallsBackToNameSearch()
+    {
+        await TestDatabase.PurgeProbeRowsAsync(Prefix);
+        try
+        {
+            var userId = await TestDatabase.EnsureUserAsync(UserEmail);
+            var name = NewName("d");
+            var appId = NewSteamAppId();
+            var gameId = await NewProbeAsync(userId, name, steamAppId: appId);
+            var exactId = NewIgdbId();
+
+            var (igdb, handler) = IgdbStub.Create((path, body) =>
+            {
+                if (path == "/v4/games" && QuotedSearchTerm(body) == name)
+                    return $"[{GameJson(exactId + 1, "Decoy")},{GameJson(exactId, name)}]";
+                return "[]";
+            });
+
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+            await CreateManager(igdb).RunAsync(cts.Token);
+
+            Assert.Equal(exactId, (await ReadAsync(gameId)).IgdbId);
+            Assert.Contains(IgdbRequests(handler, "/v4/external_games"), r => r.Body.Contains($"uid = \"{appId}\""));
+            Assert.Contains(IgdbRequests(handler, "/v4/games"), r => QuotedSearchTerm(r.Body) == name);
+        }
+        finally
+        {
+            await TestDatabase.PurgeProbeRowsAsync(Prefix);
+        }
+    }
+
+    [Fact]
+    public async Task RowWithIgdbId_IsNeverRematched()
+    {
+        await TestDatabase.PurgeProbeRowsAsync(Prefix);
+        try
+        {
+            var userId = await TestDatabase.EnsureUserAsync(UserEmail);
+            var name = NewName("e");
+            var appId = NewSteamAppId();
+            var z = NewIgdbId();
+            var other = z + 7000;
+            var gameId = await NewProbeAsync(userId, name, igdbId: z, steamAppId: appId);
+
+            var (igdb, handler) = IgdbStub.Create((path, body) =>
+            {
+                if (path == "/v4/games" && body.Contains($"where id = {z};")) return $"[{GameJson(z, "Kept")}]";
+                if (path == "/v4/external_games" && body.Contains($"uid = \"{appId}\""))
+                    return $$"""[{"id":1,"uid":"{{appId}}","game":{{other}}}]""";
+                return "[]";
+            });
+
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+            await CreateManager(igdb).RunAsync(cts.Token);
+
+            Assert.Equal(z, (await ReadAsync(gameId)).IgdbId);
+            Assert.DoesNotContain(IgdbRequests(handler, "/v4/external_games"), r => r.Body.Contains($"uid = \"{appId}\""));
+            Assert.DoesNotContain(IgdbRequests(handler, "/v4/games"), r => QuotedSearchTerm(r.Body) == name);
+        }
+        finally
+        {
+            await TestDatabase.PurgeProbeRowsAsync(Prefix);
+        }
+    }
+
+    [Fact]
+    public async Task UnmatchedRowWithStoredStamp_StillGetsSteamMatch()
+    {
+        await TestDatabase.PurgeProbeRowsAsync(Prefix);
+        try
+        {
+            var userId = await TestDatabase.EnsureUserAsync(UserEmail);
+            var name = NewName("f");
+            var appId = NewSteamAppId();
+            var mapped = NewIgdbId();
+            var gameId = await NewProbeAsync(userId, name, steamAppId: appId, igdbUpdatedAt: new DateTime(2030, 1, 1));
+
+            var (igdb, _) = IgdbStub.Create((path, body) =>
+            {
+                if (path == "/v4/external_games" && body.Contains($"uid = \"{appId}\""))
+                    return $$"""[{"id":1,"uid":"{{appId}}","game":{{mapped}}}]""";
+                if (path == "/v4/games" && body.Contains($"where id = {mapped};"))
+                    return $"[{GameJson(mapped, "Mapped", updatedAt: 1700000000)}]";
+                return "[]";
+            });
+
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+            await CreateManager(igdb).RunAsync(cts.Token);
+
+            Assert.Equal(mapped, (await ReadAsync(gameId)).IgdbId);
+        }
+        finally
+        {
+            await TestDatabase.PurgeProbeRowsAsync(Prefix);
+        }
+    }
+
+    [Fact]
+    public async Task SyncLoop_ReachesEveryRow_WhenEnrichedRowsLeaveTheFilter()
+    {
+        const string CursorPrefix = Prefix + "cur-";
+        const int RowCount = 51;
+        await TestDatabase.PurgeProbeRowsAsync(Prefix);
+        try
+        {
+            var userId = await TestDatabase.EnsureUserAsync(UserEmail);
+            var tag = Guid.NewGuid().ToString("N");
+            var baseId = NewIgdbId();
+            var ids = new List<int>();
+            for (var i = 0; i < RowCount; i++)
+                ids.Add(await NewProbeAsync(userId, $"{CursorPrefix}{i:D2}-{tag}"));
+
+            var (igdb, handler) = IgdbStub.Create((path, body) =>
+            {
+                if (path != "/v4/games") return "[]";
+                var term = QuotedSearchTerm(body);
+                if (!term.StartsWith(CursorPrefix) || !term.EndsWith(tag)) return "[]";
+                var index = int.Parse(term.Substring(CursorPrefix.Length, 2));
+                return $"[{GameJson(baseId + index, term)}]";
+            });
+
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(90));
+            await CreateManager(igdb).RunAsync(cts.Token);
+
+            await using var db = TestDatabase.CreateContext();
+            var first = await db.Games.AsNoTracking()
+                .Include(g => g.Genres).Include(g => g.Tags).Include(g => g.Themes)
+                .Include(g => g.PlayerPerspectives).Include(g => g.GameModes)
+                .FirstAsync(g => g.Id == ids[0]);
+            Assert.True(first.Genres.Any() && first.Tags.Any() && first.Themes.Any()
+                && first.PlayerPerspectives.Any() && first.GameModes.Any()
+                && first.AggregatedRating != null && first.FirstReleaseDate != null && first.IGDBId != null,
+                "the first row must be fully enriched so it leaves the sync filter");
+
+            var lastRowId = ids[^1];
+            var last = await db.Games.AsNoTracking().FirstAsync(g => g.Id == lastRowId);
+            Assert.Equal(baseId + RowCount - 1, last.IGDBId);
+            Assert.Equal(RowCount, await db.Games.CountAsync(g => g.Name.StartsWith(CursorPrefix) && g.IGDBId != null));
+
+            var searches = IgdbRequests(handler, "/v4/games")
+                .Select(r => QuotedSearchTerm(r.Body)).Where(t => t.StartsWith(CursorPrefix) && t.EndsWith(tag)).ToList();
+            Assert.Equal(RowCount, searches.Count);
+            Assert.Equal(RowCount, searches.Distinct().Count());
+        }
+        finally
+        {
+            await TestDatabase.PurgeProbeRowsAsync(Prefix);
+        }
+    }
 }

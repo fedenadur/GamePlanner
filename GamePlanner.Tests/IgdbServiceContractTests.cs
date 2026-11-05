@@ -179,4 +179,16 @@ public class IgdbServiceContractTests
 
         Assert.Empty(rows);
     }
+
+    [Fact]
+    public async Task SearchGame_AsksForTenResults()
+    {
+        var (igdb, handler, _) = Build();
+
+        await igdb.SearchGameAsync("Portal", CancellationToken.None);
+
+        var query = Assert.Single(handler.Requests, r => r.Uri.Host == "api.igdb.com");
+        Assert.StartsWith("search \"Portal\"", query.Body);
+        Assert.Contains("limit 10;", query.Body);
+    }
 }

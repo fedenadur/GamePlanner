@@ -14,28 +14,19 @@ namespace GamePlanner.Tests;
 /// ModifiedAt/DeletedAt are stamped exclusively in T-SQL. Every throwaway row created here
 /// carries the "gsd-probe-" name prefix and is removed in a finally block.
 /// </summary>
+[Collection(TestDatabase.CollectionName)]
 public class GameManagerAtomicityTests
 {
     private const string NamePrefix = "gsd-probe-";
 
-    private static string ConnectionString =>
-        Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")
-        ?? "Server=localhost;Database=GamePlannerDB;Trusted_Connection=True;TrustServerCertificate=True;";
-
-    private static GamePlannerDbContext CreateContext()
-    {
-        var options = new DbContextOptionsBuilder<GamePlannerDbContext>()
-            .UseSqlServer(ConnectionString)
-            .Options;
-        return new GamePlannerDbContext(options);
-    }
+    private static GamePlannerDbContext CreateContext() => TestDatabase.CreateContext();
 
     private static GameManager CreateManager(GamePlannerDbContext db)
     {
         var config = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["ConnectionStrings:DefaultConnection"] = ConnectionString
+                ["ConnectionStrings:DefaultConnection"] = TestDatabase.ConnectionString
             })
             .Build();
 
@@ -45,7 +36,7 @@ public class GameManagerAtomicityTests
     /// <summary>Hard-deletes every probe row (and its junction rows) whose Name starts with the given prefix.</summary>
     private static async Task CleanupByNamePrefixAsync(string namePrefix)
     {
-        await using var conn = new SqlConnection(ConnectionString);
+        await using var conn = new SqlConnection(TestDatabase.ConnectionString);
         await conn.OpenAsync();
         await conn.ExecuteAsync(
             """
@@ -62,7 +53,7 @@ public class GameManagerAtomicityTests
         var name = $"{NamePrefix}{Guid.NewGuid():N}";
 
         await using var db = CreateContext();
-        var userId = await db.Users.Select(u => u.Id).FirstAsync();
+        var userId = await TestDatabase.EnsureUserAsync("gsd-probe-atomicity@test.local");
         var manager = CreateManager(db);
 
         var gameId = await manager.CreateAsync(
@@ -108,7 +99,7 @@ public class GameManagerAtomicityTests
         var name = $"{NamePrefix}{Guid.NewGuid():N}";
 
         await using var db = CreateContext();
-        var userId = await db.Users.Select(u => u.Id).FirstAsync();
+        var userId = await TestDatabase.EnsureUserAsync("gsd-probe-atomicity@test.local");
         var manager = CreateManager(db);
 
         var gameId = await manager.CreateAsync(
@@ -148,7 +139,7 @@ public class GameManagerAtomicityTests
         var name = $"{NamePrefix}{Guid.NewGuid():N}";
 
         await using var db = CreateContext();
-        var userId = await db.Users.Select(u => u.Id).FirstAsync();
+        var userId = await TestDatabase.EnsureUserAsync("gsd-probe-atomicity@test.local");
         var manager = CreateManager(db);
 
         var gameId = await manager.CreateAsync(
@@ -166,7 +157,7 @@ public class GameManagerAtomicityTests
 
             // Call sp_DeleteGame a second time directly, bypassing the manager's exists-check,
             // to prove the proc's own IsActive = 1 guard makes a repeat delete a no-op.
-            await using var conn = new SqlConnection(ConnectionString);
+            await using var conn = new SqlConnection(TestDatabase.ConnectionString);
             var rowsAffected = await conn.ExecuteScalarAsync<int>("sp_DeleteGame",
                 new { Id = gameId },
                 commandType: System.Data.CommandType.StoredProcedure);
@@ -189,7 +180,7 @@ public class GameManagerAtomicityTests
         var name = $"{NamePrefix}{Guid.NewGuid():N}";
 
         await using var db = CreateContext();
-        var userId = await db.Users.Select(u => u.Id).FirstAsync();
+        var userId = await TestDatabase.EnsureUserAsync("gsd-probe-atomicity@test.local");
         var manager = CreateManager(db);
 
         try
@@ -227,7 +218,7 @@ public class GameManagerAtomicityTests
         var igdbId = 9_000_000_000L + Random.Shared.Next(1, 1_000_000);
 
         await using var db = CreateContext();
-        var userId = await db.Users.Select(u => u.Id).FirstAsync();
+        var userId = await TestDatabase.EnsureUserAsync("gsd-probe-atomicity@test.local");
         var manager = CreateManager(db);
 
         try
@@ -263,7 +254,7 @@ public class GameManagerAtomicityTests
         var igdbId = Random.Shared.NextInt64(1_000_000_000, 2_000_000_000);
 
         await using var db = CreateContext();
-        var userId = await db.Users.Select(u => u.Id).FirstAsync();
+        var userId = await TestDatabase.EnsureUserAsync("gsd-probe-atomicity@test.local");
         var manager = CreateManager(db);
 
         var firstId = await manager.CreateFromIgdbAsync(

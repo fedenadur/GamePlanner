@@ -1,8 +1,10 @@
+using GamePlanner.API.Context;
 using GamePlanner.API.Entities;
 using GamePlanner.API.Services;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Http;
@@ -35,6 +37,8 @@ public class ApiFactory : WebApplicationFactory<Program>
         builder.UseSetting("Steam:ApiKey", TestSteamKey);
         builder.UseSetting("IGDB:ClientId", TestIgdbClientId);
         builder.UseSetting("IGDB:ClientSecret", TestIgdbSecret);
+        // D-25: the in-process API must never reach the owner's database (appsettings.json default).
+        builder.UseSetting("ConnectionStrings:DefaultConnection", TestDatabase.ApiHostConnectionString);
 
         builder.ConfigureLogging(l => l.AddProvider(Logs));
 
@@ -47,6 +51,11 @@ public class ApiFactory : WebApplicationFactory<Program>
                 .ToList();
             foreach (var d in workers)
                 services.Remove(d);
+
+            // Pin EF to the guarded database regardless of configuration precedence (D-25).
+            foreach (var d in services.Where(d => d.ServiceType == typeof(DbContextOptions<GamePlannerDbContext>)).ToList())
+                services.Remove(d);
+            services.AddDbContext<GamePlannerDbContext>(o => o.UseSqlServer(TestDatabase.ApiHostConnectionString));
 
             services.ConfigureHttpClientDefaults(b => b.ConfigurePrimaryHttpMessageHandler(() => Http));
         });

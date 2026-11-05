@@ -44,8 +44,8 @@ export class AuthService {
     const token = this.getToken();
     if (!token) return false;
     try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload.exp * 1000 > Date.now();
+      const payload = this.decodePayload(token);
+      return payload['exp'] * 1000 > Date.now();
     } catch {
       return false;
     }

@@ -44,3 +44,16 @@ describe('AuthService.isAdmin', () => {
     expect(service.isAdmin()).toBeFalse();
   });
 });
+
+describe('AuthService.isLoggedIn', () => {
+  it('accepts a non-expired token whose payload is unpadded base64url', () => {
+    localStorage.clear();
+    const service = new AuthService({} as HttpClient, {} as Router);
+    const json = JSON.stringify({ x: '???>>>', exp: Math.floor(Date.now() / 1000) + 3600 });
+    const url = btoa(json).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    expect(url).toMatch(/[-_]/);
+    service.saveToken(`h.${url}.s`);
+    expect(service.isLoggedIn()).toBeTrue();
+    localStorage.clear();
+  });
+});

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, HostListener, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { GameService, GameDetail, GameImage } from '../../services/game.service';
@@ -17,7 +17,8 @@ export class GameDetailComponent implements OnInit, OnDestroy {
 
   game: GameDetail | null = null;
   screenshots: GameImage[] = [];
-  lightboxImage: GameImage | null = null;
+  lightboxIndex: number | null = null;
+  imageFading = false;
   loading = true;
   error   = '';
 
@@ -70,8 +71,52 @@ export class GameDetailComponent implements OnInit, OnDestroy {
     if (el) el.scrollBy({ left: dir * 480, behavior: 'smooth' });
   }
 
-  openLightbox(img: GameImage)  { this.lightboxImage = img; }
-  closeLightbox()               { this.lightboxImage = null; }
+  get lightboxImage(): GameImage | null {
+    return this.lightboxIndex !== null ? this.screenshots[this.lightboxIndex] : null;
+  }
+
+  openLightbox(index: number) { this.setLightboxIndex(index); }
+  closeLightbox()             { this.lightboxIndex = null; }
+
+  nextImage() {
+    if (this.lightboxIndex === null || this.screenshots.length <= 1) return;
+    this.setLightboxIndex((this.lightboxIndex + 1) % this.screenshots.length);
+  }
+
+  prevImage() {
+    if (this.lightboxIndex === null || this.screenshots.length <= 1) return;
+    const len = this.screenshots.length;
+    this.setLightboxIndex((this.lightboxIndex - 1 + len) % len);
+  }
+
+  @HostListener('window:keydown', ['$event'])
+  handleLightboxKeydown(event: KeyboardEvent) {
+    if (this.lightboxIndex === null) return;
+    if (event.key === 'ArrowRight') this.nextImage();
+    else if (event.key === 'ArrowLeft') this.prevImage();
+  }
+
+  private setLightboxIndex(index: number) {
+    this.lightboxIndex = index;
+    this.triggerFade();
+    this.preloadNeighbors();
+  }
+
+  private triggerFade() {
+    this.imageFading = true;
+    setTimeout(() => this.imageFading = false, 20);
+  }
+
+  private preloadNeighbors() {
+    if (this.lightboxIndex === null || this.screenshots.length <= 1) return;
+    const len = this.screenshots.length;
+    const nextIdx = (this.lightboxIndex + 1) % len;
+    const prevIdx = (this.lightboxIndex - 1 + len) % len;
+    [nextIdx, prevIdx].forEach(i => {
+      const preload = new Image();
+      preload.src = this.lightboxUrl(this.screenshots[i].url);
+    });
+  }
 
   lightboxUrl(url: string): string {
     return url.replace('t_screenshot_big', 't_1080p');

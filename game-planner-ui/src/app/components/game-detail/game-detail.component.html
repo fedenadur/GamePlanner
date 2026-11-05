@@ -48,7 +48,7 @@
     <div class="carousel-wrap">
       <button class="carousel-btn carousel-prev" (click)="carouselScroll(-1)">‹</button>
       <div class="carousel-track" #carouselTrack>
-        <button class="carousel-item" *ngFor="let img of screenshots" (click)="openLightbox(img)">
+        <button class="carousel-item" *ngFor="let img of screenshots; let i = index" (click)="openLightbox(i)">
           <img [src]="img.url" [alt]="game!.name" loading="lazy" class="carousel-img" />
         </button>
       </div>
@@ -57,10 +57,13 @@
   </div>
 
   <!-- Lightbox -->
-  <div class="lightbox-overlay" *ngIf="lightboxImage" (click)="closeLightbox()">
-    <button class="lightbox-close" (click)="closeLightbox()">✕</button>
+  <div class="lightbox-overlay" *ngIf="lightboxImage as img" (click)="closeLightbox()">
+    <button class="lightbox-close" (click)="closeLightbox()" aria-label="Close">✕</button>
     <div class="lightbox-content" (click)="$event.stopPropagation()">
-      <img [src]="lightboxUrl(lightboxImage.url)" [alt]="game!.name" class="lightbox-img" />
+      <button *ngIf="screenshots.length > 1" class="lightbox-arrow lightbox-arrow-prev" (click)="prevImage()" aria-label="Previous screenshot">‹</button>
+      <img [src]="lightboxUrl(img.url)" [alt]="game!.name" class="lightbox-img" [class.fading]="imageFading" />
+      <button *ngIf="screenshots.length > 1" class="lightbox-arrow lightbox-arrow-next" (click)="nextImage()" aria-label="Next screenshot">›</button>
+      <span *ngIf="screenshots.length > 1" class="lightbox-counter">{{ lightboxIndex! + 1 }} / {{ screenshots.length }}</span>
     </div>
   </div>
 

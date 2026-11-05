@@ -102,9 +102,9 @@ v1.1 roadmap decisions:
 - [v1.1 roadmap]: UI-04 (type scale) runs in Phase 9, after the Phase 6 and Phase 8 UI changes, so the consolidated scale covers them.
 - [v1.1 roadmap]: Numbered SQL scripts take the next free number when each phase runs. 39 is free now; expected order is 39 Portal IGDBId fix (Phase 6), 40 `UQ_Users_Email` filtered index (Phase 7), 41 playtime write SP (Phase 8).
 - [v1.1 roadmap]: PLAT-01..03 are already complete (commits 408c1ea, 865eea1). Phase 10's remaining work is PLAT-04: record the confirmed recommendation in PROJECT.md Key Decisions.
-- [Phase ?]: Phase 06-01: cover sync fetches every NULL cover once per run (D-01 no timestamp skip, D-02 Id cursor, D-28 per-row retry of failed batch); images sync before covers
-- [Phase ?]: Phase 06-01: all DB tests and ApiFactory pinned to GamePlannerDB_Test (D-18/D-23/D-25); env var must be exported in the same Bash call as dotnet test
-- [Phase ?]: 06-03: GET /api/gameimages gameId filter (user-scoped) replaces igdbId read on game-detail; Escape closes lightbox; lightbox e2e authored, run in 06-06
+- [Phase 06]: Phase 06-01: cover sync fetches every NULL cover once per run (D-01 no timestamp skip, D-02 Id cursor, D-28 per-row retry of failed batch); images sync before covers
+- [Phase 06]: Phase 06-01: all DB tests and ApiFactory pinned to GamePlannerDB_Test (D-18/D-23/D-25); env var must be exported in the same Bash call as dotnet test
+- [Phase 06]: 06-03: GET /api/gameimages gameId filter (user-scoped) replaces igdbId read on game-detail; Escape closes lightbox; lightbox e2e authored, run in 06-06
 
 ### Pending Todos
 

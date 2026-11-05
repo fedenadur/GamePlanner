@@ -25,7 +25,9 @@ public class NowPlayingManager(GamePlannerDbContext db, IConfiguration config)
 
         return Enumerable.Range(0, 3).Select(slot =>
         {
-            var row = rows.FirstOrDefault(r => r.Slot == slot);
+            // Transitional (Task 1): slots 0/1 map to PC/SteamDeck until Task 2 rewrites Now Playing by device
+            var device = slot == 0 ? "PC" : slot == 1 ? "SteamDeck" : null;
+            var row = rows.FirstOrDefault(r => r.Device == device);
             return new NowPlayingSlotDto
             {
                 Slot = slot,

@@ -17,6 +17,8 @@ public class Game
     public int? SteamAppId { get; set; }
     public double PlaytimeHours { get; set; }
     public string Source { get; set; } = "Manual";
+    public string Store { get; set; } = "Other";
+    public bool IsFavorite { get; set; }
 
     // Image fields
     public string? CoverImageUrl { get; set; }
@@ -37,4 +39,5 @@ public class Game
     public List<Theme>             Themes             { get; set; } = [];
     public List<PlayerPerspective> PlayerPerspectives { get; set; } = [];
     public List<GameMode>          GameModes          { get; set; } = [];
+    public List<GamePlayableDevice> PlayableDevices   { get; set; } = [];
 }

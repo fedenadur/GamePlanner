@@ -21,6 +21,11 @@ public class GamePlannerDbContext(DbContextOptions<GamePlannerDbContext> options
     public DbSet<GameJournalEntry>  GameJournalEntries => Set<GameJournalEntry>();
     public DbSet<TrackedGame>       TrackedGames       => Set<TrackedGame>();
     public DbSet<GameImage>         GameImages         => Set<GameImage>();
+    public DbSet<UserDevice>           UserDevices           => Set<UserDevice>();
+    public DbSet<PlaySession>          PlaySessions          => Set<PlaySession>();
+    public DbSet<UserPreference>       UserPreferences       => Set<UserPreference>();
+    public DbSet<UserPreferenceGenre>  UserPreferenceGenres  => Set<UserPreferenceGenre>();
+    public DbSet<GamePlayableDevice>   GamePlayableDevices   => Set<GamePlayableDevice>();
 
     protected override void OnModelCreating(ModelBuilder mb)
     {
@@ -38,6 +43,16 @@ public class GamePlannerDbContext(DbContextOptions<GamePlannerDbContext> options
             .HasOne(n => n.Game)
             .WithMany()
             .HasForeignKey(n => n.GameId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        mb.Entity<UserDevice>().HasKey(d => new { d.UserId, d.Device });
+        mb.Entity<UserPreference>().HasKey(p => p.UserId);
+        mb.Entity<UserPreferenceGenre>().HasKey(g => new { g.UserId, g.GenreId });
+        mb.Entity<GamePlayableDevice>().HasKey(d => new { d.GameId, d.Device });
+        mb.Entity<Game>()
+            .HasMany(g => g.PlayableDevices)
+            .WithOne()
+            .HasForeignKey(d => d.GameId)
             .OnDelete(DeleteBehavior.Cascade);
 
         mb.Entity<Game>()

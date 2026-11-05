@@ -1,0 +1,21 @@
+LIGHTBOX_STARTED_AT=2026-11-05T17:57:39Z
+
+Running 2 tests using 1 worker
+
+NAV_IMAGE_MS next attempt=1 ms=8.2 budget=250
+NAV_IMAGE_MS prev attempt=1 ms=11.6 budget=250
+  ok 1 tests\uat.spec.ts:280:9 › GamePlanner UAT › lightbox › lightbox: buttons, arrow keys, wrap, counter, Escape, preload (1.3s)
+  ok 2 tests\uat.spec.ts:329:9 › GamePlanner UAT › lightbox › lightbox: counter stays visible on a short viewport (844ms)
+
+  2 passed (3.2s)
+LIGHTBOX_RUN_1_EXIT=0
+
+Running 2 tests using 1 worker
+
+NAV_IMAGE_MS next attempt=1 ms=2.7 budget=250
+NAV_IMAGE_MS prev attempt=1 ms=12.4 budget=250
+  ok 1 tests\uat.spec.ts:280:9 › GamePlanner UAT › lightbox › lightbox: buttons, arrow keys, wrap, counter, Escape, preload (1.5s)
+  ok 2 tests\uat.spec.ts:329:9 › GamePlanner UAT › lightbox › lightbox: counter stays visible on a short viewport (836ms)
+
+  2 passed (3.4s)
+LIGHTBOX_RUN_2_EXIT=0

@@ -226,3 +226,97 @@ BEGIN
     SELECT @Rows AS RowsAffected;
 END
 GO
+
+-- ── User devices and preferences ────────────────────────────────────────
+-- @Devices: comma-separated device codes, in display order. Returns 0 = saved,
+-- 1 = a device being removed still has a game in Now Playing (nothing changes).
+CREATE OR ALTER PROCEDURE sp_SaveUserDevices
+    @UserId  INT,
+    @Devices NVARCHAR(400)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+
+    DECLARE @New TABLE (Device NVARCHAR(20) NOT NULL PRIMARY KEY, SortOrder INT NOT NULL);
+    INSERT INTO @New (Device, SortOrder)
+    SELECT v, ROW_NUMBER() OVER (ORDER BY CHARINDEX(',' + v + ',', ',' + @Devices + ',')) - 1
+    FROM (SELECT DISTINCT LTRIM(RTRIM(value)) AS v FROM STRING_SPLIT(@Devices, ',')) s
+    WHERE v <> '';
+
+    BEGIN TRAN;
+
+    IF EXISTS (SELECT 1 FROM NowPlayingGames np
+               WHERE np.UserId = @UserId
+                 AND np.Device NOT IN (SELECT Device FROM @New))
+    BEGIN
+        ROLLBACK TRAN;
+        RETURN 1;
+    END
+
+    DELETE FROM UserDevices WHERE UserId = @UserId;
+    INSERT INTO UserDevices (UserId, Device, SortOrder)
+    SELECT @UserId, Device, SortOrder FROM @New;
+
+    COMMIT TRAN;
+    RETURN 0;
+END
+GO
+
+-- Genres come by name separated by '|' (some genre names contain commas). Unknown names are ignored.
+CREATE OR ALTER PROCEDURE sp_SaveUserPreferences
+    @UserId         INT,
+    @MaxGameHours   INT,
+    @SinglePlayer   NVARCHAR(10),
+    @Narrative      NVARCHAR(10),
+    @Combat         NVARCHAR(10),
+    @FavoriteGenres NVARCHAR(MAX),
+    @AvoidGenres    NVARCHAR(MAX)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+
+    BEGIN TRAN;
+
+    IF EXISTS (SELECT 1 FROM UserPreferences WHERE UserId = @UserId)
+        UPDATE UserPreferences
+           SET MaxGameHours = @MaxGameHours, SinglePlayer = @SinglePlayer,
+               Narrative = @Narrative, Combat = @Combat
+         WHERE UserId = @UserId
+    ELSE
+        INSERT INTO UserPreferences (UserId, MaxGameHours, SinglePlayer, Narrative, Combat)
+        VALUES (@UserId, @MaxGameHours, @SinglePlayer, @Narrative, @Combat);
+
+    DELETE FROM UserPreferenceGenres WHERE UserId = @UserId;
+
+    INSERT INTO UserPreferenceGenres (UserId, GenreId, Kind)
+    SELECT @UserId, g.Id, 'Favorite'
+    FROM Genres g
+    WHERE g.Name IN (SELECT LTRIM(RTRIM(value)) FROM STRING_SPLIT(@FavoriteGenres, '|'));
+
+    INSERT INTO UserPreferenceGenres (UserId, GenreId, Kind)
+    SELECT @UserId, g.Id, 'Avoid'
+    FROM Genres g
+    WHERE g.Name IN (SELECT LTRIM(RTRIM(value)) FROM STRING_SPLIT(@AvoidGenres, '|'))
+      AND NOT EXISTS (SELECT 1 FROM UserPreferenceGenres u WHERE u.UserId = @UserId AND u.GenreId = g.Id);
+
+    COMMIT TRAN;
+END
+GO
+
+-- Redefined: a game that leaves the Journal also leaves Now Playing (only Playing/Replaying games are in it).
+CREATE OR ALTER PROCEDURE sp_DeleteGameJournalEntry
+    @UserId INT,
+    @GameId INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+
+    BEGIN TRAN;
+    DELETE FROM GameJournalEntries WHERE UserId = @UserId AND GameId = @GameId;
+    DELETE FROM NowPlayingGames    WHERE UserId = @UserId AND GameId = @GameId;
+    COMMIT TRAN;
+END
+GO

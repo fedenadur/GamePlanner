@@ -38,6 +38,7 @@ builder.Services.AddSingleton<CsvGameService>();
 builder.Services.AddScoped<GameHLTBManager>();
 builder.Services.AddScoped<UpcomingGamesManager>();
 builder.Services.AddScoped<NowPlayingManager>();
+builder.Services.AddScoped<UserSettingsManager>();
 builder.Services.AddScoped<TrackedGamesManager>();
 builder.Services.AddScoped<BacklogPrioritizerManager>();
 builder.Services.AddScoped<GameJournalManager>();

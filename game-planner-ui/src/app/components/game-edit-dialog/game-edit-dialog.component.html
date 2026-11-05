@@ -1,0 +1,36 @@
+<div class="backdrop" (click)="cancelled.emit()">
+  <div class="dialog" role="dialog" (click)="$event.stopPropagation()">
+    <h4>Edit game</h4>
+
+    <label>Name</label>
+    <input [(ngModel)]="name" name="name" />
+
+    <label>Cover URL</label>
+    <input [(ngModel)]="coverImageUrl" name="cover" placeholder="https://..." />
+
+    <label>Store</label>
+    <select [(ngModel)]="store" name="store">
+      <option *ngFor="let s of storeCodes" [value]="s">{{ storeLabels[s] }}</option>
+    </select>
+
+    <label>Devices <span class="hint" *ngIf="selectedDevices.size === 0">Store default</span></label>
+    <div class="chips">
+      <button type="button" *ngFor="let d of devices" class="chip"
+              [class.active]="selectedDevices.has(d)" (click)="toggleDevice(d)">{{ deviceIcons[d] }} {{ deviceLabels[d] }}</button>
+    </div>
+
+    <label>Estimated duration (hours)</label>
+    <input type="number" min="0" step="0.5" [(ngModel)]="hours" name="hours" />
+
+    <label>Genres (comma separated)</label>
+    <input [(ngModel)]="genresText" name="genres" />
+
+    <label class="fav"><input type="checkbox" [(ngModel)]="isFavorite" name="fav" /> Favorite</label>
+
+    <p class="error" *ngIf="error">{{ error }}</p>
+    <div class="actions">
+      <button class="btn-ghost" (click)="cancelled.emit()">Cancel</button>
+      <button class="btn-primary" [disabled]="saving" (click)="save()">Save</button>
+    </div>
+  </div>
+</div>

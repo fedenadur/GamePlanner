@@ -27,6 +27,8 @@ import { SidebarComponent } from './components/sidebar/sidebar.component';
 import { TrackedGamesComponent } from './components/tracked-games/tracked-games.component';
 import { FinishGameDialogComponent } from './components/finish-game-dialog/finish-game-dialog.component';
 import { LogSessionDialogComponent } from './components/log-session-dialog/log-session-dialog.component';
+import { GameEditDialogComponent } from './components/game-edit-dialog/game-edit-dialog.component';
+import { ConfirmDialogComponent } from './components/confirm-dialog/confirm-dialog.component';
 
 @NgModule({ declarations: [
         AppComponent,
@@ -50,7 +52,9 @@ import { LogSessionDialogComponent } from './components/log-session-dialog/log-s
         DashboardComponent,
         TrackedGamesComponent,
         FinishGameDialogComponent,
-        LogSessionDialogComponent
+        LogSessionDialogComponent,
+        GameEditDialogComponent,
+        ConfirmDialogComponent
     ],
     bootstrap: [AppComponent], imports: [BrowserModule,
         AppRoutingModule,

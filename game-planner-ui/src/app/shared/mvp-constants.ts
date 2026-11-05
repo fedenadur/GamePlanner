@@ -34,3 +34,11 @@ export const STORE_LABELS: Record<string, string> = {
 };
 
 export const JOURNAL_STATUSES: string[] = ['Backlog', 'Playing', 'Finished', 'Paused', 'Dropped', 'Replaying'];
+
+export function statusColor(status: string): string {
+  const map: Record<string, string> = {
+    Playing: 'green', Replaying: 'blue', Finished: 'purple',
+    Paused: 'yellow', Backlog: 'muted', Dropped: 'red'
+  };
+  return map[status] ?? 'muted';
+}

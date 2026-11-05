@@ -114,9 +114,10 @@ export class GameService {
     return this.http.post<SessionPlannerResult>(`${this.api}/session/plan`, request);
   }
 
-  getGameImages(type = 'screenshot', igdbId?: number | null): Observable<GameImage[]> {
+  getGameImages(type = 'screenshot', igdbId?: number | null, gameId?: number | null): Observable<GameImage[]> {
     const params: Record<string, string | number> = { type };
     if (igdbId != null) params['igdbId'] = igdbId;
+    if (gameId != null) params['gameId'] = gameId;
     return this.http.get<GameImage[]>(`${this.api}/gameimages`, { params });
   }
 

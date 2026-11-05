@@ -48,7 +48,7 @@ export class GameDetailComponent implements OnInit, OnDestroy {
       this.journalSaved = false;
       this.hoverRating = null;
       this.gameService.getGameDetail(id).subscribe({
-        next:  (g) => { this.game = g; this.loading = false; this.loadJournal(id); this.loadScreenshots(g.igdbId); },
+        next:  (g) => { this.game = g; this.loading = false; this.loadJournal(id); this.loadScreenshots(g.igdbId, g.id); },
         error: ()  => { this.error = 'Game not found.'; this.loading = false; }
       });
     });
@@ -58,10 +58,10 @@ export class GameDetailComponent implements OnInit, OnDestroy {
     this.routeSub?.unsubscribe();
   }
 
-  private loadScreenshots(igdbId: number | null) {
+  private loadScreenshots(igdbId: number | null, gameId: number) {
     this.screenshots = [];
     if (!igdbId) return;
-    this.gameService.getGameImages('screenshot', igdbId).subscribe({
+    this.gameService.getGameImages('screenshot', igdbId, gameId).subscribe({
       next: (imgs) => { this.screenshots = imgs; }
     });
   }

@@ -15,6 +15,7 @@ public class GameImagesController(GamePlannerDbContext db) : ControllerBase
     public async Task<IActionResult> Get(
         [FromQuery] string type    = "screenshot",
         [FromQuery] long?  igdbId  = null,
+        [FromQuery] int?   gameId  = null,
         CancellationToken  ct      = default)
     {
         var userId = GetUserId();
@@ -23,7 +24,9 @@ public class GameImagesController(GamePlannerDbContext db) : ControllerBase
         var query = db.GameImages
             .Where(i => i.Game.UserId == userId && i.Game.IsActive && i.ImageType == type);
 
-        if (igdbId.HasValue)
+        if (gameId.HasValue)
+            query = query.Where(i => i.GameId == gameId.Value);
+        else if (igdbId.HasValue)
             query = query.Where(i => i.Game.IGDBId == igdbId.Value);
 
         var images = await query

@@ -5,15 +5,15 @@ milestone_name: Cleanup + Platform Analysis
 current_phase: 06
 current_phase_name: game-images-metadata
 status: executing
-stopped_at: Completed 06-02-PLAN.md (owner applied script 39); next 06-05
-last_updated: "2026-11-05T17:40:14.304Z"
+stopped_at: Completed 06-05-PLAN.md
+last_updated: "2026-11-05T17:55:32.209Z"
 last_activity: 2026-11-05
 last_activity_desc: Phase 06 execution started
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 6
-  completed_plans: 4
+  completed_plans: 5
   percent: 0
 ---
 
@@ -29,11 +29,11 @@ See: .planning/PROJECT.md (updated 2026-10-27)
 ## Current Position
 
 Phase: 06 (game-images-metadata) — EXECUTING
-Plan: 5 of 6
+Plan: 6 of 6
 Status: Ready to execute
 Last activity: 2026-11-05 — Phase 06 execution started
 
-Progress: [███████░░░] 67%
+Progress: [████████░░] 83%
 
 ## Performance Metrics
 
@@ -89,6 +89,7 @@ Progress: [███████░░░] 67%
 | Phase 06 P01 | 10min | 3 tasks | 11 files |
 | Phase 06 P03 | 12 min | 2 tasks | 6 files |
 | Phase 06 P04 | 12 min | 3 tasks | 7 files |
+| Phase 06 P05 | 65min | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -109,6 +110,7 @@ v1.1 roadmap decisions:
 - [Phase 06]: 06-04 D-09 split: IgdbService returns raw external_games rows, GameSyncManager picks the lowest mapped game id; freshness skip only for rows with an IGDBId; sync loop uses an Id cursor
 - [Phase 06]: 06-02: Portal IGDB id is 71 (Valve 2007) via Steam external_games mapping; script 39 authored and dry-run proven, owner applies it
 - [Phase 06]: 06-02: Portal IGDBId corrected 14546 -> 71 via guarded, reversible Database/39_FixPortalIgdbId.sql (raw UPDATE/DELETE, convention exemption approved); owner applied in SSMS 2026-11-05 and re-verified read-only; 48 D-07 suspects logged, none changed
+- [Phase 06]: Plan 06-05 live proof passed after owner-approved restart: SC1 rests on REPRO_OK (repro row 108276), matcher assigned exactly the previewed ids, Dark Messiah siblings share IGDB 2369 with identical image sets, Portal re-derived as 2007 Valve (PORTAL_OK); no retry needed
 
 ### Pending Todos
 
@@ -146,8 +148,8 @@ All four are now scheduled in v1.1 (Phases 6, 7 and 9). See Pending Todos above.
 
 ## Session Continuity
 
-Last session: 2026-11-05T17:40:14.290Z
-Stopped at: Completed 06-02-PLAN.md (owner applied script 39); next 06-05
+Last session: 2026-11-05T17:55:32.194Z
+Stopped at: Completed 06-05-PLAN.md
 Resume file: None
 
 ## Operator Next Steps

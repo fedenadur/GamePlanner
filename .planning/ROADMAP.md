@@ -31,7 +31,7 @@ v1.1 closes the backlog left after v1.0 and settles, with evidence, whether anot
 
 **Milestone Goal:** Close the 5 pending todos plus the in-progress image fix, and decide, with evidence, which other game store (if any) to integrate next.
 
-- [ ] **Phase 6: Game Images & Metadata** - Land the uncommitted image/lightbox work, then make sure every game gets its cover, screenshots and correct IGDB match
+- [x] **Phase 6: Game Images & Metadata** - Land the uncommitted image/lightbox work, then make sure every game gets its cover, screenshots and correct IGDB match (completed 2026-11-05)
 - [ ] **Phase 7: Steam Login Hardening** - Any number of first-time Steam users can log in, and the OpenID round trip is browser-bound, rate limited and safe against double submits
 - [ ] **Phase 8: Manual Playtime** - User can record hours Steam can't sync, and Steam sync never lowers them
 - [ ] **Phase 9: UI Copy & Type Scale** - Error and empty states give a next step, and the stylesheet uses one smaller type scale
@@ -137,7 +137,7 @@ Phases execute in numeric order: 6 → 7 → 8 → 9 → 10
 | 3. Auth, CORS & Rate Limiting Hardening | v1.0 | 3/3 | Complete | 2026-08-31 |
 | 4. Data Layer Reliability & Audit Trail | v1.0 | 3/3 | Complete | 2026-10-24 |
 | 5. Regression Testing & Full-Stack Verification | v1.0 | 6/6 | Complete | 2026-10-27 |
-| 6. Game Images & Metadata | v1.1 | 6/6 | In Progress|  |
+| 6. Game Images & Metadata | v1.1 | 6/6 | Complete    | 2026-11-05 |
 | 7. Steam Login Hardening | v1.1 | 0/TBD | Not started | - |
 | 8. Manual Playtime | v1.1 | 0/TBD | Not started | - |
 | 9. UI Copy & Type Scale | v1.1 | 0/TBD | Not started | - |

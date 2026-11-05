@@ -34,7 +34,7 @@ public class GameSyncManager(
 
         logger.LogInformation("Starting enrichment for {Total} games with missing metadata.", total);
 
-        int offset = 0;
+        int lastId = 0;
         int processed = 0;
         int failedCount = 0;
         var failedNames = new List<string>();
@@ -42,14 +42,13 @@ public class GameSyncManager(
         while (!ct.IsCancellationRequested)
         {
             var batch = await db.Games
-                .Where(g => g.IsActive &&
+                .Where(g => g.IsActive && g.Id > lastId &&
                     (!g.Genres.Any() || !g.Tags.Any() || !g.Themes.Any()
                      || !g.PlayerPerspectives.Any() || !g.GameModes.Any()
                      || g.AggregatedRating == null || g.FirstReleaseDate == null
                      || g.IGDBId == null))
                 .Select(g => new { g.Id, g.IGDBId, g.SteamAppId, g.Name, g.IGDBUpdatedAt })
                 .OrderBy(g => g.Id)
-                .Skip(offset)
                 .Take(BatchSize)
                 .ToListAsync(ct);
 
@@ -71,7 +70,7 @@ public class GameSyncManager(
             logger.LogInformation("Progress: {Processed}/{Total} games processed.", processed, total);
 
             if (batch.Count < BatchSize) break;
-            offset += BatchSize;
+            lastId = batch[^1].Id;
         }
 
         logger.LogInformation("Enrichment sync complete. {Processed} games processed.", processed);
@@ -114,7 +113,8 @@ public class GameSyncManager(
             if (result is null) return true;
 
             var igdbUpdatedAt = DateTimeOffset.FromUnixTimeSeconds(result.UpdatedAt).UtcDateTime;
-            if (!force && storedUpdatedAt.HasValue && igdbUpdatedAt <= storedUpdatedAt.Value)
+            // The stored stamp belongs to the stored IGDBId only
+            if (!force && igdbId.HasValue && storedUpdatedAt.HasValue && igdbUpdatedAt <= storedUpdatedAt.Value)
             {
                 logger.LogDebug("'{Name}' is up-to-date (IGDB updated_at unchanged). Skipping.", name);
                 return true;

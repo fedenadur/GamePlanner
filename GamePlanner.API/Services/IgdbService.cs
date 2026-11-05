@@ -66,7 +66,7 @@ public class IgdbService(IHttpClientFactory httpFactory, IConfiguration config, 
     public async Task<IgdbGame?> SearchGameAsync(string name, CancellationToken ct)
     {
         var escaped = name.Replace("\"", "\\\"");
-        var query = $"search \"{escaped}\"; fields name,genres.name,themes.name,player_perspectives.name,game_modes.name,aggregated_rating,aggregated_rating_count,first_release_date,updated_at; limit 3;";
+        var query = $"search \"{escaped}\"; fields name,genres.name,themes.name,player_perspectives.name,game_modes.name,aggregated_rating,aggregated_rating_count,first_release_date,updated_at; limit 10;";
         var results = await PostQueryAsync(query, ct);
         return results.FirstOrDefault(r =>
             string.Equals(r.Name, name, StringComparison.OrdinalIgnoreCase))

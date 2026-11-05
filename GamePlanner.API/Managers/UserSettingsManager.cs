@@ -22,7 +22,7 @@ public class UserSettingsManager(GamePlannerDbContext db, IConfiguration config)
 
     public async Task<SaveDevicesResult> SaveDevicesAsync(int userId, List<string> devices)
     {
-        if (devices.Any(d => !DeviceTypes.IsSelectable(d)) || devices.Distinct().Count() != devices.Count)
+        if (devices.Any(d => string.IsNullOrWhiteSpace(d) || !DeviceTypes.IsSelectable(d)) || devices.Distinct().Count() != devices.Count)
             return SaveDevicesResult.Invalid;
 
         var p = new DynamicParameters(new { UserId = userId, Devices = string.Join(',', devices) });
@@ -62,8 +62,8 @@ public class UserSettingsManager(GamePlannerDbContext db, IConfiguration config)
         if (p.MaxGameHours is < 1 or > 500) return false;
         if (!PreferenceValues.Contains(p.SinglePlayer) || !PreferenceValues.Contains(p.Narrative)
             || !PreferenceValues.Contains(p.Combat)) return false;
-        if (p.FavoriteGenres.Concat(p.AvoidGenres).Any(g => g.Contains('|'))) return false;
-        if (p.FavoriteGenres.Intersect(p.AvoidGenres).Any()) return false;
+        if (p.FavoriteGenres.Concat(p.AvoidGenres).Any(g => string.IsNullOrWhiteSpace(g) || g.Contains('|'))) return false;
+        if (p.FavoriteGenres.Intersect(p.AvoidGenres, StringComparer.OrdinalIgnoreCase).Any()) return false;
 
         using var conn = CreateConnection();
         await conn.ExecuteAsync("sp_SaveUserPreferences",

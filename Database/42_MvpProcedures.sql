@@ -248,11 +248,16 @@ BEGIN
 
     IF EXISTS (SELECT 1 FROM NowPlayingGames np
                WHERE np.UserId = @UserId
+                 AND np.Device <> 'General'
                  AND np.Device NOT IN (SELECT Device FROM @New))
     BEGIN
         ROLLBACK TRAN;
         RETURN 1;
     END
+
+    -- A game on the General slot moves to the first device of a non-empty list.
+    UPDATE NowPlayingGames SET Device = (SELECT TOP 1 Device FROM @New ORDER BY SortOrder)
+     WHERE UserId = @UserId AND Device = 'General' AND EXISTS (SELECT 1 FROM @New);
 
     DELETE FROM UserDevices WHERE UserId = @UserId;
     INSERT INTO UserDevices (UserId, Device, SortOrder)

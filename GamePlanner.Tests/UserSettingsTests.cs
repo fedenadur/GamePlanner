@@ -85,6 +85,48 @@ public class UserSettingsTests
     }
 
     [Fact]
+    public async Task SaveDevices_FirstDevice_MovesGeneralGameToIt()
+    {
+        var prefix = NewPrefix();
+        try
+        {
+            var user = await MvpTestData.CreateUserAsync(prefix);
+            var game = await MvpTestData.CreateGameAsync(user, prefix + "a");
+            var np = new NowPlayingManager(TestDatabase.CreateContext(), TestDatabase.CreateConfig());
+            Assert.Equal(NowPlayingResult.Ok,
+                await np.StartAsync(user, DeviceTypes.General, new StartNowPlayingRequest { GameId = game }));
+
+            var result = await CreateManager().SaveDevicesAsync(user, [DeviceTypes.SteamDeck, DeviceTypes.PC]);
+
+            Assert.Equal(SaveDevicesResult.Ok, result);
+            await using var conn = new SqlConnection(TestDatabase.ConnectionString);
+            Assert.Equal(DeviceTypes.SteamDeck, await conn.ExecuteScalarAsync<string>(
+                "SELECT Device FROM NowPlayingGames WHERE UserId = @user AND GameId = @game", new { user, game }));
+            Assert.Equal(JournalStatuses.Playing, await conn.ExecuteScalarAsync<string>(
+                "SELECT Status FROM GameJournalEntries WHERE UserId = @user AND GameId = @game", new { user, game }));
+        }
+        finally { await MvpTestData.CleanupAsync(prefix); }
+    }
+
+    [Fact]
+    public async Task Lists_WithBlankElements_AreRejected()
+    {
+        var prefix = NewPrefix();
+        try
+        {
+            var user = await MvpTestData.CreateUserAsync(prefix);
+            var manager = CreateManager();
+
+            Assert.Equal(SaveDevicesResult.Invalid, await manager.SaveDevicesAsync(user, [null!]));
+            Assert.False(await manager.SavePreferencesAsync(user, new UserPreferencesDto { FavoriteGenres = [" "] }));
+            Assert.False(await manager.SavePreferencesAsync(user, new UserPreferencesDto { AvoidGenres = [null!] }));
+            Assert.False(await manager.SavePreferencesAsync(user, new UserPreferencesDto
+            { FavoriteGenres = ["rpg"], AvoidGenres = ["RPG"] }));
+        }
+        finally { await MvpTestData.CleanupAsync(prefix); }
+    }
+
+    [Fact]
     public async Task Preferences_DefaultWhenMissing()
     {
         var prefix = NewPrefix();

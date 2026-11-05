@@ -7,8 +7,8 @@
 
 ### Images & Metadata (IMG)
 
-- [ ] **IMG-01**: A game with `CoverImageUrl` NULL gets its cover fetched by `GameImageSyncWorker` even when `IGDBUpdatedAt` is already set (freshness skip applies only when a cover exists)
-- [ ] **IMG-02**: When several local games share one IGDBId, screenshots and artworks are saved for every one of them (finish and verify the uncommitted `GameImageManager` change)
+- [x] **IMG-01**: A game with `CoverImageUrl` NULL gets its cover fetched by `GameImageSyncWorker` even when `IGDBUpdatedAt` is already set (freshness skip applies only when a cover exists)
+- [x] **IMG-02**: When several local games share one IGDBId, screenshots and artworks are saved for every one of them (finish and verify the uncommitted `GameImageManager` change)
 - [ ] **IMG-03**: Portal (`Games.Id 107693`) carries the correct IGDBId for Valve's 2007 Portal, fixed via a guarded, reversible numbered SQL script and followed by a non-force re-sync
 
 ### Game Detail (UI)
@@ -52,8 +52,8 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| IMG-01 | Phase 6 | Pending |
-| IMG-02 | Phase 6 | Pending |
+| IMG-01 | Phase 6 | Complete |
+| IMG-02 | Phase 6 | Complete |
 | IMG-03 | Phase 6 | Pending |
 | UI-01 | Phase 6 | Pending |
 | AUTH-03 | Phase 7 | Pending |

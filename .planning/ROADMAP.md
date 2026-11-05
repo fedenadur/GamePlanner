@@ -52,11 +52,11 @@ v1.1 closes the backlog left after v1.0 and settles, with evidence, whether anot
   4. In the game-detail lightbox the user can move between screenshots with prev/next buttons and the Left/Right arrow keys, wrapping at both ends and showing a position counter, and the next or previous image appears without a visible load delay
 
 **Notes**: Start by reviewing and committing the uncommitted WIP in `GamePlanner.API/Managers/GameImageManager.cs` (IGDBId to local games is now one-to-many) and the `game-detail` component (lightbox prev/next, arrow keys, neighbor preload). Finish and verify it; do not rewrite it. IMG-01 also touches `GameImageManager.SaveCoverAsync`, so it builds on the committed WIP. IMG-03 follows the shape of `Database/38_FixHalfLifeIgdbId.sql` (guarded, reversible) and needs the owner's go-ahead because it writes a live row.
-**Plans**: 6 plans
+**Plans**: 1/6 plans executed
 
 Plans:
 
-- [ ] 06-01-PLAN.md — Commit the WIP, build the GamePlannerDB_Test harness and move every DB test onto it (D-18, D-23, D-25), fix cover sync (D-01/D-02, per-row retry of a failed batch), sync images before covers [wave 1]
+- [x] 06-01-PLAN.md — Commit the WIP, build the GamePlannerDB_Test harness and move every DB test onto it (D-18, D-23, D-25), fix cover sync (D-01/D-02, per-row retry of a failed batch), sync images before covers [wave 1]
 - [ ] 06-02-PLAN.md — Portal script 39 with dry-run and REVERSAL proof, D-07 suspect scan, matcher preview with expected ids from the committed 06-04 queries, sibling-pair gate, owner checkpoint (apply in SSMS + restart heads-up) [wave 3, checkpoint]
 - [ ] 06-03-PLAN.md — Per-game screenshot read (`gameId`, D-19), Escape (D-12), Karma specs, lightbox e2e test with timed swap (D-16, D-14) [wave 2]
 - [ ] 06-04-PLAN.md — Steam AppId matcher via IGDB external_games (D-08..D-10, sorted query, selection in the manager), search limit 10 (D-20), Id-cursor sync loop, paged image fetch (D-21) [wave 2]
@@ -137,7 +137,7 @@ Phases execute in numeric order: 6 → 7 → 8 → 9 → 10
 | 3. Auth, CORS & Rate Limiting Hardening | v1.0 | 3/3 | Complete | 2026-08-31 |
 | 4. Data Layer Reliability & Audit Trail | v1.0 | 3/3 | Complete | 2026-10-24 |
 | 5. Regression Testing & Full-Stack Verification | v1.0 | 6/6 | Complete | 2026-10-27 |
-| 6. Game Images & Metadata | v1.1 | 0/5 | Planned | - |
+| 6. Game Images & Metadata | v1.1 | 1/6 | In Progress|  |
 | 7. Steam Login Hardening | v1.1 | 0/TBD | Not started | - |
 | 8. Manual Playtime | v1.1 | 0/TBD | Not started | - |
 | 9. UI Copy & Type Scale | v1.1 | 0/TBD | Not started | - |

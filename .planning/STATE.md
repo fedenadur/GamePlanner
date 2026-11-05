@@ -2,18 +2,18 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Cleanup + Platform Analysis
-current_phase: 6
-current_phase_name: Game Images & Metadata
-status: planning
-stopped_at: Phase 6 context gathered
-last_updated: "2026-10-27T23:02:49.194Z"
-last_activity: 2026-10-27
-last_activity_desc: v1.1 roadmap created (Phases 6-10, 17/17 requirements mapped)
+current_phase: 06
+current_phase_name: game-images-metadata
+status: executing
+stopped_at: Completed 06-01-PLAN.md
+last_updated: "2026-11-05T16:59:14.958Z"
+last_activity: 2026-11-05
+last_activity_desc: Phase 06 execution started
 progress:
   total_phases: 5
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  total_plans: 6
+  completed_plans: 1
   percent: 0
 ---
 
@@ -24,16 +24,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-10-27)
 
 **Core value:** Close the backlog left after v1.0 (data, auth and UI todos plus in-progress work) and decide, with evidence, whether other game stores can be integrated like Steam. (v1.1, from REQUIREMENTS.md; PROJECT.md Core Value still states the achieved v1.0 value)
-**Current focus:** Phase 6 — Game Images & Metadata
+**Current focus:** Phase 06 — game-images-metadata
 
 ## Current Position
 
-Phase: 6 (Game Images & Metadata) — first of 5 v1.1 phases (6-10)
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-10-27 — v1.1 roadmap created (Phases 6-10, 17/17 requirements mapped)
+Phase: 06 (game-images-metadata) — EXECUTING
+Plan: 2 of 6
+Status: Ready to execute
+Last activity: 2026-11-05 — Phase 06 execution started
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [██░░░░░░░░] 17%
 
 ## Performance Metrics
 
@@ -86,6 +86,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 05 P04 | ~35min | 2 tasks | 5 files |
 | Phase 05 P05 | ~30min | 3 tasks | 6 files |
 | Phase 05 P06 | ~20min | 5 tasks | 8 files |
+| Phase 06 P01 | 10min | 3 tasks | 11 files |
 
 ## Accumulated Context
 
@@ -100,6 +101,8 @@ v1.1 roadmap decisions:
 - [v1.1 roadmap]: UI-04 (type scale) runs in Phase 9, after the Phase 6 and Phase 8 UI changes, so the consolidated scale covers them.
 - [v1.1 roadmap]: Numbered SQL scripts take the next free number when each phase runs. 39 is free now; expected order is 39 Portal IGDBId fix (Phase 6), 40 `UQ_Users_Email` filtered index (Phase 7), 41 playtime write SP (Phase 8).
 - [v1.1 roadmap]: PLAT-01..03 are already complete (commits 408c1ea, 865eea1). Phase 10's remaining work is PLAT-04: record the confirmed recommendation in PROJECT.md Key Decisions.
+- [Phase ?]: Phase 06-01: cover sync fetches every NULL cover once per run (D-01 no timestamp skip, D-02 Id cursor, D-28 per-row retry of failed batch); images sync before covers
+- [Phase ?]: Phase 06-01: all DB tests and ApiFactory pinned to GamePlannerDB_Test (D-18/D-23/D-25); env var must be exported in the same Bash call as dotnet test
 
 ### Pending Todos
 
@@ -137,9 +140,9 @@ All four are now scheduled in v1.1 (Phases 6, 7 and 9). See Pending Todos above.
 
 ## Session Continuity
 
-Last session: 2026-10-27T23:02:49.185Z
-Stopped at: Phase 6 context gathered
-Resume file: .planning/phases/06-game-images-metadata/06-CONTEXT.md
+Last session: 2026-11-05T16:59:14.944Z
+Stopped at: Completed 06-01-PLAN.md
+Resume file: None
 
 ## Operator Next Steps
 

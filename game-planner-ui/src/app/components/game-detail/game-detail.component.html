@@ -153,8 +153,44 @@
         </button>
         <span class="save-confirm" *ngIf="journalSaved">Saved!</span>
       </div>
+      <div class="removed-notice" *ngIf="removedNotice">{{ removedNotice }}</div>
       <a routerLink="/journal" class="journal-link">Open full journal →</a>
+    </div>
+
+    <!-- Play sessions -->
+    <div class="card detail-card sessions-card">
+      <div class="sessions-head">
+        <h2>Play sessions</h2>
+        <button class="btn-save" (click)="openLog()">+ Log session</button>
+      </div>
+      <div class="sessions-totals" *ngIf="sessions.length || steamLabel">
+        <span *ngIf="sessions.length">{{ loggedLabel }}</span>
+        <span *ngIf="steamLabel">{{ steamLabel }}</span>
+      </div>
+      <p class="sessions-empty" *ngIf="!sessions.length">No sessions yet. Log one from Now Playing or here.</p>
+      <ul class="session-list" *ngIf="sessions.length">
+        <li *ngFor="let s of sessions" class="session-row">
+          <span class="s-date">{{ s.playedOn | date:'mediumDate' }}</span>
+          <span class="s-device">{{ deviceIcons[s.device] }} {{ deviceLabels[s.device] || s.device }}</span>
+          <span class="s-hours">{{ s.hours }} h</span>
+          <span class="s-note">{{ s.note }}</span>
+          <button class="s-btn" (click)="editing = s">Edit</button>
+          <button class="s-btn s-del" (click)="deleting = s">Delete</button>
+        </li>
+      </ul>
     </div>
 
   </div>
 </div>
+
+<app-log-session-dialog *ngIf="logOpen && game"
+  [gameName]="game.name" [device]="logDevice" [devices]="logDevices"
+  (saved)="onLogSaved($event)" (cancelled)="logOpen = false"></app-log-session-dialog>
+<app-log-session-dialog *ngIf="editing && game"
+  [gameName]="game.name" [device]="editing.device"
+  [initial]="{ hours: editing.hours, note: editing.note, playedOn: editing.playedOn.substring(0, 10), device: editing.device }"
+  (saved)="onEditSaved($event)" (cancelled)="editing = null"></app-log-session-dialog>
+<app-confirm-dialog *ngIf="deleting"
+  title="Delete this session?" message="This session will be removed from your history."
+  confirmLabel="Delete"
+  (confirmed)="confirmDelete()" (cancelled)="deleting = null"></app-confirm-dialog>

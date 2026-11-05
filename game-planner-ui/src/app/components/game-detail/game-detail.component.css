@@ -445,3 +445,18 @@
   transition: color var(--t-fast);
 }
 .journal-link:hover { color: var(--accent); }
+
+.sessions-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.sessions-head h2 { margin: 0; }
+.sessions-totals { display: flex; gap: 16px; font-size: 13px; color: var(--text-soft); margin-bottom: 8px; }
+.sessions-empty { font-size: 13px; color: var(--muted); margin: 4px 0; }
+.session-list { list-style: none; margin: 0; padding: 0; }
+.session-row { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-top: 1px solid var(--border); font-size: 13px; }
+.s-date { width: 110px; color: var(--muted); }
+.s-device { width: 130px; }
+.s-hours { width: 60px; font-weight: 600; }
+.s-note { flex: 1; color: var(--text-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.s-btn { background: none; border: 1px solid var(--border); border-radius: 6px; color: var(--text-soft); padding: 3px 10px; font-size: 12px; cursor: pointer; }
+.s-btn:hover { color: var(--text); }
+.s-del:hover { color: var(--danger); border-color: var(--danger); }
+.removed-notice { font-size: 12px; color: var(--muted); margin-top: 8px; }

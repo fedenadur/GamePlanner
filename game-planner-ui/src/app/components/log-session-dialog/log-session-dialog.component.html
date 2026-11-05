@@ -1,7 +1,12 @@
 <div class="backdrop" (click)="cancelled.emit()">
   <div class="dialog" (click)="$event.stopPropagation()">
     <h4>Session — {{ gameName }}</h4>
-    <p>{{ deviceLabel }}</p>
+    <p *ngIf="!devices">{{ deviceLabel }}</p>
+    <label class="field" *ngIf="devices">Device
+      <select class="in device-select" [(ngModel)]="selectedDevice" name="device">
+        <option *ngFor="let d of devices" [value]="d">{{ deviceIcons[d] }} {{ deviceLabels[d] || d }}</option>
+      </select>
+    </label>
     <label class="field">Hours played
       <input class="in" type="text" inputmode="decimal" [(ngModel)]="hoursText" name="hours" />
     </label>

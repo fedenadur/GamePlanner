@@ -3,6 +3,11 @@ import { ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { GameService, GameDetail, GameImage } from '../../services/game.service';
 import { JournalService, JournalEntry, UpsertJournalRequest } from '../../services/journal.service';
+import { PlaySession, PlaySessionService } from '../../services/play-session.service';
+import { NowPlayingService } from '../../services/now-playing.service';
+import { UserSettingsService } from '../../services/user-settings.service';
+import { LogSessionResult } from '../log-session-dialog/log-session-dialog.component';
+import { DEVICE_ICONS, DEVICE_LABELS } from '../../shared/mvp-constants';
 import { genreIcon } from '../../shared/genre-meta';
 
 @Component({
@@ -30,12 +35,26 @@ export class GameDetailComponent implements OnInit, OnDestroy {
   readonly starPositions = [1, 2, 3, 4, 5];
   hoverRating: number | null = null;
 
+  sessions: PlaySession[] = [];
+  nowPlayingDevice: string | null = null;
+  removedNotice = '';
+  logOpen = false;
+  logDevice = '';
+  logDevices: string[] | null = null;
+  editing: PlaySession | null = null;
+  deleting: PlaySession | null = null;
+  readonly deviceLabels = DEVICE_LABELS;
+  readonly deviceIcons = DEVICE_ICONS;
+
   private routeSub?: Subscription;
 
   constructor(
     private route: ActivatedRoute,
     private gameService: GameService,
-    private journalService: JournalService
+    private journalService: JournalService,
+    private sessionService: PlaySessionService,
+    private nowPlayingService: NowPlayingService,
+    private settingsService: UserSettingsService
   ) {}
 
   ngOnInit() {
@@ -47,8 +66,11 @@ export class GameDetailComponent implements OnInit, OnDestroy {
       this.journal = this.emptyJournal();
       this.journalSaved = false;
       this.hoverRating = null;
+      this.sessions = [];
+      this.nowPlayingDevice = null;
+      this.removedNotice = '';
       this.gameService.getGameDetail(id).subscribe({
-        next:  (g) => { this.game = g; this.loading = false; this.loadJournal(id); this.loadScreenshots(g.igdbId, g.id); },
+        next:  (g) => { this.game = g; this.loading = false; this.loadJournal(id); this.loadSessions(id); this.loadNowPlaying(id); this.loadScreenshots(g.igdbId, g.id); },
         error: ()  => { this.error = 'Game not found.'; this.loading = false; }
       });
     });
@@ -136,9 +158,81 @@ export class GameDetailComponent implements OnInit, OnDestroy {
   saveJournal() {
     if (!this.game) return;
     this.journalSaving = true;
-    this.journalService.upsert(this.game.id, this.journal).subscribe({
-      next: () => { this.journalSaved = true; this.journalSaving = false; setTimeout(() => this.journalSaved = false, 2500); },
+    this.removedNotice = '';
+    const gameId = this.game.id;
+    const wasNowPlaying = this.nowPlayingDevice !== null;
+    this.journalService.upsert(gameId, this.journal).subscribe({
+      next: () => {
+        this.journalSaved = true; this.journalSaving = false; setTimeout(() => this.journalSaved = false, 2500);
+        this.loadNowPlaying(gameId, () => {
+          if (wasNowPlaying && this.nowPlayingDevice === null) this.removedNotice = 'Removed from Now Playing.';
+        });
+      },
       error: () => { this.journalSaving = false; }
+    });
+  }
+
+  private loadSessions(gameId: number) {
+    this.sessionService.list(gameId).subscribe({ next: (list) => { this.sessions = list; } });
+  }
+
+  private loadNowPlaying(gameId: number, done?: () => void) {
+    this.nowPlayingService.getSlots().subscribe({
+      next: (slots) => {
+        this.nowPlayingDevice = slots.find(s => s.game?.id === gameId)?.device ?? null;
+        done?.();
+      }
+    });
+  }
+
+  get loggedLabel(): string {
+    const total = Math.round(this.sessions.reduce((sum, s) => sum + s.hours, 0) * 100) / 100;
+    const n = this.sessions.length;
+    return `Logged: ${total} h in ${n} ${n === 1 ? 'session' : 'sessions'}`;
+  }
+
+  get steamLabel(): string {
+    const h = this.game?.playtimeHours ?? 0;
+    return h > 0 ? `Steam: ${h} h` : '';
+  }
+
+  openLog() {
+    if (this.nowPlayingDevice) {
+      this.logDevice = this.nowPlayingDevice;
+      this.logDevices = null;
+      this.logOpen = true;
+      return;
+    }
+    this.settingsService.getDevices().subscribe({
+      next: (r) => { this.logDevices = [...r.devices, 'General']; this.logDevice = this.logDevices[0]; this.logOpen = true; },
+      error: () => { this.logDevices = ['General']; this.logDevice = 'General'; this.logOpen = true; }
+    });
+  }
+
+  onLogSaved(r: LogSessionResult) {
+    if (!this.game) return;
+    const gameId = this.game.id;
+    this.sessionService.log(gameId, { device: r.device, hours: r.hours, note: r.note, playedOn: r.playedOn }).subscribe({
+      next: () => { this.logOpen = false; this.loadSessions(gameId); },
+      error: () => { this.logOpen = false; }
+    });
+  }
+
+  onEditSaved(r: LogSessionResult) {
+    if (!this.game || !this.editing) return;
+    const gameId = this.game.id;
+    this.sessionService.update(this.editing.id, { device: r.device, hours: r.hours, note: r.note, playedOn: r.playedOn }).subscribe({
+      next: () => { this.editing = null; this.loadSessions(gameId); },
+      error: () => { this.editing = null; }
+    });
+  }
+
+  confirmDelete() {
+    if (!this.game || !this.deleting) return;
+    const gameId = this.game.id;
+    this.sessionService.delete(this.deleting.id).subscribe({
+      next: () => { this.deleting = null; this.loadSessions(gameId); },
+      error: () => { this.deleting = null; }
     });
   }
 

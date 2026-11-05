@@ -1,3 +1,5 @@
+import { TestBed } from '@angular/core/testing';
+import { FormsModule } from '@angular/forms';
 import { LogSessionDialogComponent } from './log-session-dialog.component';
 
 describe('LogSessionDialogComponent', () => {
@@ -37,5 +39,40 @@ describe('LogSessionDialogComponent', () => {
     expect(cmp.canSave).toBeFalse();
     cmp.save();
     expect(saved.length).toBe(0);
+  });
+
+  it('pre-fills from the initial session on init', () => {
+    cmp.initial = { hours: 2.5, note: 'n', playedOn: '2026-01-02', device: 'Switch' };
+    cmp.ngOnInit();
+    expect(cmp.hoursText).toBe('2.5');
+    expect(cmp.note).toBe('n');
+    expect(cmp.playedOn).toBe('2026-01-02');
+    expect(cmp.selectedDevice).toBe('Switch');
+  });
+
+  it('emits the chosen device when devices are offered', () => {
+    cmp.devices = ['PC', 'General'];
+    cmp.ngOnInit();
+    cmp.selectedDevice = 'General';
+    cmp.hoursText = '1';
+    cmp.save();
+    expect(saved[0].device).toBe('General');
+  });
+
+  describe('device selector', () => {
+    function render(devices: string[] | null) {
+      TestBed.configureTestingModule({ declarations: [LogSessionDialogComponent], imports: [FormsModule] });
+      const f = TestBed.createComponent(LogSessionDialogComponent);
+      f.componentInstance.device = 'PC';
+      f.componentInstance.devices = devices;
+      f.detectChanges();
+      return f.nativeElement as HTMLElement;
+    }
+    it('is shown only when devices is not null', () => {
+      expect(render(['PC', 'General']).querySelector('select.device-select')).not.toBeNull();
+    });
+    it('is hidden when devices is null', () => {
+      expect(render(null).querySelector('select.device-select')).toBeNull();
+    });
   });
 });

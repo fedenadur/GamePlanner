@@ -71,6 +71,9 @@ public class AuthService(GamePlannerDbContext db, IConfiguration config, ILogger
         if (!string.IsNullOrEmpty(user.Email))
             claims.Add(new Claim(ClaimTypes.Email, user.Email));
 
+        if (user.IsAdmin)
+            claims.Add(new Claim(ClaimTypes.Role, "Admin"));
+
         if (!string.IsNullOrEmpty(user.SteamId))
             claims.Add(new Claim("steamId", user.SteamId));
 

@@ -27,10 +27,10 @@ public class GameManager(GamePlannerDbContext db, IConfiguration config)
             .OrderBy(g => g.Name)
             .ToListAsync();
 
-        var journal = await LoadJournalStatusesAsync(userId, games.Select(g => g.Id).ToList());
-        var sessions = await LoadSessionTotalsAsync(userId);
+        var journal = await GameLibraryEnrichment.LoadJournalStatusesAsync(db, userId, games.Select(g => g.Id).ToList());
+        var sessions = await GameLibraryEnrichment.LoadSessionTotalsAsync(db, userId);
 
-        return games.Select(g => ToLibraryDto(g, journal, sessions)).ToList();
+        return games.Select(g => GameLibraryEnrichment.ToLibraryDto(g, journal, sessions)).ToList();
     }
 
     public async Task<GameDto?> GetByIdAsync(int id, int userId)
@@ -46,9 +46,9 @@ public class GameManager(GamePlannerDbContext db, IConfiguration config)
 
         if (game is null) return null;
 
-        var journal = await LoadJournalStatusesAsync(userId, [game.Id]);
-        var sessions = await LoadSessionTotalsAsync(userId, game.Id);
-        return ToLibraryDto(game, journal, sessions);
+        var journal = await GameLibraryEnrichment.LoadJournalStatusesAsync(db, userId, [game.Id]);
+        var sessions = await GameLibraryEnrichment.LoadSessionTotalsAsync(db, userId, [game.Id]);
+        return GameLibraryEnrichment.ToLibraryDto(game, journal, sessions);
     }
 
     public async Task<GameDetailDto?> GetDetailAsync(int id, int userId)
@@ -72,9 +72,9 @@ public class GameManager(GamePlannerDbContext db, IConfiguration config)
         hltb ??= await db.GamesHLTB
             .FirstOrDefaultAsync(h => h.Name.ToLower() == game.Name.ToLower());
 
-        var journal = await LoadJournalStatusesAsync(userId, [game.Id]);
-        var sessions = await LoadSessionTotalsAsync(userId, game.Id);
-        var base_ = ToLibraryDto(game, journal, sessions);
+        var journal = await GameLibraryEnrichment.LoadJournalStatusesAsync(db, userId, [game.Id]);
+        var sessions = await GameLibraryEnrichment.LoadSessionTotalsAsync(db, userId, [game.Id]);
+        var base_ = GameLibraryEnrichment.ToLibraryDto(game, journal, sessions);
 
         return new GameDetailDto
         {
@@ -108,27 +108,6 @@ public class GameManager(GamePlannerDbContext db, IConfiguration config)
             AggregatedRating       = game.AggregatedRating,
             AggregatedRatingCount  = game.AggregatedRatingCount,
         };
-    }
-
-    private async Task<Dictionary<int, string>> LoadJournalStatusesAsync(int userId, List<int> gameIds) =>
-        await db.GameJournalEntries
-            .Where(j => j.UserId == userId && gameIds.Contains(j.GameId))
-            .ToDictionaryAsync(j => j.GameId, j => j.Status);
-
-    private async Task<Dictionary<int, (double Hours, int Count)>> LoadSessionTotalsAsync(int userId, int? gameId = null)
-    {
-        var rows = await db.PlaySessions
-            .Where(p => p.UserId == userId && (gameId == null || p.GameId == gameId))
-            .GroupBy(p => p.GameId)
-            .Select(x => new { GameId = x.Key, Hours = x.Sum(p => p.Hours), Count = x.Count() })
-            .ToListAsync();
-        return rows.ToDictionary(r => r.GameId, r => ((double)r.Hours, r.Count));
-    }
-
-    private static GameDto ToLibraryDto(Game game, Dictionary<int, string> journal, Dictionary<int, (double Hours, int Count)> sessions)
-    {
-        var (hours, count) = sessions.GetValueOrDefault(game.Id);
-        return game.ToDto(journal.GetValueOrDefault(game.Id, JournalStatuses.Backlog), hours, count);
     }
 
     private static void ValidateStoreAndDevices(string store, List<string> devices)
@@ -205,6 +184,7 @@ public class GameManager(GamePlannerDbContext db, IConfiguration config)
 
     public async Task<bool> UpdateAsync(int id, UpdateGameRequest request, int userId)
     {
+        request.PlayableDevices ??= [];
         ValidateStoreAndDevices(request.Store, request.PlayableDevices);
 
         var game = await db.Games

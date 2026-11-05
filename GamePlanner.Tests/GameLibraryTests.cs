@@ -137,6 +137,25 @@ public class GameLibraryTests
     }
 
     [Fact]
+    public async Task Update_NullDevices_TreatedAsEmpty()
+    {
+        var prefix = NewPrefix();
+        try
+        {
+            var user = await MvpTestData.CreateUserAsync(prefix);
+            var game = await MvpTestData.CreateGameAsync(user, prefix + "g");
+            var request = UpdateReq(prefix + "g", "Steam");
+            request.PlayableDevices = null!;
+
+            Assert.True(await CreateManager().UpdateAsync(game, request, user));
+
+            var dto = (await CreateManager().GetAllAsync(user)).Single(g => g.Id == game);
+            Assert.Equal([DeviceTypes.PC, DeviceTypes.SteamDeck], dto.PlayableDevices);
+        }
+        finally { await MvpTestData.CleanupAsync(prefix); }
+    }
+
+    [Fact]
     public async Task Update_InvalidStore_Rejected()
     {
         var prefix = NewPrefix();

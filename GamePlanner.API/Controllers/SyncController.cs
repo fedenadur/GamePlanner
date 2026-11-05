@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace GamePlanner.API.Controllers;
 
-[Authorize]
+[Authorize(Roles = "Admin")]
 [ApiController]
 [Route("api/[controller]")]
 public class SyncController(GameSyncManager manager) : ControllerBase

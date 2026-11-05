@@ -314,6 +314,32 @@ public class NowPlayingTransitionTests
     }
 
     [Fact]
+    public async Task GetSlots_GameDto_HasJournalStatusAndLoggedHours()
+    {
+        var prefix = NewPrefix();
+        try
+        {
+            var user = await MvpTestData.CreateUserAsync(prefix);
+            await MvpTestData.SetDevicesAsync(user, DeviceTypes.PC);
+            var game = await MvpTestData.CreateGameAsync(user, prefix + "a");
+            await CreateManager().StartAsync(user, DeviceTypes.PC, Start(game));
+            await using (var conn = new SqlConnection(TestDatabase.ConnectionString))
+                await conn.ExecuteAsync(
+                    "INSERT INTO PlaySessions (UserId, GameId, Device, PlayedOn, Hours) VALUES (@user, @game, 'PC', GETDATE(), 1.5), (@user, @game, 'PC', GETDATE(), 2)",
+                    new { user, game });
+
+            var dto = Assert.Single(await CreateManager().GetSlotsAsync(user)).Game!;
+
+            Assert.Equal(JournalStatuses.Playing, dto.Status);
+            Assert.Equal(3.5, dto.LoggedHours);
+            Assert.Equal(2, dto.SessionCount);
+            Assert.Equal(3.5, dto.TotalHours);
+            Assert.Equal(Stores.DefaultDevices("Other").ToList(), dto.PlayableDevices);
+        }
+        finally { await MvpTestData.CleanupAsync(prefix); }
+    }
+
+    [Fact]
     public async Task GetSlots_NoDevices_ReturnsSingleGeneralSlot()
     {
         var prefix = NewPrefix();

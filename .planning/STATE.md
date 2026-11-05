@@ -4,17 +4,17 @@ milestone: v1.1
 milestone_name: Cleanup + Platform Analysis
 current_phase: 06
 current_phase_name: game-images-metadata
-status: executing
-stopped_at: Completed 06-05-PLAN.md
-last_updated: "2026-11-05T17:55:32.209Z"
+status: verifying
+stopped_at: Completed 06-06-PLAN.md
+last_updated: "2026-11-05T18:12:12.446Z"
 last_activity: 2026-11-05
 last_activity_desc: Phase 06 execution started
 progress:
   total_phases: 5
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 6
-  completed_plans: 5
-  percent: 0
+  completed_plans: 6
+  percent: 20
 ---
 
 # Project State
@@ -30,10 +30,10 @@ See: .planning/PROJECT.md (updated 2026-10-27)
 
 Phase: 06 (game-images-metadata) — EXECUTING
 Plan: 6 of 6
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-11-05 — Phase 06 execution started
 
-Progress: [████████░░] 83%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -90,6 +90,7 @@ Progress: [████████░░] 83%
 | Phase 06 P03 | 12 min | 2 tasks | 6 files |
 | Phase 06 P04 | 12 min | 3 tasks | 7 files |
 | Phase 06 P05 | 65min | 3 tasks | 3 files |
+| Phase 06 P06 | continuation | 3 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -111,6 +112,7 @@ v1.1 roadmap decisions:
 - [Phase 06]: 06-02: Portal IGDB id is 71 (Valve 2007) via Steam external_games mapping; script 39 authored and dry-run proven, owner applies it
 - [Phase 06]: 06-02: Portal IGDBId corrected 14546 -> 71 via guarded, reversible Database/39_FixPortalIgdbId.sql (raw UPDATE/DELETE, convention exemption approved); owner applied in SSMS 2026-11-05 and re-verified read-only; 48 D-07 suspects logged, none changed
 - [Phase 06]: Plan 06-05 live proof passed after owner-approved restart: SC1 rests on REPRO_OK (repro row 108276), matcher assigned exactly the previewed ids, Dark Messiah siblings share IGDB 2369 with identical image sets, Portal re-derived as 2007 Valve (PORTAL_OK); no retry needed
+- [Phase 06]: Owner confirmed Portal and Dark Messiah pages (D-26); release date is not exposed by the UI, tracked as a separate todo; folded IMG-01 and Portal todos closed after SUITE_EXIT=0
 
 ### Pending Todos
 
@@ -148,8 +150,8 @@ All four are now scheduled in v1.1 (Phases 6, 7 and 9). See Pending Todos above.
 
 ## Session Continuity
 
-Last session: 2026-11-05T17:55:32.194Z
-Stopped at: Completed 06-05-PLAN.md
+Last session: 2026-11-05T18:12:12.432Z
+Stopped at: Completed 06-06-PLAN.md
 Resume file: None
 
 ## Operator Next Steps

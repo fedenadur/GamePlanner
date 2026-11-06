@@ -6,7 +6,8 @@ const API = process.env.UAT_API_URL ?? 'https://localhost:7174';
 // Every row this spec creates carries the run prefix; nothing else is ever started, finished or deleted.
 const ts = Date.now();
 const gameName = `uat-${ts}`;
-const genre = `uat-genre-${ts}`;
+// One fixed name reused on every run: there is no API to delete genres, so a per-run name would leave rows behind.
+const genre = 'uat-genre';
 
 function bearer(): Record<string, string> {
   const state = JSON.parse(readFileSync('.auth/uat.json', 'utf8'));
@@ -26,27 +27,44 @@ function api(request: APIRequestContext) {
 
 test.describe.serial('daily flow', () => {
   let gameId = 0;
-  let originalDevices: string[] = [];
+  let originalDevices: string[] | null = null;
 
   test.afterAll(async ({ playwright }) => {
     const request = await playwright.request.newContext({ ignoreHTTPSErrors: true });
     const a = api(request);
+    const failures: string[] = [];
+    const check = async (label: string, call: () => Promise<{ ok(): boolean; status(): number }>, okStatuses: number[] = []) => {
+      try {
+        const res = await call();
+        if (!res.ok() && !okStatuses.includes(res.status())) failures.push(`${label}: HTTP ${res.status()}`);
+      } catch (e) {
+        failures.push(`${label}: ${e instanceof Error ? e.message : String(e)}`);
+      }
+    };
     try {
       if (gameId) {
         // Free the slot first (keeps status), then remove sessions, journal entry and the game itself.
-        const slots = (await (await a.get('/api/now-playing')).json()) as { device: string; game: { id: number } | null }[];
-        for (const s of slots.filter(s => s.game?.id === gameId)) {
-          await a.post(`/api/now-playing/${s.device}/remove`, { outcome: 'None' });
-        }
-        const sessions = (await (await a.get(`/api/games/${gameId}/sessions`)).json()) as { id: number }[];
-        for (const s of sessions) await a.del(`/api/sessions/${s.id}`);
-        await a.del(`/api/journal/${gameId}`);
-        await a.del(`/api/games/${gameId}`);
+        try {
+          const slots = (await (await a.get('/api/now-playing')).json()) as { device: string; game: { id: number } | null }[];
+          for (const s of slots.filter(s => s.game?.id === gameId)) {
+            await check(`remove ${s.device} slot`, () => a.post(`/api/now-playing/${s.device}/remove`, { outcome: 'None' }));
+          }
+        } catch (e) { failures.push(`read now-playing: ${e instanceof Error ? e.message : String(e)}`); }
+        try {
+          const sessions = (await (await a.get(`/api/games/${gameId}/sessions`)).json()) as { id: number }[];
+          for (const s of sessions) await check(`delete session ${s.id}`, () => a.del(`/api/sessions/${s.id}`));
+        } catch (e) { failures.push(`read sessions: ${e instanceof Error ? e.message : String(e)}`); }
+        await check('delete journal entry', () => a.del(`/api/journal/${gameId}`), [404]);
+        await check('delete game', () => a.del(`/api/games/${gameId}`));
+      }
+      // After the game is gone (device_in_use otherwise); an empty original list is restored too.
+      if (originalDevices !== null) {
+        await check('restore devices', () => a.put('/api/profile/devices', { devices: originalDevices! }));
       }
     } finally {
-      if (originalDevices.length) await a.put('/api/profile/devices', { devices: originalDevices });
       await request.dispose();
     }
+    if (failures.length) throw new Error(`daily-flow cleanup failed: ${failures.join('; ')}`);
   });
 
   test('set up devices and a game that tops What to Play on Steam Deck', async ({ request }) => {
@@ -62,6 +80,10 @@ test.describe.serial('daily flow', () => {
     const slots = (await (await a.get('/api/now-playing')).json()) as { device: string; game: { name: string } | null }[];
     const busy = slots.find(s => s.device === 'SteamDeck' && s.game);
     expect(busy, `SteamDeck slot is held by "${busy?.game?.name}"; the test never touches pre-existing games`).toBeUndefined();
+
+    const library = (await (await a.get('/api/games')).json()) as { name: string; genres: string[] }[];
+    const carriers = library.filter(g => g.genres.includes(genre)).map(g => g.name);
+    expect(carriers, `games other than this run's already carry the "${genre}" genre`).toEqual([]);
 
     const created = await a.post('/api/games', {
       name: gameName, genres: [genre], estimatedMinutes: 90, tags: [], store: 'Steam',
@@ -96,7 +118,7 @@ test.describe.serial('daily flow', () => {
 
     await slot.getByRole('button', { name: 'Finish / remove' }).click();
     await page.locator('.choice.fin .star').nth(3).click();
-    await page.locator('.choice.fin').click({ position: { x: 10, y: 10 } });
+    await page.locator('.choice.fin').click({ position: { x: 10, y: 10 } }); // the row itself is the confirm control
     await expect(page.locator('.slot', { hasText: gameName })).toHaveCount(0);
   });
 

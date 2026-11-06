@@ -20,9 +20,9 @@ Branch `feat/mvp-now-playing`. Spec: `docs/superpowers/specs/2026-11-05-mvp-now-
 |-------|---------|--------|
 | Backend | `dotnet test GamePlanner.Tests` (against `GamePlannerDB_Test`) | 223 passed, 0 failed, 0 skipped, 223 total (20 s) |
 | Frontend | `npx ng test --watch=false --browsers=ChromeHeadless` | 89 of 89 SUCCESS |
-| E2E | `cd e2e && npx playwright test` (API on :7174 and UI on :4200 against `GamePlannerDB`, as the UAT user) | 19 passed, 0 failed (28.4 s) |
+| E2E | `cd e2e && npx playwright test` (API on :7174 and UI on :4200 against `GamePlannerDB`, as the UAT user) | 19 passed, 0 failed (17.4 s) |
 
-The E2E run includes `daily flow` (devices PC and Steam Deck, top pick on Steam Deck, 1,5 h session with a note, finish with 4 stars = rating 8, Journal shows Finished, game detail lists the session, What to Play no longer offers the game, cleanup and device restore) and `non-admin cannot see workers`.
+The E2E run includes `daily flow` (devices PC and Steam Deck, top pick on Steam Deck, 1,5 h session with a note, finish with 4 stars = rating 8, Journal shows Finished, game detail lists the session, What to Play no longer offers the game, cleanup and device restore; every cleanup call is checked and a failure fails the run) and `non-admin cannot see workers`.
 
 Changes to `e2e/tests/uat.spec.ts` for the MVP behavior:
 
@@ -32,7 +32,11 @@ Changes to `e2e/tests/uat.spec.ts` for the MVP behavior:
 - The old `/api/session/plan` check is now `/api/what-to-play`.
 - The four admin-only worker "Run now" tests were replaced by a non-admin 403 check.
 
+Cleanup verification (fix round 1): user 17's devices were set to `[]` through the API before the run; after the full Playwright run `GET /api/profile/devices` returned `{"devices":[]}` again. An earlier full run in the same session stopped at one auth test (login page rendered blank) and was re-run; the passing run is the one counted above.
+
 ## Known issues
+
+- 6 leftover `Genres` rows named `uat-genre-<ts>` from the first daily-flow run (the spec now reuses the single name `uat-genre`, which still exists as a row after the first run). There is no API to delete genres. The owner can remove them in SSMS with `DELETE FROM Genres WHERE Name LIKE 'uat-genre-%'` after checking the junction table that references `Genres` (the game-genre link) has no rows for them.
 
 - Admin-only worker "Run now" flows (GameSync, GameImageSync, GameHLTBSync, SteamPlaytimeSync) are no longer covered by e2e, because the UAT account is not admin. They were not re-verified in this release.
 - The lightbox e2e fixture triggers `GameImageSyncWorker` when no game with 2+ screenshots exists; that needs an admin and would fail for the UAT user. It passed in the run above because a fixture game already existed.

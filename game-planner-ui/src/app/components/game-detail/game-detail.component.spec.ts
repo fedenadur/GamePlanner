@@ -1,7 +1,7 @@
 import { ActivatedRoute, convertToParamMap } from '@angular/router';
 import { NEVER, of, throwError } from 'rxjs';
 import { GameDetail, GameImage, GameService } from '../../services/game.service';
-import { JournalService } from '../../services/journal.service';
+import { JournalEntry, JournalService } from '../../services/journal.service';
 import { PlaySession, PlaySessionService } from '../../services/play-session.service';
 import { NowPlayingService, NowPlayingSlot } from '../../services/now-playing.service';
 import { UserSettingsService } from '../../services/user-settings.service';
@@ -10,7 +10,7 @@ import { GameDetailComponent } from './game-detail.component';
 function buildComponent() {
   const svc = jasmine.createSpyObj<GameService>('GameService', ['getGameDetail', 'getGameImages']);
   const journal = jasmine.createSpyObj<JournalService>('JournalService', ['getEntry']);
-  journal.getEntry.and.returnValue(NEVER);
+  journal.getEntry.and.returnValue(throwError(() => ({ status: 404 })));
   const route = { paramMap: of(convertToParamMap({ id: '42' })) } as unknown as ActivatedRoute;
   svc.getGameDetail.and.returnValue(of({
     id: 42, igdbId: 7, name: 'x', genres: [], tags: [], themes: [], playerPerspectives: [],
@@ -243,5 +243,60 @@ describe('GameDetailComponent journal save and Now Playing', () => {
     cmp.ngOnInit();
     cmp.saveJournal();
     expect(cmp.removedNotice).toBe('');
+  });
+});
+
+describe('GameDetailComponent journal load', () => {
+  const entry: JournalEntry = {
+    gameId: 42, gameName: 'x', coverImageUrl: null, status: 'Playing',
+    startedAt: '2026-01-01T00:00:00', finishedAt: null, lastPlayedAt: '2026-02-01T00:00:00',
+    userRating: 6, notes: 'my notes', favoriteMoment: 'the boss', replayCount: 2,
+    createdAt: '2026-01-01T00:00:00', updatedAt: '2026-02-01T00:00:00', daysToFinish: null
+  };
+
+  it('saves the full loaded entry with only the edited fields changed', () => {
+    const { cmp, journal } = buildComponent();
+    journal.getEntry.and.returnValue(of(entry));
+    journal.upsert = jasmine.createSpy().and.returnValue(of({}));
+    cmp.ngOnInit();
+    cmp.journal.status = 'Finished';
+    cmp.setRating(8);
+    cmp.saveJournal();
+    expect(journal.upsert).toHaveBeenCalledWith(42, {
+      status: 'Finished', startedAt: '2026-01-01T00:00:00', finishedAt: null,
+      lastPlayedAt: '2026-02-01T00:00:00', userRating: 8, notes: 'my notes',
+      favoriteMoment: 'the boss', replayCount: 2
+    });
+  });
+
+  it('shows the load error and blocks Save when the entry fails to load', () => {
+    const { cmp, journal } = buildComponent();
+    journal.getEntry.and.returnValue(throwError(() => ({ status: 500 })));
+    journal.upsert = jasmine.createSpy().and.returnValue(of({}));
+    cmp.ngOnInit();
+    expect(cmp.journalError).toBe('Could not load the journal entry. Check that the API is running, then reload.');
+    expect(cmp.journalReady).toBeFalse();
+    cmp.saveJournal();
+    expect(journal.upsert).not.toHaveBeenCalled();
+  });
+
+  it('blocks Save while the entry is still loading', () => {
+    const { cmp, journal } = buildComponent();
+    journal.getEntry.and.returnValue(NEVER);
+    journal.upsert = jasmine.createSpy().and.returnValue(of({}));
+    cmp.ngOnInit();
+    cmp.saveJournal();
+    expect(journal.upsert).not.toHaveBeenCalled();
+  });
+
+  it('a 404 means no entry yet and still allows creating one', () => {
+    const { cmp, journal } = buildComponent();
+    journal.upsert = jasmine.createSpy().and.returnValue(of({}));
+    cmp.ngOnInit();
+    expect(cmp.journalError).toBe('');
+    expect(cmp.journalReady).toBeTrue();
+    cmp.journal.status = 'Playing';
+    cmp.saveJournal();
+    expect(journal.upsert).toHaveBeenCalledWith(42, jasmine.objectContaining({ status: 'Playing', replayCount: 0, notes: null }));
   });
 });

@@ -32,6 +32,7 @@ export class GameDetailComponent implements OnInit, OnDestroy {
   journal: UpsertJournalRequest = this.emptyJournal();
   journalSaved  = false;
   journalSaving = false;
+  journalReady  = false;
 
   readonly starPositions = [1, 2, 3, 4, 5];
   hoverRating: number | null = null;
@@ -70,6 +71,8 @@ export class GameDetailComponent implements OnInit, OnDestroy {
       this.loading = true;
       this.error = '';
       this.journal = this.emptyJournal();
+      this.journalReady = false;
+      this.journalError = '';
       this.journalSaved = false;
       this.hoverRating = null;
       this.sessions = [];
@@ -152,18 +155,26 @@ export class GameDetailComponent implements OnInit, OnDestroy {
     return url.replace('t_screenshot_big', 't_1080p');
   }
 
+  // Keep the whole entry: the upsert overwrites every column, so a partial copy would wipe dates and notes.
   private loadJournal(gameId: number) {
     this.journalService.getEntry(gameId).subscribe({
       next: (entry: JournalEntry) => {
-        this.journal.status     = entry.status;
-        this.journal.userRating = entry.userRating;
+        this.journal = {
+          status: entry.status, startedAt: entry.startedAt, finishedAt: entry.finishedAt,
+          lastPlayedAt: entry.lastPlayedAt, userRating: entry.userRating, notes: entry.notes,
+          favoriteMoment: entry.favoriteMoment, replayCount: entry.replayCount
+        };
+        this.journalReady = true;
       },
-      error: () => {}
+      error: (err) => {
+        if (err?.status === 404) { this.journalReady = true; return; }
+        this.journalError = loadError('the journal entry');
+      }
     });
   }
 
   saveJournal() {
-    if (!this.game) return;
+    if (!this.game || !this.journalReady) return;
     this.journalSaving = true;
     this.journalError = '';
     this.removedNotice = '';

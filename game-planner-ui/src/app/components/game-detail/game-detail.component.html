@@ -148,7 +148,7 @@
             <span class="star-label star-label--clear" *ngIf="journal.userRating" (click)="setRating(journal.userRating!)">✕</span>
           </div>
         </div>
-        <button class="btn-save" (click)="saveJournal()" [disabled]="journalSaving">
+        <button class="btn-save" (click)="saveJournal()" [disabled]="journalSaving || !journalReady">
           {{ journalSaving ? '…' : 'Save' }}
         </button>
         <span class="save-confirm" *ngIf="journalSaved">Saved!</span>

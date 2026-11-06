@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Subject, Subscription, catchError, debounce, forkJoin, of, switchMap, timer } from 'rxjs';
+import { Subject, Subscription, catchError, debounce, filter, forkJoin, of, switchMap, timer } from 'rxjs';
 import { GameService } from '../../services/game.service';
 import { NowPlayingService } from '../../services/now-playing.service';
 import { UserSettingsService } from '../../services/user-settings.service';
@@ -83,6 +83,7 @@ export class WhatToPlayComponent implements OnInit, OnDestroy {
   loading = true;
   loaded = false;
   error = '';
+  devicesError = '';
 
   pendingStart: WhatToPlayResult | null = null;
   finishGameName = '';
@@ -103,6 +104,7 @@ export class WhatToPlayComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.sub.add(this.run$.pipe(
       debounce(delay => timer(delay)),
+      filter(() => this.devices.length > 0),
       switchMap(() => {
         this.loading = true;
         this.error = '';
@@ -120,11 +122,23 @@ export class WhatToPlayComponent implements OnInit, OnDestroy {
       if (res) this.results = res.results;
     }));
 
+    this.loadOptions();
+  }
+
+  // A devices error must not fall back to General: the API rejects General for a user who has devices.
+  loadOptions() {
+    this.devicesError = '';
+    this.loading = true;
     forkJoin({
-      devices: this.settings.getDevices().pipe(catchError(() => of({ devices: [] as string[] }))),
+      devices: this.settings.getDevices().pipe(catchError(() => of(null))),
       genres: this.settings.getGenres().pipe(catchError(() => of([] as string[]))),
       games: this.gameService.getGames().pipe(catchError(() => of(null)))
     }).subscribe(({ devices, genres, games }) => {
+      if (!devices) {
+        this.devicesError = loadError('your devices');
+        this.loading = false;
+        return;
+      }
       this.devices = devices.devices.length ? devices.devices : ['General'];
       this.genres = genres;
       this.libraryEmpty = games !== null && games.length === 0;

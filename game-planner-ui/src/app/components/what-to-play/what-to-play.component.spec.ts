@@ -80,6 +80,25 @@ describe('WhatToPlayComponent', () => {
     expect(wtp.recommend.calls.mostRecent().args[0].device).toBe('General');
   }));
 
+  it('shows the devices load error with Reload and requests nothing when devices fail', fakeAsync(() => {
+    settings.getDevices.and.returnValue(throwError(() => new HttpErrorResponse({ status: 500 })));
+    const cmp = create();
+    tick(400);
+    expect(cmp.devicesError).toBe('Could not load your devices. Check that the API is running, then reload.');
+    expect(wtp.recommend).not.toHaveBeenCalled();
+    expect(cmp.loading).toBeFalse();
+    expect(cmp.noResults).toBeFalse();
+    cmp.setSessionTime('Short');
+    tick(400);
+    expect(wtp.recommend).not.toHaveBeenCalled();
+
+    settings.getDevices.and.returnValue(of({ devices: ['PC'] }));
+    cmp.loadOptions();
+    tick();
+    expect(cmp.devicesError).toBe('');
+    expect(wtp.recommend.calls.mostRecent().args[0].device).toBe('PC');
+  }));
+
   it('debounces option changes by 300 ms', fakeAsync(() => {
     const cmp = create();
     tick();

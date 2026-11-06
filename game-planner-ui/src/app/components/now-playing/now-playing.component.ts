@@ -5,6 +5,7 @@ import { NowPlayingService, NowPlayingSlot } from '../../services/now-playing.se
 import { PlaySessionService } from '../../services/play-session.service';
 import { FinishChoice } from '../finish-game-dialog/finish-game-dialog.component';
 import { LogSessionResult } from '../log-session-dialog/log-session-dialog.component';
+import { loadError } from '../../shared/messages';
 import { DEVICE_ICONS, DEVICE_LABELS, STORE_LABELS } from '../../shared/mvp-constants';
 
 @Component({
@@ -20,6 +21,7 @@ export class NowPlayingComponent implements OnInit {
 
   allGames: Game[] = [];
   loadingGames = false;
+  gamesError = '';
 
   pickerDevice: string | null = null;
   pickerSearch = '';
@@ -46,7 +48,7 @@ export class NowPlayingComponent implements OnInit {
     this.loadingGames = true;
     this.gameService.getGames().subscribe({
       next: (data) => { this.allGames = data; this.loadingGames = false; },
-      error: () => { this.loadingGames = false; }
+      error: () => { this.gamesError = loadError('your library'); this.loadingGames = false; }
     });
     this.loadSlots();
   }
@@ -55,10 +57,17 @@ export class NowPlayingComponent implements OnInit {
     this.nowPlayingService.getSlots().subscribe({
       next: (slots) => { this.slots = slots; this.loadingSlots = false; },
       error: () => {
-        this.error = 'Could not load Now Playing. Is the API running?';
+        this.error = loadError('Now Playing');
         this.loadingSlots = false;
       }
     });
+  }
+
+  retry() {
+    this.error = '';
+    this.loadingSlots = true;
+    this.loadSlots();
+    this.refreshGames();
   }
 
   get isGeneralOnly(): boolean {
@@ -155,7 +164,10 @@ export class NowPlayingComponent implements OnInit {
   }
 
   private refreshGames() {
-    this.gameService.getGames().subscribe({ next: (data) => { this.allGames = data; } });
+    this.gameService.getGames().subscribe({
+      next: (data) => { this.allGames = data; this.gamesError = ''; },
+      error: () => { this.gamesError = loadError('your library'); }
+    });
   }
 
   private fail(err: HttpErrorResponse) {

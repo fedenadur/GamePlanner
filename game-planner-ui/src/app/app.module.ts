@@ -28,6 +28,7 @@ import { FinishGameDialogComponent } from './components/finish-game-dialog/finis
 import { LogSessionDialogComponent } from './components/log-session-dialog/log-session-dialog.component';
 import { GameEditDialogComponent } from './components/game-edit-dialog/game-edit-dialog.component';
 import { ConfirmDialogComponent } from './components/confirm-dialog/confirm-dialog.component';
+import { GameTitlePipe } from './pipes/game-title.pipe';
 
 @NgModule({ declarations: [
         AppComponent,
@@ -52,7 +53,8 @@ import { ConfirmDialogComponent } from './components/confirm-dialog/confirm-dial
         FinishGameDialogComponent,
         LogSessionDialogComponent,
         GameEditDialogComponent,
-        ConfirmDialogComponent
+        ConfirmDialogComponent,
+        GameTitlePipe
     ],
     bootstrap: [AppComponent], imports: [BrowserModule,
         AppRoutingModule,

@@ -19,14 +19,14 @@
 }
 
 .page-title {
-  font-size: 1.6rem;
-  font-weight: 800;
-  letter-spacing: -0.02em;
+  font-size: var(--fs-2xl);
+  font-weight: 700;
+  letter-spacing: -0.3px;
   margin-bottom: 0.25rem;
 }
 
 .page-sub {
-  font-size: 0.875rem;
+  font-size: var(--fs-sm);
   color: var(--muted);
 }
 
@@ -39,7 +39,7 @@
 }
 
 .stat-pill {
-  font-size: 0.78rem;
+  font-size: var(--fs-xs);
   font-weight: 700;
   padding: 0.28rem 0.85rem;
   border-radius: 999px;
@@ -64,7 +64,7 @@
   animation: spin 0.7s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
-.error-msg { color: var(--danger); font-size: 0.875rem; }
+.error-msg { color: var(--danger); font-size: var(--fs-sm); }
 
 /* ── Empty state ──────────────────────────────────────────────────────────── */
 .empty-state {
@@ -75,9 +75,9 @@
   align-items: center;
   gap: 0.75rem;
 }
-.empty-icon  { font-size: 3.5rem; opacity: 0.4; }
-.empty-title { font-size: 1.15rem; font-weight: 700; color: var(--text-soft); }
-.empty-sub   { font-size: 0.875rem; color: var(--muted); max-width: 360px; line-height: 1.6; }
+.empty-icon  { font-size: var(--fs-2xl); opacity: 0.4; }
+.empty-title { font-size: var(--fs-lg); font-weight: 700; color: var(--text-soft); }
+.empty-sub   { font-size: var(--fs-sm); color: var(--muted); max-width: 360px; line-height: 1.6; }
 .btn-primary {
   display: inline-flex;
   align-items: center;
@@ -85,7 +85,7 @@
   padding: 0.55rem 1.4rem;
   background: var(--accent);
   color: #fff;
-  font-size: 0.875rem;
+  font-size: var(--fs-sm);
   font-weight: 700;
   border-radius: var(--radius-sm);
   text-decoration: none;
@@ -123,7 +123,7 @@
 }
 
 .group-label {
-  font-size: 0.9rem;
+  font-size: var(--fs-sm);
   font-weight: 800;
   color: var(--text-soft);
   letter-spacing: -0.01em;
@@ -132,13 +132,13 @@
 .group-label.soon  { color: #f59e0b; }
 
 .group-count {
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   color: var(--muted);
   font-weight: 600;
 }
 
 .group-badge {
-  font-size: 0.62rem;
+  font-size: var(--fs-xs);
   font-weight: 700;
   padding: 2px 8px;
   border-radius: 999px;
@@ -197,7 +197,7 @@
   bottom: 0; left: 0; right: 0;
   background: rgba(34,197,94,0.92);
   color: #fff;
-  font-size: 0.52rem;
+  font-size: var(--fs-xs);
   font-weight: 800;
   text-align: center;
   padding: 3px 0;
@@ -215,7 +215,7 @@
 }
 
 .card-name {
-  font-size: 0.95rem;
+  font-size: var(--fs-md);
   font-weight: 700;
   color: var(--text);
   line-height: 1.3;
@@ -235,12 +235,12 @@
 }
 
 .card-date {
-  font-size: 0.78rem;
+  font-size: var(--fs-xs);
   color: var(--muted);
 }
 
 .card-days {
-  font-size: 0.72rem;
+  font-size: var(--fs-xs);
   font-weight: 700;
   color: #f59e0b;
   background: rgba(245,158,11,0.1);
@@ -250,7 +250,7 @@
 }
 
 .card-hypes {
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   font-weight: 600;
   color: #fb923c;
 }
@@ -262,7 +262,7 @@
 }
 
 .genre-chip {
-  font-size: 0.65rem;
+  font-size: var(--fs-xs);
   font-weight: 600;
   padding: 2px 8px;
   border-radius: 999px;
@@ -284,7 +284,7 @@
   align-items: center;
   padding: 0.3rem 0.8rem;
   border-radius: var(--radius-sm);
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   font-weight: 700;
   text-decoration: none;
   cursor: pointer;

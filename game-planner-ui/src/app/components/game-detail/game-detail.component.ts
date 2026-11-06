@@ -9,6 +9,7 @@ import { UserSettingsService } from '../../services/user-settings.service';
 import { LogSessionResult } from '../log-session-dialog/log-session-dialog.component';
 import { DEVICE_ICONS, DEVICE_LABELS } from '../../shared/mvp-constants';
 import { genreIcon } from '../../shared/genre-meta';
+import { loadError } from '../../shared/messages';
 
 @Component({
     selector: 'app-game-detail',
@@ -42,6 +43,7 @@ export class GameDetailComponent implements OnInit, OnDestroy {
   saveError = '';
   deleteError = '';
   sessionsError = '';
+  journalError = '';
   logOpen = false;
   logDevice = '';
   logDevices: string[] | null = null;
@@ -76,7 +78,7 @@ export class GameDetailComponent implements OnInit, OnDestroy {
       this.removedNotice = '';
       this.gameService.getGameDetail(id).subscribe({
         next:  (g) => { this.game = g; this.loading = false; this.loadJournal(id); this.loadSessions(id); this.loadNowPlaying(id); this.loadScreenshots(g.igdbId, g.id); },
-        error: ()  => { this.error = 'Game not found.'; this.loading = false; }
+        error: (err) => { this.error = err?.status === 404 ? 'Game not found. It may have been deleted.' : loadError('this game'); this.loading = false; }
       });
     });
   }
@@ -163,6 +165,7 @@ export class GameDetailComponent implements OnInit, OnDestroy {
   saveJournal() {
     if (!this.game) return;
     this.journalSaving = true;
+    this.journalError = '';
     this.removedNotice = '';
     const gameId = this.game.id;
     const wasNowPlaying = this.nowPlayingDevice !== null;
@@ -173,14 +176,14 @@ export class GameDetailComponent implements OnInit, OnDestroy {
           if (wasNowPlaying && this.nowPlayingDevice === null) this.removedNotice = 'Removed from Now Playing.';
         });
       },
-      error: () => { this.journalSaving = false; }
+      error: () => { this.journalSaving = false; this.journalError = 'Could not save. Try again.'; }
     });
   }
 
   private loadSessions(gameId: number) {
     this.sessionService.list(gameId).subscribe({
       next: (list) => { this.sessions = list; this.sessionsError = ''; },
-      error: () => { this.sessionsError = 'Could not load sessions. Check that the API is running, then reload.'; }
+      error: () => { this.sessionsError = loadError('sessions'); }
     });
   }
 

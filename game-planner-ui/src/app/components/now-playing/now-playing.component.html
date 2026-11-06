@@ -12,6 +12,7 @@
   </p>
 
   <div *ngIf="error" class="error-msg">{{ error }}</div>
+  <button *ngIf="error" type="button" class="btn" (click)="retry()">Reload</button>
 
   <div class="slots" *ngIf="!loadingSlots">
     <div class="slot" *ngFor="let slot of slots">
@@ -22,7 +23,7 @@
           <img *ngIf="game.coverImageUrl" class="cover" [src]="game.coverImageUrl" [alt]="game.name" />
           <div *ngIf="!game.coverImageUrl" class="cover">{{ game.name }}</div>
           <div class="meta">
-            <div class="name">{{ game.name }}</div>
+            <div class="name">{{ game | gameTitle }}</div>
             <span class="pill" *ngIf="game.genres?.length">{{ game.genres[0] }}</span>
             <span class="pill" *ngIf="game.store">{{ storeLabels[game.store] ?? game.store }}</span><br>
             <ng-container *ngIf="slot.playingSince">Playing since {{ slot.playingSince | date:'d MMM' }}<br></ng-container>
@@ -77,8 +78,10 @@
       </label>
 
       <div class="picker-list" *ngIf="!loadingGames">
-        <div *ngIf="pickerGames.length === 0" class="picker-empty">
-          {{ pickerSearch ? 'No games match your search.' : 'No more games available.' }}
+        <div *ngIf="gamesError" class="picker-empty error-msg">{{ gamesError }}</div>
+        <div *ngIf="!gamesError && pickerGames.length === 0" class="picker-empty">
+          {{ pickerSearch ? 'No games match your search. Clear it or add the game in' : 'No more games available. Add games in' }}
+          <a routerLink="/games" (click)="closePicker()">My Games</a>.
         </div>
         <button
           *ngFor="let g of pickerGames; trackBy: trackById"
@@ -88,7 +91,7 @@
           <img *ngIf="g.coverImageUrl" [src]="g.coverImageUrl" [alt]="g.name" class="picker-thumb" />
           <div *ngIf="!g.coverImageUrl" class="picker-thumb picker-thumb-placeholder">🎮</div>
           <div class="picker-item-info">
-            <span class="picker-item-name">{{ g.name }}</span>
+            <span class="picker-item-name">{{ g | gameTitle }}</span>
             <span class="picker-item-genre" *ngIf="g.genres?.length">{{ g.genres.join(', ') }}</span>
           </div>
         </button>
@@ -100,13 +103,13 @@
 
   <app-finish-game-dialog
     *ngIf="finishFor"
-    [gameName]="finishFor.game!.name"
+    [gameName]="finishFor.game! | gameTitle"
     (chosen)="onFinishChosen($event)"
     (cancelled)="onFinishCancelled()"></app-finish-game-dialog>
 
   <app-log-session-dialog
     *ngIf="logFor"
-    [gameName]="logFor.game!.name"
+    [gameName]="logFor.game! | gameTitle"
     [device]="logFor.device"
     (saved)="onSessionSaved($event)"
     (cancelled)="logFor = null"></app-log-session-dialog>

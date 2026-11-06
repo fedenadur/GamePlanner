@@ -1,5 +1,5 @@
 <div class="detail-loading" *ngIf="loading">Loading...</div>
-<p class="error-msg" *ngIf="error">{{ error }}</p>
+<p class="error-msg" *ngIf="error">{{ error }} <a routerLink="/games">Back to My Games</a></p>
 
 <div class="detail-page" *ngIf="game && !loading">
 
@@ -10,7 +10,7 @@
       <div *ngIf="!game.coverImageUrl" class="cover-placeholder">🎮</div>
     </div>
     <div class="hero-info">
-      <h1 class="game-title">{{ game.name }}</h1>
+      <h1 class="game-title">{{ game | gameTitle }}</h1>
       <span class="playtime-badge" [class.played]="game.playtimeHours > 0">{{ playedLabel }}</span>
 
       <!-- Rating -->
@@ -152,6 +152,7 @@
           {{ journalSaving ? '…' : 'Save' }}
         </button>
         <span class="save-confirm" *ngIf="journalSaved">Saved!</span>
+        <span class="sessions-error" *ngIf="journalError">{{ journalError }}</span>
       </div>
       <div class="removed-notice" *ngIf="removedNotice">{{ removedNotice }}</div>
       <a routerLink="/journal" class="journal-link">Open full journal →</a>
@@ -168,7 +169,7 @@
         <span *ngIf="steamLabel">{{ steamLabel }}</span>
       </div>
       <p class="sessions-error" *ngIf="sessionsError">{{ sessionsError }}</p>
-      <p class="sessions-empty" *ngIf="!sessions.length && !sessionsError">No sessions yet. Log one from Now Playing or here.</p>
+      <p class="sessions-empty" *ngIf="!sessions.length && !sessionsError">No sessions yet. Use <b>+ Log session</b> above, or <a routerLink="/now-playing">start the game in Now Playing</a>.</p>
       <ul class="session-list" *ngIf="sessions.length">
         <li *ngFor="let s of sessions" class="session-row">
           <span class="s-date">{{ s.playedOn | date:'mediumDate' }}</span>
@@ -185,10 +186,10 @@
 </div>
 
 <app-log-session-dialog *ngIf="logOpen && game"
-  [gameName]="game.name" [device]="logDevice" [devices]="logDevices" [saving]="saving" [error]="saveError"
+  [gameName]="game | gameTitle" [device]="logDevice" [devices]="logDevices" [saving]="saving" [error]="saveError"
   (saved)="onLogSaved($event)" (cancelled)="closeDialogs()"></app-log-session-dialog>
 <app-log-session-dialog *ngIf="editing && game"
-  [gameName]="game.name" [device]="editing.device"
+  [gameName]="game | gameTitle" [device]="editing.device"
   [saving]="saving" [error]="saveError"
   [initial]="{ hours: editing.hours, note: editing.note, playedOn: editing.playedOn.substring(0, 10), device: editing.device }"
   (saved)="onEditSaved($event)" (cancelled)="closeDialogs()"></app-log-session-dialog>

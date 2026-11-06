@@ -18,6 +18,11 @@
     </div>
   </div>
 
+  <div class="load-error" *ngIf="loadFailed">
+    <span class="error-msg">{{ loadFailed }}</span>
+    <button type="button" class="btn-ghost" (click)="loadSettings()">Reload</button>
+  </div>
+
   <!-- Form card -->
   <div class="card profile-form">
     <h2>Account details</h2>

@@ -1,6 +1,7 @@
 import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { ProfileService, UserProfile } from '../../services/profile.service';
 import { UserSettingsService } from '../../services/user-settings.service';
+import { loadError } from '../../shared/messages';
 import { DEVICE_ICONS, DEVICE_LABELS, SELECTABLE_DEVICES } from '../../shared/mvp-constants';
 
 @Component({
@@ -46,24 +47,40 @@ export class ProfileComponent implements OnInit {
   prefsSaving = false;
   prefsSaved  = false;
   prefsError  = '';
+  loadFailed  = '';
 
   constructor(private profileService: ProfileService, private settings: UserSettingsService) {}
 
   ngOnInit() {
-    this.settings.getDevices().subscribe(r => { this.devices = [...r.devices]; this.savedDevices = [...r.devices]; });
-    this.settings.getGenres().subscribe(g => this.genres = g);
-    this.settings.getPreferences().subscribe(p => {
-      this.favoriteGenres = [...p.favoriteGenres];
-      this.avoidGenres    = [...p.avoidGenres];
-      this.maxGameHours   = p.maxGameHours;
-      this.singlePlayer   = p.singlePlayer;
-      this.narrative      = p.narrative;
-      this.combat         = p.combat;
-    });
+    this.loadSettings();
 
     const p = this.profileService.snapshot;
     if (p) this.populate(p);
-    else this.profileService.load().subscribe(p => this.populate(p));
+    else this.profileService.load().subscribe({
+      next: p => this.populate(p),
+      error: () => this.loadFailed = loadError('your profile')
+    });
+  }
+
+  loadSettings() {
+    this.loadFailed = '';
+    const failed = () => { this.loadFailed = loadError('your profile settings'); };
+    this.settings.getDevices().subscribe({
+      next: r => { this.devices = [...r.devices]; this.savedDevices = [...r.devices]; },
+      error: failed
+    });
+    this.settings.getGenres().subscribe({ next: g => this.genres = g, error: failed });
+    this.settings.getPreferences().subscribe({
+      next: p => {
+        this.favoriteGenres = [...p.favoriteGenres];
+        this.avoidGenres    = [...p.avoidGenres];
+        this.maxGameHours   = p.maxGameHours;
+        this.singlePlayer   = p.singlePlayer;
+        this.narrative      = p.narrative;
+        this.combat         = p.combat;
+      },
+      error: failed
+    });
   }
 
   private populate(p: UserProfile) {

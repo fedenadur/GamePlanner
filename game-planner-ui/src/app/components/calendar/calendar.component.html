@@ -60,7 +60,18 @@
   </div>
 </div>
 
-<p class="error-msg" *ngIf="error">{{ error }}</p>
+<p class="error-msg" *ngIf="error">{{ error }} <button type="button" class="empty-btn" (click)="load()">Reload</button></p>
+
+<div class="calendar-empty" *ngIf="!loading && !error && isEmpty">
+  <ng-container *ngIf="hasFilters; else noReleases">
+    No releases match these filters.
+    <button type="button" class="empty-btn" (click)="clearServerFilters()">Clear filters</button>
+  </ng-container>
+  <ng-template #noReleases>
+    No upcoming releases in this {{ mode }}.
+    <button type="button" class="empty-btn" (click)="next()">Check the next {{ mode }}</button>
+  </ng-template>
+</div>
 
 <div class="spinner-wrap" *ngIf="loading">
   <span class="spinner"></span>

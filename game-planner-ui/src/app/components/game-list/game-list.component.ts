@@ -1,5 +1,6 @@
 import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { Game, GameService } from '../../services/game.service';
+import { loadError } from '../../shared/messages';
 import { genreMeta } from '../../shared/genre-meta';
 import { JOURNAL_STATUSES, statusColor, SELECTABLE_DEVICES, STORE_LABELS, DEVICE_LABELS } from '../../shared/mvp-constants';
 
@@ -22,6 +23,7 @@ export class GameListComponent implements OnInit {
   games: Game[] = [];
   loading = false;
   error = '';
+  loadFailed = false;
   showForm = false;
 
   filterTitle = '';
@@ -53,9 +55,11 @@ export class GameListComponent implements OnInit {
 
   loadGames() {
     this.loading = true;
+    this.error = '';
+    this.loadFailed = false;
     this.gameService.getGames().subscribe({
       next: (data) => { this.games = data; this.loading = false; },
-      error: () => { this.error = 'Could not load games. Is the API running?'; this.loading = false; }
+      error: () => { this.error = loadError('your games'); this.loadFailed = true; this.loading = false; }
     });
   }
 

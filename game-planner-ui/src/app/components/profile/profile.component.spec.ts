@@ -33,6 +33,12 @@ describe('ProfileComponent devices and preferences', () => {
     expect(cmp.devicesSaved).toBeFalse();
   });
 
+  it('shows the load error when settings fail to load', () => {
+    settings.getDevices.and.returnValue(throwError(() => new HttpErrorResponse({ status: 500 })));
+    cmp.loadSettings();
+    expect(cmp.loadFailed).toBe('Could not load your profile settings. Check that the API is running, then reload.');
+  });
+
   it('disables a genre in the other list once chosen', () => {
     cmp.toggleGenre('favorite', 'RPG');
     expect(cmp.isGenreDisabled('avoid', 'RPG')).toBeTrue();

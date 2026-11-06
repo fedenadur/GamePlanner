@@ -7,6 +7,7 @@ import { UserSettingsService } from '../../services/user-settings.service';
 import { WhatToPlayResponse, WhatToPlayResult, WhatToPlayService } from '../../services/what-to-play.service';
 import { FinishChoice } from '../finish-game-dialog/finish-game-dialog.component';
 import { startOnDevice } from '../../shared/start-game';
+import { loadError } from '../../shared/messages';
 import { DEVICE_ICONS, DEVICE_LABELS } from '../../shared/mvp-constants';
 
 const DEBOUNCE_MS = 300;
@@ -107,7 +108,8 @@ export class WhatToPlayComponent implements OnInit, OnDestroy {
         this.error = '';
         return this.whatToPlay.recommend(this.buildRequest(), 5).pipe(
           catchError(() => {
-            this.error = 'Could not load recommendations. Is the API running?';
+            this.error = loadError('recommendations');
+            this.results = [];
             return of<WhatToPlayResponse | null>(null);
           })
         );
@@ -130,6 +132,19 @@ export class WhatToPlayComponent implements OnInit, OnDestroy {
       this.device = wanted && this.devices.includes(wanted) ? wanted : this.devices[0];
       this.run$.next(0);
     });
+  }
+
+  retry() { this.run$.next(0); }
+
+  resetOptions() {
+    this.sessionTime = 'Any';
+    this.gameLength = 'Any';
+    this.selectedGenres.clear();
+    this.mood = '';
+    this.perspective = '';
+    this.modes.clear();
+    this.strategy = 'Default';
+    this.run$.next(0);
   }
 
   ngOnDestroy() { this.sub.unsubscribe(); }

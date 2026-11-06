@@ -22,13 +22,13 @@
 }
 
 .hero-title {
-  font-size: 1.85rem;
-  font-weight: 800;
+  font-size: var(--fs-2xl);
+  font-weight: 700;
   margin: 0;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.3px;
 }
 .hero-sub {
-  font-size: 0.9rem;
+  font-size: var(--fs-sm);
   color: var(--muted);
   margin: 0.25rem 0 0;
 }
@@ -43,7 +43,7 @@
 .btn {
   display: inline-flex;
   align-items: center;
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
   font-weight: 600;
   padding: 0.6rem 1rem;
   border-radius: var(--radius-sm);
@@ -55,7 +55,7 @@
 .btn:hover { transform: translateY(-1px); }
 
 .btn-sm {
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   padding: 0.4rem 0.8rem;
 }
 
@@ -115,7 +115,7 @@
   margin-bottom: 1rem;
 }
 .card-head h2 {
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   font-weight: 700;
   margin: 0;
   text-transform: uppercase;
@@ -124,7 +124,7 @@
 }
 
 .card-link {
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   font-weight: 600;
   color: var(--muted);
   text-decoration: none;
@@ -139,8 +139,9 @@
   justify-content: center;
 }
 
+.empty-mini a { color: var(--accent-h); }
 .empty-mini {
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
   color: var(--muted);
   text-align: center;
 }
@@ -156,7 +157,7 @@
   border: 1px solid rgba(239,68,68,0.2);
   border-radius: var(--radius);
   color: var(--danger);
-  font-size: 0.875rem;
+  font-size: var(--fs-sm);
 }
 
 /* ── Skeleton ─────────────────────────────────────────────────────────── */
@@ -193,7 +194,7 @@
 .cover-fallback {
   width: 100%; height: 100%;
   display: flex; align-items: center; justify-content: center;
-  font-weight: 800; font-size: 1.2rem; color: var(--muted);
+  font-weight: 800; font-size: var(--fs-lg); color: var(--muted);
   background: linear-gradient(135deg, var(--surface3), var(--surface2));
 }
 
@@ -224,14 +225,14 @@
   flex: 1;
 }
 .continue-name {
-  font-size: 0.8rem;
+  font-size: var(--fs-xs);
   font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .continue-detail {
-  font-size: 0.65rem;
+  font-size: var(--fs-xs);
   color: var(--muted);
   margin-top: 0.1rem;
 }
@@ -260,21 +261,21 @@
 }
 
 .stat-number {
-  font-size: 1.8rem;
+  font-size: var(--fs-2xl);
   font-weight: 800;
   color: var(--accent-h);
   line-height: 1;
 }
 
 .stat-number-sm {
-  font-size: 1rem;
+  font-size: var(--fs-md);
   font-weight: 700;
   color: var(--text);
   line-height: 1;
 }
 
 .stat-label {
-  font-size: 0.7rem;
+  font-size: var(--fs-xs);
   color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -301,7 +302,7 @@
 }
 
 .day-header {
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   font-weight: 700;
   color: var(--accent-h);
   text-transform: uppercase;
@@ -313,7 +314,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.8rem;
+  font-size: var(--fs-xs);
   padding: 0.3rem 0;
 }
 
@@ -328,7 +329,7 @@
 
 .days-until {
   color: var(--muted);
-  font-size: 0.7rem;
+  font-size: var(--fs-xs);
 }
 
 /* ── Tonight Pick (Full Width) ────────────────────────────────────────────── */
@@ -378,19 +379,19 @@
 }
 
 .tonight-details h3 {
-  font-size: 1.35rem;
+  font-size: var(--fs-lg);
   font-weight: 700;
   margin: 0;
   line-height: 1.2;
 }
 
 .tonight-reason {
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
   color: var(--accent-h);
 }
 
 .tonight-meta {
-  font-size: 0.8rem;
+  font-size: var(--fs-xs);
   color: var(--muted);
 }
 
@@ -421,12 +422,12 @@
 }
 
 .backlog-completion strong {
-  font-size: 0.95rem;
+  font-size: var(--fs-md);
   font-weight: 700;
 }
 
 .backlog-breakdown {
-  font-size: 0.8rem;
+  font-size: var(--fs-xs);
   color: var(--muted);
 }
 

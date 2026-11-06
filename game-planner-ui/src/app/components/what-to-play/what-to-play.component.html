@@ -66,7 +66,7 @@
     </div>
   </div>
 
-  <div *ngIf="error" class="error-msg">{{ error }}</div>
+  <div *ngIf="error" class="error-msg">{{ error }} <button type="button" class="btn" (click)="retry()">Try again</button></div>
 
   <div class="empty-state" *ngIf="libraryEmpty">
     Your library is empty. Add games or import from Steam.
@@ -78,6 +78,10 @@
 
   <div class="empty-state" *ngIf="noResults">
     Nothing to recommend with these options. Try another device or Any length.
+    <div class="empty-links">
+      <button type="button" class="btn" (click)="resetOptions()">Reset options</button>
+      <a routerLink="/games">Go to My Games</a>
+    </div>
   </div>
 
   <div class="res" *ngIf="top as t">

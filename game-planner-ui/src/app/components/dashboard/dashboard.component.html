@@ -18,7 +18,8 @@
   <!-- Error -->
   <div *ngIf="error" class="dash-error">
     <span>⚠️</span>
-    <span>Could not load dashboard.</span>
+    <span>Could not load the dashboard. Check that the API is running, then reload.</span>
+    <button type="button" class="btn btn-ghost" (click)="reload()">Reload</button>
   </div>
 
   <!-- Skeleton -->
@@ -39,7 +40,7 @@
         <h2>▶ Continue Playing</h2>
       </header>
       <div class="card-body">
-        <div *ngIf="!data.continuePlaying.length" class="empty-mini">Nothing in progress yet.</div>
+        <div *ngIf="!data.continuePlaying.length" class="empty-mini">Nothing in progress yet. <a routerLink="/now-playing">Pick a game in Now Playing</a> to start.</div>
         <div class="continue-list" *ngIf="data.continuePlaying.length">
           <a class="continue-item-compact"
              *ngFor="let g of data.continuePlaying"
@@ -49,7 +50,7 @@
               <div *ngIf="!g.coverImageUrl" class="cover-fallback">{{ g.name[0] }}</div>
             </div>
             <div class="continue-info-compact">
-              <div class="continue-name">{{ g.name }}</div>
+              <div class="continue-name">{{ g | gameTitle }}</div>
               <div class="continue-detail">{{ g.playtimeHours | number:'1.0-1' }}h<ng-container *ngIf="deviceByGameId.get(g.id) as dev"> · {{ deviceLabel(dev) }}</ng-container></div>
             </div>
           </a>
@@ -88,7 +89,7 @@
         <h2>Upcoming This Week</h2>
       </header>
       <div class="card-body upcoming-body">
-        <div *ngIf="!data.upcomingThisWeek.length" class="empty-mini">No releases in the next 7 days.</div>
+        <div *ngIf="!data.upcomingThisWeek.length" class="empty-mini">No releases in the next 7 days. <a routerLink="/calendar">Browse the calendar</a> to track upcoming games.</div>
         <div class="upcoming-grouped" *ngIf="data.upcomingThisWeek.length">
           <div class="week-group" *ngFor="let group of groupUpcomingByDay(data.upcomingThisWeek)">
             <div class="day-header">{{ group.date | date:'MMM d' }}</div>
@@ -109,7 +110,7 @@
         <a routerLink="/what-to-play" class="card-link">More →</a>
       </header>
       <div class="card-body tonight-full-body">
-        <div *ngIf="!data.tonightRecommendation" class="empty-mini">No recommendation yet.</div>
+        <div *ngIf="!data.tonightRecommendation" class="empty-mini">No recommendation yet. <a routerLink="/what-to-play">Ask What to Play</a> for a pick.</div>
         <div *ngIf="data.tonightRecommendation as t" class="tonight-full">
           <div class="tonight-cover-lg">
             <img *ngIf="t.coverImageUrl" [src]="t.coverImageUrl" [alt]="t.name">

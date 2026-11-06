@@ -18,7 +18,9 @@
   </div>
 
   <!-- Error -->
-  <p class="error-msg" *ngIf="error">{{ error }}</p>
+  <p class="error-msg" *ngIf="error">{{ error }} <button type="button" class="btn-ghost" (click)="load()">Reload</button></p>
+
+  <p class="error-msg" *ngIf="untrackError">{{ untrackError }}</p>
 
   <!-- Empty state -->
   <div class="empty-state" *ngIf="!loading && !error && groups.length === 0">

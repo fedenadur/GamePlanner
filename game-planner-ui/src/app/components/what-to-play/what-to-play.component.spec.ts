@@ -148,4 +148,16 @@ describe('WhatToPlayComponent', () => {
     expect(cmp.libraryEmpty).toBeTrue();
     expect(cmp.noResults).toBeFalse();
   }));
+
+  it('clears stale results and shows the load error when recommend fails', fakeAsync(() => {
+    const cmp = create();
+    tick();
+    expect(cmp.top).not.toBeNull();
+    wtp.recommend.and.returnValue(throwError(() => new HttpErrorResponse({ status: 500 })));
+    cmp.setDevice('SteamDeck');
+    tick(400);
+    expect(cmp.results).toEqual([]);
+    expect(cmp.top).toBeNull();
+    expect(cmp.error).toBe('Could not load recommendations. Check that the API is running, then reload.');
+  }));
 });

@@ -38,6 +38,16 @@ export class DashboardComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.load();
+  }
+
+  reload() {
+    this.error = false;
+    this.loading = true;
+    this.load();
+  }
+
+  private load() {
     this.dashboardService.get().subscribe({
       next: d => { this.data = d; this.loading = false; },
       error: () => { this.error = true; this.loading = false; }

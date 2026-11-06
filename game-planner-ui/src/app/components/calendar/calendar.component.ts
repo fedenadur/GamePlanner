@@ -1,3 +1,4 @@
+import { loadError } from '../../shared/messages';
 import { Component, OnDestroy, OnInit, HostListener, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
@@ -98,6 +99,20 @@ export class CalendarComponent implements OnInit, OnDestroy {
     const startStr = this.weekStartDate.toLocaleDateString('default', { month: 'short', day: 'numeric' });
     const endStr   = weekEnd.toLocaleDateString('default', { month: 'short', day: 'numeric', year: 'numeric' });
     return `${startStr} – ${endStr}`;
+  }
+
+  get hasFilters(): boolean {
+    return !!(this.genreFilter || this.hypeMinFilter || this.ownedOnly || this.favoriteGenresOnly);
+  }
+
+  get isEmpty(): boolean { return this.gamesWithDates().length === 0; }
+
+  clearServerFilters() {
+    this.genreFilter = '';
+    this.hypeMinFilter = 0;
+    this.ownedOnly = false;
+    this.favoriteGenresOnly = false;
+    this.load();
   }
 
   get topAnticipated(): { game: CalendarGame; date: Date }[] {
@@ -235,7 +250,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
         this.showAllThisWeek = false;
         this.loading = false;
       },
-      error: () => { this.error = 'Failed to load calendar.'; this.loading = false; }
+      error: () => { this.error = loadError('the calendar'); this.loading = false; }
     });
   }
 
@@ -285,7 +300,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
         game.isTracked = !game.isTracked;
         this.trackingInProgress = false;
       },
-      error: () => { this.trackingInProgress = false; }
+      error: () => { this.trackingInProgress = false; this.error = 'Could not update tracking. Try again.'; }
     });
   }
 

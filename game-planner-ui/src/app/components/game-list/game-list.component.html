@@ -88,7 +88,7 @@
   <span class="results-count">{{ filtered.length }} game{{ filtered.length !== 1 ? 's' : '' }}</span>
 </div>
 
-<p class="error-msg" *ngIf="error">{{ error }}</p>
+<p class="error-msg" *ngIf="error">{{ error }} <button *ngIf="loadFailed" class="btn-ghost" (click)="loadGames()">Reload</button></p>
 
 <!-- Loading skeletons -->
 <div class="games-grid" *ngIf="loading">
@@ -105,9 +105,19 @@
     (favoriteToggled)="toggleFavorite($event)">
   </app-game-card>
 
-  <div class="empty-state" *ngIf="filtered.length === 0">
+  <div class="empty-state" *ngIf="filtered.length === 0 && !loadFailed">
     <div class="empty-state-icon">🎮</div>
-    <p>No games match your filters.</p>
+    <ng-container *ngIf="games.length === 0; else noMatch">
+      <p>Your library is empty. Add a game or import your Steam library.</p>
+      <div class="empty-actions">
+        <button class="btn-primary add-btn" (click)="showForm = true">+ Add Game</button>
+        <button class="btn-ghost add-btn" routerLink="/steam">Import from Steam</button>
+      </div>
+    </ng-container>
+    <ng-template #noMatch>
+      <p>No games match your filters. Clear them to see your whole library.</p>
+      <button class="btn-ghost add-btn" (click)="clearFilters()">Clear all filters</button>
+    </ng-template>
   </div>
 </div>
 
@@ -124,7 +134,7 @@
 <app-game-edit-dialog *ngIf="editingGame" [game]="editingGame" (saved)="saved()" (cancelled)="editingGame = null"></app-game-edit-dialog>
 
 <app-confirm-dialog *ngIf="deletingGame"
-  [title]="'Delete ' + deletingGame.name + '?'"
+  [title]="'Delete ' + (deletingGame | gameTitle) + '?'"
   message="This removes it from your library, Now Playing and recommendations."
   confirmLabel="Delete"
   (confirmed)="confirmDelete()"

@@ -190,4 +190,44 @@ public class GameLibraryTests
         }
         finally { await MvpTestData.CleanupAsync(prefix); }
     }
+
+    [Fact]
+    public async Task SteamImportInsert_SetsStoreSteam()
+    {
+        var prefix = NewPrefix();
+        try
+        {
+            var user = await MvpTestData.CreateUserAsync(prefix);
+            await using (var conn = new SqlConnection(TestDatabase.ConnectionString))
+                await conn.ExecuteAsync("sp_InsertSteamGame",
+                    new { Name = prefix + "steam", SteamAppId = 987654, PlaytimeHours = 3.5, UserId = user },
+                    commandType: System.Data.CommandType.StoredProcedure);
+
+            var dto = Assert.Single(await CreateManager().GetAllAsync(user));
+            Assert.Equal(Stores.Steam, dto.Store);
+            Assert.Equal("Steam", dto.Source);
+            Assert.Equal([DeviceTypes.PC, DeviceTypes.SteamDeck], dto.PlayableDevices);
+        }
+        finally { await MvpTestData.CleanupAsync(prefix); }
+    }
+
+    [Fact]
+    public async Task Update_EmptyCover_ClearsIt_NullCover_KeepsIt()
+    {
+        var prefix = NewPrefix();
+        try
+        {
+            var user = await MvpTestData.CreateUserAsync(prefix);
+            var game = await MvpTestData.CreateGameAsync(user, prefix + "g");
+            var manager = CreateManager();
+            await manager.UpdateAsync(game, UpdateReq(prefix + "g", cover: "https://img/x.jpg"), user);
+
+            await manager.UpdateAsync(game, UpdateReq(prefix + "g", cover: null), user);
+            Assert.Equal("https://img/x.jpg", await ScalarAsync<string>("SELECT CoverImageUrl FROM Games WHERE Id=@game", new { game }));
+
+            await manager.UpdateAsync(game, UpdateReq(prefix + "g", cover: ""), user);
+            Assert.Null(await ScalarAsync<string?>("SELECT CoverImageUrl FROM Games WHERE Id=@game", new { game }));
+        }
+        finally { await MvpTestData.CleanupAsync(prefix); }
+    }
 }

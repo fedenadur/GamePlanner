@@ -53,6 +53,12 @@ describe('DashboardComponent', () => {
     expect(startBtn()!.textContent!.trim()).toBe('▶ Start on Steam Deck');
   });
 
+  it('starts on General when the user has no devices', () => {
+    setup(of({ devices: [] }));
+    expect(startBtn()!.disabled).toBeFalse();
+    expect(startBtn()!.textContent!.trim()).toBe('▶ Start on General');
+  });
+
   it('dayLabel gives Today, Tomorrow and in Nd', () => {
     setup();
     const c = fixture.componentInstance;

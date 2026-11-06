@@ -14,7 +14,7 @@ public class GameJournalManager(GamePlannerDbContext db, IConfiguration config)
     public async Task<List<GameJournalEntryDto>> GetJournalAsync(int userId)
     {
         var entries = await db.GameJournalEntries
-            .Where(j => j.UserId == userId)
+            .Where(j => j.UserId == userId && j.Game.IsActive)
             .Include(j => j.Game)
             .OrderByDescending(j => j.UpdatedAt)
             .ToListAsync();
@@ -31,10 +31,12 @@ public class GameJournalManager(GamePlannerDbContext db, IConfiguration config)
         return entry is null ? null : ToDto(entry);
     }
 
-    public async Task UpsertAsync(int userId, int gameId, UpsertJournalRequest req)
+    public async Task<bool> UpsertAsync(int userId, int gameId, UpsertJournalRequest req)
     {
-        using var conn = CreateConnection();
-        await conn.ExecuteAsync("sp_UpsertGameJournalEntry", new
+        if (req.Status is null || !JournalStatuses.All.Contains(req.Status)) throw new ArgumentException("Invalid status.");
+        if (req.UserRating is < 1 or > 10) throw new ArgumentException("Rating must be between 1 and 10.");
+
+        var p = new DynamicParameters(new
         {
             UserId         = userId,
             GameId         = gameId,
@@ -46,7 +48,12 @@ public class GameJournalManager(GamePlannerDbContext db, IConfiguration config)
             req.Notes,
             req.FavoriteMoment,
             req.ReplayCount
-        }, commandType: System.Data.CommandType.StoredProcedure);
+        });
+        p.Add("Result", dbType: System.Data.DbType.Int32, direction: System.Data.ParameterDirection.ReturnValue);
+
+        using var conn = CreateConnection();
+        await conn.ExecuteAsync("sp_UpsertGameJournalEntry", p, commandType: System.Data.CommandType.StoredProcedure);
+        return p.Get<int>("Result") == 0;
     }
 
     public async Task DeleteAsync(int userId, int gameId)

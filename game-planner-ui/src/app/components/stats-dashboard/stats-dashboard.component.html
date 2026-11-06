@@ -19,7 +19,8 @@
 
   <div *ngIf="error" class="stats-error">
     <span class="error-icon">⚠️</span>
-    <span>Could not load stats. Make sure you have games in your library.</span>
+    <span>Could not load stats. Check that the API is running, then reload.</span>
+    <button type="button" class="stats-link" (click)="load()">Reload</button>
   </div>
 
   <ng-container *ngIf="data && !loading">
@@ -118,7 +119,7 @@
 
       <div class="chart-card">
         <div class="chart-title">Top Genres <span class="chart-sub">· by games</span></div>
-        <div *ngIf="!data.genres.topByCount.length" class="chart-empty">No genre data yet</div>
+        <div *ngIf="!data.genres.topByCount.length" class="chart-empty">No genre data yet. <a routerLink="/games">Add games in My Games</a>.</div>
         <div class="bar-list" *ngIf="data.genres.topByCount.length">
           <div class="bar-row" *ngFor="let g of data.genres.topByCount">
             <span class="bar-name">{{ g.genre }}</span>
@@ -133,7 +134,7 @@
 
       <div class="chart-card">
         <div class="chart-title">Top Genres <span class="chart-sub">· by hours</span></div>
-        <div *ngIf="!data.genres.topByHours.length" class="chart-empty">No playtime data yet</div>
+        <div *ngIf="!data.genres.topByHours.length" class="chart-empty">No playtime data yet. <a routerLink="/now-playing">Log a session in Now Playing</a>.</div>
         <div class="bar-list" *ngIf="data.genres.topByHours.length">
           <div class="bar-row" *ngFor="let g of data.genres.topByHours">
             <span class="bar-name">{{ g.genre }}</span>
@@ -228,7 +229,7 @@
         <div class="hl-body">
           <div class="hl-label">Getting Started</div>
           <div class="hl-value">Play more games</div>
-          <div class="hl-detail">Highlights will appear as your library grows</div>
+          <div class="hl-detail">Highlights appear as you play. <a routerLink="/now-playing">Start a game in Now Playing</a>.</div>
         </div>
       </div>
 

@@ -1,6 +1,7 @@
 import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { JournalService, JournalEntry, UpsertJournalRequest } from '../../services/journal.service';
 import { GameService, Game } from '../../services/game.service';
+import { loadError } from '../../shared/messages';
 
 @Component({
     selector: 'app-journal',
@@ -23,6 +24,8 @@ export class JournalComponent implements OnInit {
   editSaving  = false;
   editSaved   = false;
   editDeleting = false;
+  editError = '';
+  pickerError = '';
 
   readonly starPositions = [1, 2, 3, 4, 5];
   hoverRating: number | null = null;
@@ -38,11 +41,12 @@ export class JournalComponent implements OnInit {
     this.load();
   }
 
-  private load() {
+  load() {
     this.loading = true;
+    this.error = '';
     this.journalService.getJournal().subscribe({
       next:  (data) => { this.entries = data; this.loading = false; },
-      error: ()     => { this.error = 'Could not load journal.'; this.loading = false; }
+      error: ()     => { this.error = loadError('your journal'); this.loading = false; }
     });
   }
 
@@ -63,6 +67,7 @@ export class JournalComponent implements OnInit {
   openEdit(entry: JournalEntry) {
     this.selected  = entry;
     this.editSaved = false;
+    this.editError = '';
     this.editForm  = {
       status:         entry.status,
       startedAt:      entry.startedAt    ? entry.startedAt.substring(0, 10)    : null,
@@ -75,15 +80,18 @@ export class JournalComponent implements OnInit {
     };
   }
 
+  clearFilters() { this.filterQuery = ''; this.filterStatus = 'All'; }
+
   closeEdit() { this.selected = null; }
 
   openPicker() {
     this.pickerOpen    = true;
     this.pickerQuery   = '';
     this.pickerLoading = true;
+    this.pickerError = '';
     this.gameService.getGames().subscribe({
       next:  (games) => { this.pickerGames = games; this.pickerLoading = false; },
-      error: ()      => { this.pickerLoading = false; }
+      error: ()      => { this.pickerLoading = false; this.pickerError = loadError('your library'); }
     });
   }
 
@@ -111,6 +119,7 @@ export class JournalComponent implements OnInit {
   saveEdit() {
     if (!this.selected) return;
     this.editSaving = true;
+    this.editError = '';
     this.journalService.upsert(this.selected.gameId, this.editForm).subscribe({
       next: () => {
         this.editSaving = false;
@@ -126,20 +135,21 @@ export class JournalComponent implements OnInit {
         }
         setTimeout(() => this.editSaved = false, 2000);
       },
-      error: () => { this.editSaving = false; }
+      error: () => { this.editSaving = false; this.editError = 'Could not save. Try again.'; }
     });
   }
 
   deleteEdit() {
     if (!this.selected) return;
     this.editDeleting = true;
+    this.editError = '';
     this.journalService.delete(this.selected.gameId).subscribe({
       next: () => {
         this.entries = this.entries.filter(e => e.gameId !== this.selected!.gameId);
         this.selected    = null;
         this.editDeleting = false;
       },
-      error: () => { this.editDeleting = false; }
+      error: () => { this.editDeleting = false; this.editError = 'Could not remove. Try again.'; }
     });
   }
 

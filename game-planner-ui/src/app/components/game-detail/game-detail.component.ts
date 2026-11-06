@@ -1,9 +1,15 @@
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, HostListener, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { GameService, GameDetail, GameImage } from '../../services/game.service';
 import { JournalService, JournalEntry, UpsertJournalRequest } from '../../services/journal.service';
+import { PlaySession, PlaySessionService } from '../../services/play-session.service';
+import { NowPlayingService } from '../../services/now-playing.service';
+import { UserSettingsService } from '../../services/user-settings.service';
+import { LogSessionResult } from '../log-session-dialog/log-session-dialog.component';
+import { DEVICE_ICONS, DEVICE_LABELS } from '../../shared/mvp-constants';
 import { genreIcon } from '../../shared/genre-meta';
+import { loadError } from '../../shared/messages';
 
 @Component({
     selector: 'app-game-detail',
@@ -17,7 +23,8 @@ export class GameDetailComponent implements OnInit, OnDestroy {
 
   game: GameDetail | null = null;
   screenshots: GameImage[] = [];
-  lightboxImage: GameImage | null = null;
+  lightboxIndex: number | null = null;
+  imageFading = false;
   loading = true;
   error   = '';
 
@@ -25,16 +32,36 @@ export class GameDetailComponent implements OnInit, OnDestroy {
   journal: UpsertJournalRequest = this.emptyJournal();
   journalSaved  = false;
   journalSaving = false;
+  journalReady  = false;
 
   readonly starPositions = [1, 2, 3, 4, 5];
   hoverRating: number | null = null;
+
+  sessions: PlaySession[] = [];
+  nowPlayingDevice: string | null = null;
+  removedNotice = '';
+  saving = false;
+  saveError = '';
+  deleteError = '';
+  sessionsError = '';
+  journalError = '';
+  logOpen = false;
+  logDevice = '';
+  logDevices: string[] | null = null;
+  editing: PlaySession | null = null;
+  deleting: PlaySession | null = null;
+  readonly deviceLabels = DEVICE_LABELS;
+  readonly deviceIcons = DEVICE_ICONS;
 
   private routeSub?: Subscription;
 
   constructor(
     private route: ActivatedRoute,
     private gameService: GameService,
-    private journalService: JournalService
+    private journalService: JournalService,
+    private sessionService: PlaySessionService,
+    private nowPlayingService: NowPlayingService,
+    private settingsService: UserSettingsService
   ) {}
 
   ngOnInit() {
@@ -44,11 +71,17 @@ export class GameDetailComponent implements OnInit, OnDestroy {
       this.loading = true;
       this.error = '';
       this.journal = this.emptyJournal();
+      this.journalReady = false;
+      this.journalError = '';
       this.journalSaved = false;
       this.hoverRating = null;
+      this.sessions = [];
+      this.sessionsError = '';
+      this.nowPlayingDevice = null;
+      this.removedNotice = '';
       this.gameService.getGameDetail(id).subscribe({
-        next:  (g) => { this.game = g; this.loading = false; this.loadJournal(id); this.loadScreenshots(g.igdbId); },
-        error: ()  => { this.error = 'Game not found.'; this.loading = false; }
+        next:  (g) => { this.game = g; this.loading = false; this.loadJournal(id); this.loadSessions(id); this.loadNowPlaying(id); this.loadScreenshots(g.igdbId, g.id); },
+        error: (err) => { this.error = err?.status === 404 ? 'Game not found. It may have been deleted.' : loadError('this game'); this.loading = false; }
       });
     });
   }
@@ -57,10 +90,10 @@ export class GameDetailComponent implements OnInit, OnDestroy {
     this.routeSub?.unsubscribe();
   }
 
-  private loadScreenshots(igdbId: number | null) {
+  private loadScreenshots(igdbId: number | null, gameId: number) {
     this.screenshots = [];
     if (!igdbId) return;
-    this.gameService.getGameImages('screenshot', igdbId).subscribe({
+    this.gameService.getGameImages('screenshot', igdbId, gameId).subscribe({
       next: (imgs) => { this.screenshots = imgs; }
     });
   }
@@ -70,29 +103,171 @@ export class GameDetailComponent implements OnInit, OnDestroy {
     if (el) el.scrollBy({ left: dir * 480, behavior: 'smooth' });
   }
 
-  openLightbox(img: GameImage)  { this.lightboxImage = img; }
-  closeLightbox()               { this.lightboxImage = null; }
+  get lightboxImage(): GameImage | null {
+    return this.lightboxIndex !== null ? this.screenshots[this.lightboxIndex] : null;
+  }
+
+  openLightbox(index: number) { this.setLightboxIndex(index); }
+  closeLightbox()             { this.lightboxIndex = null; }
+
+  nextImage() {
+    if (this.lightboxIndex === null || this.screenshots.length <= 1) return;
+    this.setLightboxIndex((this.lightboxIndex + 1) % this.screenshots.length);
+  }
+
+  prevImage() {
+    if (this.lightboxIndex === null || this.screenshots.length <= 1) return;
+    const len = this.screenshots.length;
+    this.setLightboxIndex((this.lightboxIndex - 1 + len) % len);
+  }
+
+  @HostListener('window:keydown', ['$event'])
+  handleLightboxKeydown(event: KeyboardEvent) {
+    if (this.lightboxIndex === null) return;
+    if (event.key === 'ArrowRight') this.nextImage();
+    else if (event.key === 'ArrowLeft') this.prevImage();
+    else if (event.key === 'Escape') this.closeLightbox();
+  }
+
+  private setLightboxIndex(index: number) {
+    this.lightboxIndex = index;
+    this.triggerFade();
+    this.preloadNeighbors();
+  }
+
+  private triggerFade() {
+    this.imageFading = true;
+    setTimeout(() => this.imageFading = false, 20);
+  }
+
+  private preloadNeighbors() {
+    if (this.lightboxIndex === null || this.screenshots.length <= 1) return;
+    const len = this.screenshots.length;
+    const nextIdx = (this.lightboxIndex + 1) % len;
+    const prevIdx = (this.lightboxIndex - 1 + len) % len;
+    [nextIdx, prevIdx].forEach(i => {
+      const preload = new Image();
+      preload.src = this.lightboxUrl(this.screenshots[i].url);
+    });
+  }
 
   lightboxUrl(url: string): string {
     return url.replace('t_screenshot_big', 't_1080p');
   }
 
+  // Keep the whole entry: the upsert overwrites every column, so a partial copy would wipe dates and notes.
   private loadJournal(gameId: number) {
     this.journalService.getEntry(gameId).subscribe({
       next: (entry: JournalEntry) => {
-        this.journal.status     = entry.status;
-        this.journal.userRating = entry.userRating;
+        this.journal = {
+          status: entry.status, startedAt: entry.startedAt, finishedAt: entry.finishedAt,
+          lastPlayedAt: entry.lastPlayedAt, userRating: entry.userRating, notes: entry.notes,
+          favoriteMoment: entry.favoriteMoment, replayCount: entry.replayCount
+        };
+        this.journalReady = true;
       },
-      error: () => {}
+      error: (err) => {
+        if (err?.status === 404) { this.journalReady = true; return; }
+        this.journalError = loadError('the journal entry');
+      }
     });
   }
 
   saveJournal() {
-    if (!this.game) return;
+    if (!this.game || !this.journalReady) return;
     this.journalSaving = true;
-    this.journalService.upsert(this.game.id, this.journal).subscribe({
-      next: () => { this.journalSaved = true; this.journalSaving = false; setTimeout(() => this.journalSaved = false, 2500); },
-      error: () => { this.journalSaving = false; }
+    this.journalError = '';
+    this.removedNotice = '';
+    const gameId = this.game.id;
+    const wasNowPlaying = this.nowPlayingDevice !== null;
+    this.journalService.upsert(gameId, this.journal).subscribe({
+      next: () => {
+        this.journalSaved = true; this.journalSaving = false; setTimeout(() => this.journalSaved = false, 2500);
+        this.loadNowPlaying(gameId, () => {
+          if (wasNowPlaying && this.nowPlayingDevice === null) this.removedNotice = 'Removed from Now Playing.';
+        });
+      },
+      error: () => { this.journalSaving = false; this.journalError = 'Could not save. Try again.'; }
+    });
+  }
+
+  private loadSessions(gameId: number) {
+    this.sessionService.list(gameId).subscribe({
+      next: (list) => { this.sessions = list; this.sessionsError = ''; },
+      error: () => { this.sessionsError = loadError('sessions'); }
+    });
+  }
+
+  private loadNowPlaying(gameId: number, done?: () => void) {
+    this.nowPlayingService.getSlots().subscribe({
+      next: (slots) => {
+        this.nowPlayingDevice = slots.find(s => s.game?.id === gameId)?.device ?? null;
+        done?.();
+      },
+      error: () => { done?.(); }
+    });
+  }
+
+  get loggedLabel(): string {
+    const total = Math.round(this.sessions.reduce((sum, s) => sum + s.hours, 0) * 100) / 100;
+    const n = this.sessions.length;
+    return `Logged: ${total} h in ${n} ${n === 1 ? 'session' : 'sessions'}`;
+  }
+
+  get steamLabel(): string {
+    const h = this.game?.playtimeHours ?? 0;
+    return h > 0 ? `Steam: ${h} h` : '';
+  }
+
+  openLog() {
+    if (this.nowPlayingDevice) {
+      this.logDevice = this.nowPlayingDevice;
+      this.logDevices = null;
+      this.logOpen = true;
+      return;
+    }
+    this.settingsService.getDevices().subscribe({
+      // General is only valid when the user has no devices (the API rejects it otherwise).
+      next: (r) => { this.logDevices = r.devices.length ? r.devices : ['General']; this.logDevice = this.logDevices[0]; this.logOpen = true; },
+      error: () => { this.sessionsError = loadError('your devices'); }
+    });
+  }
+
+  closeDialogs() {
+    this.logOpen = false; this.editing = null; this.deleting = null;
+    this.saveError = ''; this.deleteError = '';
+  }
+
+  openEdit(s: PlaySession) { this.saveError = ''; this.editing = s; }
+  openDelete(s: PlaySession) { this.deleteError = ''; this.deleting = s; }
+
+  onLogSaved(r: LogSessionResult) {
+    if (!this.game || this.saving) return;
+    this.saving = true; this.saveError = '';
+    const gameId = this.game.id;
+    this.sessionService.log(gameId, { device: r.device, hours: r.hours, note: r.note, playedOn: r.playedOn }).subscribe({
+      next: () => { this.saving = false; this.closeDialogs(); this.loadSessions(gameId); },
+      error: () => { this.saving = false; this.saveError = 'Could not save. Try again.'; }
+    });
+  }
+
+  onEditSaved(r: LogSessionResult) {
+    if (!this.game || !this.editing || this.saving) return;
+    this.saving = true; this.saveError = '';
+    const gameId = this.game.id;
+    this.sessionService.update(this.editing.id, { device: r.device, hours: r.hours, note: r.note, playedOn: r.playedOn }).subscribe({
+      next: () => { this.saving = false; this.closeDialogs(); this.loadSessions(gameId); },
+      error: () => { this.saving = false; this.saveError = 'Could not save. Try again.'; }
+    });
+  }
+
+  confirmDelete() {
+    if (!this.game || !this.deleting || this.saving) return;
+    this.saving = true; this.deleteError = '';
+    const gameId = this.game.id;
+    this.sessionService.delete(this.deleting.id).subscribe({
+      next: () => { this.saving = false; this.closeDialogs(); this.loadSessions(gameId); },
+      error: () => { this.saving = false; this.deleteError = 'Could not delete. Try again.'; }
     });
   }
 

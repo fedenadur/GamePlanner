@@ -1,7 +1,7 @@
 <div class="page">
 
   <!-- Header -->
-  <div class="page-header">
+  <div class="page-header" *ngIf="!embedded">
     <div>
       <h1 class="page-title">🔔 Tracked Games</h1>
       <p class="page-sub">Upcoming releases you're following</p>
@@ -18,7 +18,9 @@
   </div>
 
   <!-- Error -->
-  <p class="error-msg" *ngIf="error">{{ error }}</p>
+  <p class="error-msg" *ngIf="error">{{ error }} <button type="button" class="btn-ghost" (click)="load()">Reload</button></p>
+
+  <p class="error-msg" *ngIf="untrackError">{{ untrackError }}</p>
 
   <!-- Empty state -->
   <div class="empty-state" *ngIf="!loading && !error && groups.length === 0">

@@ -36,13 +36,13 @@
 
 .modal-header h2 {
   margin: 0;
-  font-size: 1.1rem;
+  font-size: var(--fs-md);
   font-weight: 700;
   color: var(--text);
 }
 
 .close-btn {
-  font-size: 1rem;
+  font-size: var(--fs-md);
   padding: 0.25rem 0.6rem;
   color: var(--muted);
 }
@@ -64,7 +64,7 @@
   top: 50%;
   transform: translateY(-50%);
   color: var(--muted);
-  font-size: 1.1rem;
+  font-size: var(--fs-md);
   pointer-events: none;
 }
 
@@ -129,7 +129,7 @@
   align-items: center;
   justify-content: center;
   background: var(--surface2);
-  font-size: 1.1rem;
+  font-size: var(--fs-md);
 }
 
 .result-info {
@@ -138,7 +138,7 @@
 }
 
 .result-name {
-  font-size: 0.875rem;
+  font-size: var(--fs-sm);
   font-weight: 600;
   color: var(--text);
   white-space: nowrap;
@@ -150,7 +150,7 @@
   display: flex;
   gap: 0.4rem;
   margin-top: 2px;
-  font-size: 0.72rem;
+  font-size: var(--fs-xs);
   color: var(--muted);
   flex-wrap: wrap;
 }
@@ -158,12 +158,12 @@
 .result-check {
   color: var(--accent);
   font-weight: 700;
-  font-size: 1rem;
+  font-size: var(--fs-md);
   flex-shrink: 0;
 }
 
 .empty-results {
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
   color: var(--muted);
   text-align: center;
   padding: 0.75rem 0;
@@ -188,7 +188,7 @@
 }
 
 .field-label {
-  font-size: 0.72rem;
+  font-size: var(--fs-xs);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -202,7 +202,7 @@
 }
 
 .modal-error {
-  font-size: 0.8rem;
+  font-size: var(--fs-xs);
   color: var(--danger);
   margin: 0;
 }

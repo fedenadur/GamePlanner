@@ -10,12 +10,12 @@
   margin-bottom: 1.5rem;
 }
 .header-left   { display: flex; align-items: baseline; gap: 0.75rem; }
-.journal-header h1 { font-size: 1.75rem; font-weight: 800; margin: 0; }
-.entry-count   { font-size: 0.78rem; color: var(--muted); }
+.journal-header h1 { margin: 0; }
+.entry-count   { font-size: var(--fs-xs); color: var(--muted); }
 
 .stats-row     { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 .stat-chip {
-  font-size: 0.68rem;
+  font-size: var(--fs-xs);
   font-weight: 700;
   padding: 3px 10px;
   border-radius: 999px;
@@ -42,7 +42,7 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   color: var(--text);
-  font-size: 0.875rem;
+  font-size: var(--fs-sm);
   padding: 0.45rem 0.75rem;
   outline: none;
   transition: border-color var(--t-fast);
@@ -52,7 +52,7 @@
 .status-chips { display: flex; gap: 0.35rem; flex-wrap: wrap; }
 
 .chip {
-  font-size: 0.72rem;
+  font-size: var(--fs-xs);
   font-weight: 600;
   padding: 4px 12px;
   border-radius: 999px;
@@ -68,7 +68,7 @@
 /* ── States ──────────────────────────────────────────────────────────────── */
 .journal-loading { color: var(--muted); padding: 4rem; text-align: center; }
 .journal-error   { color: var(--danger); }
-.no-results      { color: var(--muted); padding: 3rem; text-align: center; font-size: 0.875rem; }
+.no-results      { color: var(--muted); padding: 3rem; text-align: center; font-size: var(--fs-sm); }
 
 .journal-empty {
   display: flex;
@@ -78,15 +78,18 @@
   padding: 5rem 0;
   color: var(--muted);
 }
-.empty-icon { font-size: 2.5rem; opacity: 0.4; }
+.empty-icon { font-size: var(--fs-2xl); opacity: 0.4; }
 .btn-go {
+  border: 0;
+  cursor: pointer;
+  display: inline-block;
   margin-top: 0.5rem;
   padding: 0.5rem 1.5rem;
   background: var(--accent);
   color: #fff;
   border-radius: var(--radius-sm);
   text-decoration: none;
-  font-size: 0.875rem;
+  font-size: var(--fs-sm);
   font-weight: 600;
   transition: opacity var(--t-fast);
 }
@@ -125,13 +128,13 @@
   overflow: hidden;
 }
 .tile-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.tile-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 2rem; color: var(--border); }
+.tile-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: var(--fs-2xl); color: var(--border); }
 
 .tile-status {
   position: absolute;
   top: 6px;
   left: 6px;
-  font-size: 0.6rem;
+  font-size: var(--fs-xs);
   font-weight: 700;
   padding: 2px 7px;
   border-radius: 999px;
@@ -141,7 +144,7 @@
   position: absolute;
   top: 6px;
   right: 6px;
-  font-size: 0.6rem;
+  font-size: var(--fs-xs);
   font-weight: 700;
   padding: 2px 6px;
   border-radius: 999px;
@@ -159,7 +162,7 @@
   gap: 0.25rem;
 }
 .tile-name {
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   font-weight: 600;
   line-height: 1.3;
   overflow: hidden;
@@ -168,7 +171,7 @@
   -webkit-box-orient: vertical;
   flex: 1;
 }
-.tile-rating { font-size: 0.68rem; color: #facc15; font-weight: 700; white-space: nowrap; }
+.tile-rating { font-size: var(--fs-xs); color: #facc15; font-weight: 700; white-space: nowrap; }
 
 /* Status badge colours (reused on tile) */
 .status-green  { background: rgba(74,222,128,0.2);  color: #4ade80; border: 1px solid rgba(74,222,128,0.35); }
@@ -184,7 +187,7 @@
   color: #fff;
   border: none;
   border-radius: var(--radius-sm);
-  font-size: 0.8rem;
+  font-size: var(--fs-xs);
   font-weight: 600;
   cursor: pointer;
   transition: opacity var(--t-fast);
@@ -217,7 +220,7 @@
   padding: 1rem 1.25rem 0.75rem;
   flex-shrink: 0;
 }
-.picker-title { font-size: 0.95rem; font-weight: 700; }
+.picker-title { font-size: var(--fs-md); font-weight: 700; }
 
 .picker-search {
   margin: 0 1.25rem 0.75rem;
@@ -229,7 +232,7 @@
 .picker-empty {
   padding: 2rem;
   text-align: center;
-  font-size: 0.875rem;
+  font-size: var(--fs-sm);
   color: var(--muted);
 }
 .picker-empty a { color: var(--accent); text-decoration: none; }
@@ -264,12 +267,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1rem;
+  font-size: var(--fs-md);
   color: var(--border);
 }
 
 .picker-name {
-  font-size: 0.875rem;
+  font-size: var(--fs-sm);
   font-weight: 500;
   line-height: 1.3;
 }
@@ -308,13 +311,13 @@
 }
 .edit-title-row { display: flex; align-items: center; gap: 0.75rem; min-width: 0; }
 .edit-cover { width: 36px; height: 48px; border-radius: 5px; object-fit: cover; flex-shrink: 0; }
-.edit-game-name { font-size: 1rem; font-weight: 700; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.edit-game-name { font-size: var(--fs-md); font-weight: 700; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 
 .btn-close {
   background: none;
   border: none;
   color: var(--muted);
-  font-size: 1rem;
+  font-size: var(--fs-md);
   cursor: pointer;
   padding: 0.25rem 0.5rem;
   border-radius: var(--radius-sm);
@@ -333,7 +336,7 @@
 .edit-field--full { grid-column: 1 / -1; }
 
 .edit-field label {
-  font-size: 0.65rem;
+  font-size: var(--fs-xs);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.07em;
@@ -354,7 +357,7 @@
   color: #fff;
   border: none;
   border-radius: var(--radius-sm);
-  font-size: 0.875rem;
+  font-size: var(--fs-sm);
   font-weight: 600;
   cursor: pointer;
   transition: opacity var(--t-fast);
@@ -362,10 +365,10 @@
 .btn-primary:hover:not(:disabled) { opacity: 0.88; }
 .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
-.save-ok { font-size: 0.78rem; color: var(--success); font-weight: 600; }
+.save-ok { font-size: var(--fs-xs); color: var(--success); font-weight: 600; }
 
 .days-badge {
-  font-size: 0.7rem;
+  font-size: var(--fs-xs);
   color: var(--muted);
   background: var(--surface2);
   border: 1px solid var(--border);
@@ -379,7 +382,7 @@
   border: 1px solid rgba(239,68,68,0.3);
   color: #f87171;
   border-radius: var(--radius-sm);
-  font-size: 0.78rem;
+  font-size: var(--fs-xs);
   font-weight: 600;
   padding: 0.4rem 0.9rem;
   cursor: pointer;
@@ -416,7 +419,7 @@
   position: absolute;
   top: 0;
   left: 0;
-  font-size: 20px;
+  font-size: var(--fs-lg);
   line-height: 1;
   pointer-events: none;
   user-select: none;
@@ -425,14 +428,14 @@
 .star-fg { color: #facc15; overflow: hidden; white-space: nowrap; z-index: 1; }
 
 .star-label {
-  font-size: 0.72rem;
+  font-size: var(--fs-xs);
   color: var(--muted);
   margin-left: 6px;
 }
 .star-label--clear {
   cursor: pointer;
   color: var(--border);
-  font-size: 0.65rem;
+  font-size: var(--fs-xs);
   transition: color var(--t-fast);
 }
 .star-label--clear:hover { color: #f87171; }

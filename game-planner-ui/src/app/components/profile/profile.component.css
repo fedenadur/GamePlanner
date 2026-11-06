@@ -39,7 +39,7 @@
   justify-content: center;
   background: linear-gradient(135deg, var(--accent), var(--accent-h));
   color: #fff;
-  font-size: 2rem;
+  font-size: var(--fs-2xl);
   font-weight: 800;
   border: 3px solid rgba(124,58,237,0.35);
 }
@@ -56,8 +56,8 @@
 .banner-info { display: flex; flex-direction: column; gap: 0.4rem; }
 
 .banner-name {
-  font-size: 1.35rem;
-  font-weight: 800;
+  font-size: var(--fs-2xl);
+  font-weight: 700;
   letter-spacing: -0.3px;
   margin: 0;
   color: var(--text);
@@ -67,7 +67,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  font-size: 0.72rem;
+  font-size: var(--fs-xs);
   font-weight: 600;
   color: #66c0f4;
   background: rgba(27,40,56,0.8);
@@ -85,7 +85,7 @@
 }
 
 .profile-form h2 {
-  font-size: 0.7rem;
+  font-size: var(--fs-xs);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -99,7 +99,7 @@
 .field-group { display: flex; flex-direction: column; gap: 0.4rem; }
 
 .field-label {
-  font-size: 0.72rem;
+  font-size: var(--fs-xs);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.07em;
@@ -110,7 +110,7 @@
 }
 
 .field-opt {
-  font-size: 0.65rem;
+  font-size: var(--fs-xs);
   font-weight: 500;
   text-transform: none;
   letter-spacing: 0;
@@ -123,7 +123,7 @@
 }
 
 .steam-tag {
-  font-size: 0.65rem;
+  font-size: var(--fs-xs);
   font-weight: 500;
   color: #66c0f4;
   background: rgba(27,40,56,0.7);
@@ -135,7 +135,7 @@
 }
 
 .field-hint {
-  font-size: 0.72rem;
+  font-size: var(--fs-xs);
   color: var(--muted);
   opacity: 0.65;
 }
@@ -153,7 +153,61 @@ input.input-disabled { opacity: 0.45; cursor: not-allowed; }
 }
 
 .status-msgs { flex: 1; }
-.success-msg { color: var(--success); font-size: 0.85rem; font-weight: 500; }
-.error-msg   { color: var(--danger);  font-size: 0.85rem; }
+.success-msg { color: var(--success); font-size: var(--fs-sm); font-weight: 500; }
+.error-msg   { color: var(--danger);  font-size: var(--fs-sm); }
 
 .save-btn { padding: 0.55rem 1.75rem; flex-shrink: 0; }
+
+/* ── Chips / devices / preferences ───────────────────────────────────────── */
+.chip-row { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+
+.chip {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text-soft);
+  border-radius: 999px;
+  padding: 0.3rem 0.8rem;
+  font-size: var(--fs-xs);
+  cursor: pointer;
+  transition: all var(--t-fast);
+}
+.chip:hover:not(:disabled) { border-color: var(--accent-h); }
+.chip-on { background: var(--accent-glow); border-color: var(--accent); color: var(--text); }
+.chip-avoid.chip-on { background: rgba(239,68,68,0.15); border-color: var(--danger); }
+.chip:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.device-order { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.4rem; }
+.device-order li {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: var(--surface2);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: 0.4rem 0.7rem;
+}
+.device-rank { color: var(--muted); font-size: var(--fs-xs); width: 1rem; }
+.device-name { flex: 1; font-size: var(--fs-sm); }
+.arrow-btn {
+  background: var(--surface3);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: var(--radius-sm);
+  width: 1.8rem;
+  cursor: pointer;
+}
+.arrow-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.segmented { display: inline-flex; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; width: fit-content; }
+.segmented button {
+  background: var(--surface2);
+  border: none;
+  border-right: 1px solid var(--border);
+  color: var(--text-soft);
+  padding: 0.35rem 1rem;
+  font-size: var(--fs-xs);
+  cursor: pointer;
+}
+.segmented button:last-child { border-right: none; }
+.segmented .seg-on { background: var(--accent); color: #fff; }
+.load-error { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; }

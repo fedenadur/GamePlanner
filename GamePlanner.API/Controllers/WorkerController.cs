@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace GamePlanner.API.Controllers;
 
-[Authorize]
+[Authorize(Roles = "Admin")]
 [ApiController]
 [Route("api/[controller]")]
 public class WorkerController(
@@ -16,7 +16,8 @@ public class WorkerController(
     [
         GameSyncWorker.WorkerName,
         GameImageSyncWorker.WorkerName,
-        GameHLTBSyncWorker.WorkerName
+        GameHLTBSyncWorker.WorkerName,
+        SteamPlaytimeSyncWorker.WorkerName
     ];
 
     [HttpGet]
@@ -55,6 +56,12 @@ public class WorkerController(
         {
             var worker = new GameHLTBSyncWorker(scopeFactory,
                 scope.ServiceProvider.GetRequiredService<ILogger<GameHLTBSyncWorker>>());
+            await worker.RunAsync(CancellationToken.None);
+        }
+        else if (name == SteamPlaytimeSyncWorker.WorkerName)
+        {
+            var worker = new SteamPlaytimeSyncWorker(scopeFactory,
+                scope.ServiceProvider.GetRequiredService<ILogger<SteamPlaytimeSyncWorker>>());
             await worker.RunAsync(CancellationToken.None);
         }
     }

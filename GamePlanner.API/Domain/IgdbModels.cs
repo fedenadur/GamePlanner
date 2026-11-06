@@ -107,6 +107,18 @@ public class IgdbImage
     public long Game { get; set; }
 }
 
+public class IgdbExternalGame
+{
+    [JsonPropertyName("id")]
+    public long Id { get; set; }
+
+    [JsonPropertyName("uid")]
+    public string Uid { get; set; } = string.Empty;
+
+    [JsonPropertyName("game")]
+    public long? Game { get; set; }
+}
+
 public class IgdbTokenResponse
 {
     [JsonPropertyName("access_token")]

@@ -1,0 +1,16 @@
+<div class="backdrop" (click)="cancelled.emit()">
+  <div class="dialog" (click)="$event.stopPropagation()">
+    <h4>How did it go with {{ gameName }}?</h4>
+    <p>Your Journal is updated and the device slot is freed.</p>
+    <div class="choice fin" role="button" tabindex="0" (click)="choose('Finished')" (keydown.enter)="choose('Finished')">
+      ✓ I finished it
+      <span class="stars">
+        <span *ngFor="let s of starPositions" class="star" [class.on]="s <= stars" (click)="setStars(s, $event)">{{ s <= stars ? '★' : '☆' }}</span>
+      </span>
+    </div>
+    <button class="choice drop" (click)="choose('Dropped')">✕ I dropped it</button>
+    <button class="choice hold" (click)="choose('Paused')">⏸ Pause it, I'll come back later</button>
+    <button class="choice none" (click)="choose('None')">Just remove, keep status</button>
+    <button class="choice none" (click)="cancelled.emit()">Cancel</button>
+  </div>
+</div>

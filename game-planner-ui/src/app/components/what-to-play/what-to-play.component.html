@@ -1,0 +1,124 @@
+<div class="page">
+
+  <h1>What to Play</h1>
+  <p class="sub">Based on your library and preferences. Finished, dropped and now-playing games are left out.</p>
+
+  <div class="panel">
+    <div>
+      <div class="lbl">Device</div>
+      <div class="tg">
+        <button type="button" class="t" *ngFor="let d of devices" [class.on]="device === d" (click)="setDevice(d)">
+          {{ deviceIcons[d] }} {{ deviceLabels[d] ?? d }}
+        </button>
+      </div>
+    </div>
+
+    <div>
+      <div class="lbl">Session time</div>
+      <div class="tg">
+        <button type="button" class="t" *ngFor="let o of sessionTimeOptions" [class.on]="sessionTime === o.value" (click)="setSessionTime(o.value)">{{ o.label }}</button>
+      </div>
+    </div>
+
+    <div>
+      <div class="lbl">Game length</div>
+      <div class="tg">
+        <button type="button" class="t" *ngFor="let o of gameLengthOptions" [class.on]="gameLength === o.value" (click)="setGameLength(o.value)">{{ o.label }}</button>
+      </div>
+    </div>
+
+    <div>
+      <div class="lbl">Genre</div>
+      <div class="tg">
+        <button type="button" class="t" [class.on]="selectedGenres.size === 0" (click)="clearGenres()">Any</button>
+        <button type="button" class="t" *ngFor="let g of genres" [class.on]="selectedGenres.has(g)" (click)="toggleGenre(g)">{{ g }}</button>
+      </div>
+    </div>
+
+    <div class="more">
+      <button type="button" class="more-toggle" (click)="showMore = !showMore">{{ showMore ? '▾' : '▸' }} More options</button>
+      <div class="more-body" *ngIf="showMore">
+        <div>
+          <div class="lbl">Mood</div>
+          <div class="tg">
+            <button type="button" class="t" *ngFor="let o of moodOptions" [class.on]="mood === o.value" (click)="setMood(o.value)">{{ o.label }}</button>
+          </div>
+        </div>
+        <div>
+          <div class="lbl">Perspective</div>
+          <div class="tg">
+            <button type="button" class="t" *ngFor="let o of perspectiveOptions" [class.on]="perspective === o.value" (click)="setPerspective(o.value)">{{ o.label }}</button>
+          </div>
+        </div>
+        <div>
+          <div class="lbl">Mode</div>
+          <div class="tg">
+            <button type="button" class="t" *ngFor="let o of modeOptions" [class.on]="modes.has(o.value)" (click)="toggleMode(o.value)">{{ o.label }}</button>
+          </div>
+        </div>
+        <div>
+          <div class="lbl">Strategy</div>
+          <div class="tg">
+            <button type="button" class="t" *ngFor="let o of strategyOptions" [class.on]="strategy === o.value" (click)="setStrategy(o.value)">{{ o.label }}</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="devicesError" class="error-msg">{{ devicesError }} <button type="button" class="btn" (click)="loadOptions()">Reload</button></div>
+
+  <div *ngIf="error" class="error-msg">{{ error }} <button type="button" class="btn" (click)="retry()">Try again</button></div>
+
+  <div class="empty-state" *ngIf="libraryEmpty">
+    Your library is empty. Add games or import from Steam.
+    <div class="empty-links">
+      <a routerLink="/games">Go to My Games</a>
+      <a routerLink="/steam">Import from Steam</a>
+    </div>
+  </div>
+
+  <div class="empty-state" *ngIf="noResults">
+    Nothing to recommend with these options. Try another device or Any length.
+    <div class="empty-links">
+      <button type="button" class="btn" (click)="resetOptions()">Reset options</button>
+      <a routerLink="/games">Go to My Games</a>
+    </div>
+  </div>
+
+  <div class="res" *ngIf="top as t">
+    <div class="top">
+      <img *ngIf="t.coverImageUrl" class="cover" [src]="t.coverImageUrl" [alt]="t.name" />
+      <div *ngIf="!t.coverImageUrl" class="cover">{{ t.name }}</div>
+      <div>
+        <div class="badge">Top pick</div>
+        <div class="name">{{ t.name }}</div>
+        <div class="why">
+          <div *ngFor="let r of t.reasons"><span [ngClass]="reasonClass(r.kind)">{{ reasonIcon(r.kind) }}</span> {{ r.text }}</div>
+        </div>
+        <div class="score">Match: {{ t.match }} ({{ t.score }})</div>
+        <button type="button" class="btn p" [disabled]="starting" (click)="start(t)">▶ Start on {{ deviceLabels[device] ?? device }}</button>
+        <a class="btn" [routerLink]="['/games', t.gameId]">View details</a>
+      </div>
+    </div>
+
+    <div class="alts" *ngIf="alternatives.length">
+      <div class="lbl">Alternatives</div>
+      <a class="alt" *ngFor="let a of alternatives" [routerLink]="['/games', a.gameId]">
+        <img *ngIf="a.coverImageUrl" class="mini" [src]="a.coverImageUrl" [alt]="a.name" />
+        <div *ngIf="!a.coverImageUrl" class="mini"></div>
+        <div>
+          <div class="n">{{ a.name }}</div>
+          <div class="r">{{ altSummary(a) }}<ng-container *ngIf="altSummary(a)"> · </ng-container>{{ a.match }} ({{ a.score }})</div>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <app-finish-game-dialog
+    *ngIf="pendingStart"
+    [gameName]="finishGameName"
+    (chosen)="onFinishChosen($event)"
+    (cancelled)="onFinishCancelled()"></app-finish-game-dialog>
+
+</div>

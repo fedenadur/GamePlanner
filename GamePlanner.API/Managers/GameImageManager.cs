@@ -20,10 +20,16 @@ public class GameImageManager(
 
     public async Task<(int FailedCount, string? FailureDetail)> RunAsync(CancellationToken ct)
     {
-        var total = await db.Games.CountAsync(g => g.IsActive && g.CoverImageUrl == null, ct);
-
         var failedCount = 0;
         var failedNames = new List<string>();
+
+        // Images run before covers: sp_UpdateGameCover stamps LastImageSyncDate, which would otherwise
+        // make this same run skip the screenshots of every row that just got its cover.
+        var (imageFailedCount, imageFailedNames) = await SyncScreenshotsAndArtworksAsync(ct);
+        failedCount += imageFailedCount;
+        failedNames.AddRange(imageFailedNames);
+
+        var total = await db.Games.CountAsync(g => g.IsActive && g.CoverImageUrl == null, ct);
 
         if (total == 0)
         {
@@ -32,14 +38,10 @@ public class GameImageManager(
         else
         {
             logger.LogInformation("GameImageManager: {Total} games need cover images.", total);
-            var (coverFailedCount, coverFailedNames) = await SyncCoversAsync(ct);
+            var (coverFailedCount, coverFailedNames) = await SyncCoversAsync(total, ct);
             failedCount += coverFailedCount;
             failedNames.AddRange(coverFailedNames);
         }
-
-        var (imageFailedCount, imageFailedNames) = await SyncScreenshotsAndArtworksAsync(ct);
-        failedCount += imageFailedCount;
-        failedNames.AddRange(imageFailedNames);
 
         return (failedCount, BuildFailureDetail(failedCount, failedNames));
     }
@@ -56,24 +58,25 @@ public class GameImageManager(
         return detail.Length > 480 ? detail[..480] : detail;
     }
 
-    // ── Cover sync (existing logic, unchanged) ───────────────────────────────
+    // ── Cover sync ───────────────────────────────
 
-    private async Task<(int FailedCount, List<string> FailedNames)> SyncCoversAsync(CancellationToken ct)
+    private async Task<(int FailedCount, List<string> FailedNames)> SyncCoversAsync(int total, CancellationToken ct)
     {
         using var conn = CreateConnection();
         await conn.OpenAsync(ct);
 
         int processed = 0;
+        int lastId = 0;
         int failedCount = 0;
         var failedNames = new List<string>();
 
         while (!ct.IsCancellationRequested)
         {
             var batch = await db.Games
-                .Where(g => g.IsActive && g.CoverImageUrl == null)
+                .Where(g => g.IsActive && g.CoverImageUrl == null && g.Id > lastId)
                 .OrderBy(g => g.Id)
                 .Take(BatchSize)
-                .Select(g => new { g.Id, g.Name, g.IGDBId, g.IGDBUpdatedAt })
+                .Select(g => new { g.Id, g.Name, g.IGDBId })
                 .ToListAsync(ct);
 
             if (batch.Count == 0) break;
@@ -82,6 +85,7 @@ public class GameImageManager(
             var withoutId = batch.Where(g => !g.IGDBId.HasValue).ToList();
 
             Dictionary<long, IgdbGame> igdbResults = [];
+            bool batchFailed = false;
             if (withId.Count > 0)
             {
                 try
@@ -92,16 +96,38 @@ public class GameImageManager(
                 catch (OperationCanceledException) { throw; }
                 catch (Exception ex)
                 {
-                    // Retried per-game immediately below — not a permanent loss, keep Warning and don't count.
+                    // Batch failed, so each of its rows is fetched on its own below: the Id cursor does not revisit them this run.
                     logger.LogWarning(ex, "Batch cover fetch failed, will retry individually.");
+                    batchFailed = true;
                 }
             }
 
             foreach (var game in withId)
             {
                 ct.ThrowIfCancellationRequested();
-                igdbResults.TryGetValue(game.IGDBId!.Value, out var result);
-                await SaveCoverAsync(conn, game.Id, game.Name, game.IGDBUpdatedAt, result);
+                IgdbGame? result;
+                if (batchFailed)
+                {
+                    try
+                    {
+                        result = (await igdb.FetchCoversByIdsAsync([game.IGDBId!.Value], ct)).FirstOrDefault();
+                    }
+                    catch (OperationCanceledException) { throw; }
+                    catch (Exception ex)
+                    {
+                        logger.LogWarning(ex, "Cover retry failed for '{Name}', skipping.", game.Name);
+                        failedCount++;
+                        failedNames.Add(game.Name);
+                        await Task.Delay(250, ct);
+                        continue;
+                    }
+                    await Task.Delay(250, ct);
+                }
+                else
+                {
+                    igdbResults.TryGetValue(game.IGDBId!.Value, out result);
+                }
+                await SaveCoverAsync(conn, game.Id, game.Name, result);
             }
 
             foreach (var game in withoutId)
@@ -110,7 +136,7 @@ public class GameImageManager(
                 try
                 {
                     var result = await igdb.SearchCoverByNameAsync(game.Name, ct);
-                    await SaveCoverAsync(conn, game.Id, game.Name, game.IGDBUpdatedAt, result);
+                    await SaveCoverAsync(conn, game.Id, game.Name, result);
                 }
                 catch (OperationCanceledException) { throw; }
                 catch (Exception ex)
@@ -123,7 +149,8 @@ public class GameImageManager(
             }
 
             processed += batch.Count;
-            logger.LogInformation("GameImageManager: covers {Processed}/{Total} processed.", processed, batch.Count);
+            lastId = batch[^1].Id;
+            logger.LogInformation("GameImageManager: covers {Processed}/{Total} processed.", processed, total);
 
             if (batch.Count < BatchSize) break;
         }
@@ -133,8 +160,7 @@ public class GameImageManager(
     }
 
     private async Task SaveCoverAsync(
-        SqlConnection conn, int gameId, string name,
-        DateTime? currentUpdatedAt, IgdbGame? result)
+        SqlConnection conn, int gameId, string name, IgdbGame? result)
     {
         if (result?.Cover is null)
         {
@@ -143,12 +169,6 @@ public class GameImageManager(
         }
 
         var igdbUpdatedAt = DateTimeOffset.FromUnixTimeSeconds(result.UpdatedAt).UtcDateTime;
-
-        if (currentUpdatedAt.HasValue && igdbUpdatedAt <= currentUpdatedAt.Value)
-        {
-            logger.LogDebug("Cover up-to-date for '{Name}', skipping.", name);
-            return;
-        }
 
         var url = IgdbService.OptimizeCoverUrl(result.Cover.Url);
 
@@ -204,7 +224,7 @@ public class GameImageManager(
 
             try
             {
-                screenshots = await igdb.FetchScreenshotsByGameIdsAsync(igdbIds, ct);
+                screenshots = await FetchAllImagePagesAsync(offset => igdb.FetchScreenshotsByGameIdsAsync(igdbIds, offset, ct), ct);
             }
             catch (OperationCanceledException) { throw; }
             catch (Exception ex)
@@ -217,7 +237,7 @@ public class GameImageManager(
 
             try
             {
-                artworks = await igdb.FetchArtworksByGameIdsAsync(igdbIds, ct);
+                artworks = await FetchAllImagePagesAsync(offset => igdb.FetchArtworksByGameIdsAsync(igdbIds, offset, ct), ct);
             }
             catch (OperationCanceledException) { throw; }
             catch (Exception ex)
@@ -233,8 +253,10 @@ public class GameImageManager(
                 failedNames.AddRange(batch.Select(g => g.Name).Take(3));
             }
 
-            // Map IGDB game ID → local game ID
-            var igdbToLocal = batch.ToDictionary(g => g.IGDBId!.Value, g => g.Id);
+            // Map IGDB game ID → local game IDs (an IGDBId can be shared by multiple local games)
+            var igdbToLocal = batch
+                .GroupBy(g => g.IGDBId!.Value)
+                .ToDictionary(gr => gr.Key, gr => gr.Select(g => g.Id).ToList());
 
             await SaveImagesAsync(conn, screenshots, "screenshot", igdbToLocal, ct);
             await SaveImagesAsync(conn, artworks,    "artwork",    igdbToLocal, ct);
@@ -258,18 +280,36 @@ public class GameImageManager(
         return (failedCount, failedNames);
     }
 
+    private static async Task<List<IgdbImage>> FetchAllImagePagesAsync(
+        Func<int, Task<List<IgdbImage>>> fetchPage, CancellationToken ct)
+    {
+        var all = new List<IgdbImage>();
+        var offset = 0;
+
+        while (true)
+        {
+            ct.ThrowIfCancellationRequested();
+            var page = await fetchPage(offset);
+            all.AddRange(page);
+            offset += page.Count;
+            if (page.Count < IgdbService.ImagePageSize) break;
+        }
+
+        return all;
+    }
+
     private async Task SaveImagesAsync(
         SqlConnection conn,
         List<IgdbImage> images,
         string imageType,
-        Dictionary<long, int> igdbToLocal,
+        Dictionary<long, List<int>> igdbToLocal,
         CancellationToken ct)
     {
         foreach (var image in images)
         {
             ct.ThrowIfCancellationRequested();
 
-            if (!igdbToLocal.TryGetValue(image.Game, out var localGameId))
+            if (!igdbToLocal.TryGetValue(image.Game, out var localGameIds))
                 continue;
 
             if (string.IsNullOrEmpty(image.ImageId))
@@ -277,17 +317,20 @@ public class GameImageManager(
 
             var url = IgdbService.OptimizeImageUrl(image.Url);
 
-            await conn.ExecuteAsync("sp_UpsertGameImage",
-                new
-                {
-                    GameId      = localGameId,
-                    IgdbImageId = image.ImageId,
-                    ImageType   = imageType,
-                    Url         = url,
-                    Width       = image.Width,
-                    Height      = image.Height
-                },
-                commandType: System.Data.CommandType.StoredProcedure);
+            foreach (var localGameId in localGameIds)
+            {
+                await conn.ExecuteAsync("sp_UpsertGameImage",
+                    new
+                    {
+                        GameId      = localGameId,
+                        IgdbImageId = image.ImageId,
+                        ImageType   = imageType,
+                        Url         = url,
+                        Width       = image.Width,
+                        Height      = image.Height
+                    },
+                    commandType: System.Data.CommandType.StoredProcedure);
+            }
         }
     }
 }

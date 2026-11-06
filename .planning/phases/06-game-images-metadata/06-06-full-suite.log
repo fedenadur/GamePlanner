@@ -1,0 +1,27 @@
+SUITE_STARTED_AT=2026-11-05T18:08:20Z
+
+Running 18 tests using 1 worker
+
+  ok  1 tests\uat.spec.ts:28:9 › GamePlanner UAT › auth › unauthenticated visit to /games redirects to /login (498ms)
+  ok  2 tests\uat.spec.ts:33:9 › GamePlanner UAT › auth › steam failure redirect shows the fixed copy (435ms)
+  ok  3 tests\uat.spec.ts:38:9 › GamePlanner UAT › auth › wrong password shows the fixed copy (740ms)
+  ok  4 tests\uat.spec.ts:46:9 › GamePlanner UAT › auth › valid credentials land on the authenticated route (809ms)
+  ok  5 tests\uat.spec.ts:67:9 › GamePlanner UAT › workflows › clear leftovers from earlier failed runs (35ms)
+  ok  6 tests\uat.spec.ts:77:9 › GamePlanner UAT › workflows › empty state: a filter matching nothing shows the empty copy (685ms)
+  ok  7 tests\uat.spec.ts:82:9 › GamePlanner UAT › workflows › add a game through IGDB search (2.3s)
+  ok  8 tests\uat.spec.ts:110:9 › GamePlanner UAT › workflows › edit the game through PUT /api/games/{id} and see the new name (723ms)
+  ok  9 tests\uat.spec.ts:124:9 › GamePlanner UAT › workflows › now playing: place the game in a slot and remove it (1.3s)
+  ok 10 tests\uat.spec.ts:138:9 › GamePlanner UAT › workflows › journal: add an entry with notes and delete it (1.2s)
+  ok 11 tests\uat.spec.ts:159:9 › GamePlanner UAT › workflows › session planner returns only games from the UAT library (137ms)
+  ok 12 tests\uat.spec.ts:177:9 › GamePlanner UAT › workflows › delete the game from its card; the API then returns 404 (940ms)
+NAV_IMAGE_MS next attempt=1 ms=1.2 budget=250
+NAV_IMAGE_MS prev attempt=1 ms=15.5 budget=250
+  ok 13 tests\uat.spec.ts:280:9 › GamePlanner UAT › lightbox › lightbox: buttons, arrow keys, wrap, counter, Escape, preload (1.4s)
+  ok 14 tests\uat.spec.ts:329:9 › GamePlanner UAT › lightbox › lightbox: counter stays visible on a short viewport (792ms)
+  ok 15 tests\uat.spec.ts:357:11 › GamePlanner UAT › workers › GameSyncWorker: Run now completes without error (2.2m)
+  ok 16 tests\uat.spec.ts:357:11 › GamePlanner UAT › workers › GameImageSyncWorker: Run now completes without error (8.7s)
+  ok 17 tests\uat.spec.ts:357:11 › GamePlanner UAT › workers › GameHLTBSyncWorker: Run now completes without error (17.0s)
+  ok 18 tests\uat.spec.ts:390:9 › GamePlanner UAT › workers › SteamPlaytimeSyncWorker restart-initiated run (accepted D-04 deviation, 05-06 Task 2) (20ms)
+
+  18 passed (2.9m)
+SUITE_EXIT=0

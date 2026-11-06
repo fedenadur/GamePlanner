@@ -1,0 +1,13 @@
+.backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+.dialog { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; width: 420px; max-height: 90vh; overflow-y: auto; color: var(--text); box-shadow: var(--shadow-lg); }
+h4 { margin: 0 0 8px; font-size: var(--fs-md); }
+label { display: block; margin: 10px 0 4px; font-size: var(--fs-xs); font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+label.fav { justify-content: flex-start; display: flex; align-items: center; gap: 6px; text-transform: none; font-size: var(--fs-sm); color: var(--text); }
+.hint { text-transform: none; font-weight: 500; color: var(--accent); margin-left: 6px; }
+input:not([type=checkbox]), select { width: 100%; box-sizing: border-box; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { border: 1px solid var(--border); background: var(--surface2); color: var(--text); border-radius: 999px; padding: 4px 10px; font-size: var(--fs-xs); cursor: pointer; font-family: inherit; }
+.chip.active { border-color: var(--accent); background: rgba(124,106,247,0.2); }
+.error { color: #f87171; font-size: var(--fs-xs); margin: 8px 0 0; }
+.actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+label.fav input { width: auto; flex: none; margin: 0; }

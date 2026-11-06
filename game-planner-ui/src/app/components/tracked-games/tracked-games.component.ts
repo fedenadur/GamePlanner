@@ -1,4 +1,5 @@
-import { Component, OnInit, HostListener, ChangeDetectionStrategy } from '@angular/core';
+import { loadError } from '../../shared/messages';
+import { Component, Input, OnInit, HostListener, ChangeDetectionStrategy } from '@angular/core';
 import { Router } from '@angular/router';
 import { TrackedGamesService, TrackedGame } from '../../services/tracked-games.service';
 
@@ -19,12 +20,15 @@ interface DateGroup {
     standalone: false
 })
 export class TrackedGamesComponent implements OnInit {
+  @Input() embedded = false;
+
   groups:  DateGroup[] = [];
   loading  = true;
   error    = '';
   today    = new Date();
 
   untrackingId: number | null = null;
+  untrackError = '';
 
   constructor(
     private service: TrackedGamesService,
@@ -35,14 +39,16 @@ export class TrackedGamesComponent implements OnInit {
 
   load() {
     this.loading = true;
+    this.error = '';
     this.service.getAll().subscribe({
       next:  g  => { this.groups = this.buildGroups(g); this.loading = false; },
-      error: () => { this.error = 'Failed to load tracked games.'; this.loading = false; }
+      error: () => { this.error = loadError('tracked games'); this.loading = false; }
     });
   }
 
   untrack(game: TrackedGame) {
     this.untrackingId = game.igdbId;
+    this.untrackError = '';
     this.service.untrack(game.igdbId).subscribe({
       next: () => {
         this.untrackingId = null;
@@ -51,7 +57,7 @@ export class TrackedGamesComponent implements OnInit {
           .map(g => ({ ...g, games: g.games.filter(x => x.igdbId !== game.igdbId) }))
           .filter(g => g.games.length > 0);
       },
-      error: () => { this.untrackingId = null; }
+      error: () => { this.untrackingId = null; this.untrackError = 'Could not untrack. Try again.'; }
     });
   }
 

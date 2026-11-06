@@ -12,8 +12,21 @@ public class NowPlayingManager(GamePlannerDbContext db, IConfiguration config)
     private SqlConnection CreateConnection() =>
         new(config.GetConnectionString("DefaultConnection"));
 
+    private async Task<List<string>> GetDevicesAsync(int userId)
+    {
+        var devices = await db.UserDevices
+            .Where(d => d.UserId == userId)
+            .OrderBy(d => d.SortOrder)
+            .Select(d => d.Device)
+            .ToListAsync();
+
+        return devices.Count > 0 ? devices : [DeviceTypes.General];
+    }
+
     public async Task<List<NowPlayingSlotDto>> GetSlotsAsync(int userId)
     {
+        var devices = await GetDevicesAsync(userId);
+
         var rows = await db.NowPlayingGames
             .Where(n => n.UserId == userId)
             .Include(n => n.Game).ThenInclude(g => g.Genres)
@@ -21,32 +34,83 @@ public class NowPlayingManager(GamePlannerDbContext db, IConfiguration config)
             .Include(n => n.Game).ThenInclude(g => g.Themes)
             .Include(n => n.Game).ThenInclude(g => g.PlayerPerspectives)
             .Include(n => n.Game).ThenInclude(g => g.GameModes)
+            .Include(n => n.Game).ThenInclude(g => g.PlayableDevices)
             .ToListAsync();
 
-        return Enumerable.Range(0, 3).Select(slot =>
+        var gameIds = rows.Select(r => r.GameId).ToList();
+        var journal = await GameLibraryEnrichment.LoadJournalStatusesAsync(db, userId, gameIds);
+        var totals = await GameLibraryEnrichment.LoadSessionTotalsAsync(db, userId, gameIds);
+        var hltb = await GameLibraryEnrichment.LoadHltbMainStoryAsync(db, rows.Select(r => r.Game).ToList());
+        var sessions = await db.PlaySessions
+            .Where(s => s.UserId == userId && gameIds.Contains(s.GameId))
+            .OrderByDescending(s => s.PlayedOn).ThenByDescending(s => s.Id)
+            .Select(s => new PlaySessionDto
+            {
+                Id = s.Id, GameId = s.GameId, Device = s.Device, PlayedOn = s.PlayedOn, Hours = s.Hours, Note = s.Note
+            })
+            .ToListAsync();
+
+        return devices.Select(device =>
         {
-            var row = rows.FirstOrDefault(r => r.Slot == slot);
+            var row = rows.FirstOrDefault(r => r.Device == device);
             return new NowPlayingSlotDto
             {
-                Slot = slot,
-                Game = row?.Game.ToDto()
+                Device       = device,
+                Game         = row is null ? null : GameLibraryEnrichment.ToLibraryDto(row.Game, journal, totals, hltb),
+                PlayingSince = row?.AddedAt,
+                RecentSessions = row is null ? [] : sessions.Where(s => s.GameId == row.GameId).Take(3).ToList()
             };
         }).ToList();
     }
 
-    public async Task SetSlotAsync(int userId, int slot, int gameId)
+    public async Task<NowPlayingResult> StartAsync(int userId, string device, StartNowPlayingRequest r)
     {
+        if (!(await GetDevicesAsync(userId)).Contains(device)) return NowPlayingResult.InvalidDevice;
+
+        var p = new DynamicParameters(new
+        {
+            UserId = userId,
+            Device = device,
+            r.GameId,
+            r.OutgoingOutcome,
+            r.OutgoingRating
+        });
+        p.Add("Result", dbType: System.Data.DbType.Int32, direction: System.Data.ParameterDirection.ReturnValue);
+
         using var conn = CreateConnection();
-        await conn.ExecuteAsync("sp_UpsertNowPlayingGame",
-            new { UserId = userId, GameId = gameId, Slot = slot },
-            commandType: System.Data.CommandType.StoredProcedure);
+        await conn.ExecuteAsync("sp_StartNowPlaying", p, commandType: System.Data.CommandType.StoredProcedure);
+
+        return p.Get<int>("Result") switch
+        {
+            0 => NowPlayingResult.Ok,
+            1 => NowPlayingResult.GameNotFound,
+            2 => NowPlayingResult.SlotOccupied,
+            3 => NowPlayingResult.GameOnOtherDevice,
+            _ => NowPlayingResult.InvalidOutcome
+        };
     }
 
-    public async Task ClearSlotAsync(int userId, int slot)
+    public async Task<NowPlayingResult> RemoveAsync(int userId, string device, RemoveNowPlayingRequest r)
     {
+        if (!(await GetDevicesAsync(userId)).Contains(device)) return NowPlayingResult.InvalidDevice;
+
+        var p = new DynamicParameters(new
+        {
+            UserId = userId,
+            Device = device,
+            r.Outcome,
+            r.Rating
+        });
+        p.Add("Result", dbType: System.Data.DbType.Int32, direction: System.Data.ParameterDirection.ReturnValue);
+
         using var conn = CreateConnection();
-        await conn.ExecuteAsync("sp_DeleteNowPlayingGame",
-            new { UserId = userId, Slot = slot },
-            commandType: System.Data.CommandType.StoredProcedure);
+        await conn.ExecuteAsync("sp_RemoveNowPlaying", p, commandType: System.Data.CommandType.StoredProcedure);
+
+        return p.Get<int>("Result") switch
+        {
+            0 => NowPlayingResult.Ok,
+            1 => NowPlayingResult.SlotEmpty,
+            _ => NowPlayingResult.InvalidOutcome
+        };
     }
 }

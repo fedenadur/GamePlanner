@@ -4,7 +4,10 @@
     <h1>My Games</h1>
     <span class="library-count" *ngIf="!loading">{{ games.length }} titles</span>
   </div>
-  <button class="btn-primary add-btn" (click)="showForm = true">+ Add Game</button>
+  <div class="header-actions">
+    <button class="btn-ghost add-btn" routerLink="/steam">Import from Steam</button>
+    <button class="btn-primary add-btn" (click)="showForm = true">+ Add Game</button>
+  </div>
 </div>
 
 <app-igdb-search-modal
@@ -21,6 +24,32 @@
       <input class="filter-search" placeholder="Search by title..." [(ngModel)]="filterTitle" (ngModelChange)="onFilterChange()" />
     </div>
     <button class="btn-ghost clear-btn" (click)="clearFilters()" *ngIf="hasActiveFilters">Clear all</button>
+  </div>
+
+  <div class="filter-group">
+    <span class="filter-label">Store</span>
+    <div class="pill-select">
+      <button *ngFor="let st of allStores" class="filter-pill tag" [class.active]="selectedStores.has(st)"
+              (click)="toggleIn(selectedStores, st)">{{ storeLabels[st] || st }}</button>
+    </div>
+  </div>
+
+  <div class="filter-group">
+    <span class="filter-label">Device</span>
+    <div class="pill-select">
+      <button *ngFor="let d of devices" class="filter-pill tag" [class.active]="selectedDevices.has(d)"
+              (click)="toggleIn(selectedDevices, d)">{{ deviceLabels[d] }}</button>
+    </div>
+  </div>
+
+  <div class="filter-group">
+    <span class="filter-label">Length</span>
+    <div class="pill-select">
+      <button *ngFor="let l of lengths" class="filter-pill tag" [class.active]="selectedLengths.has(l)"
+              (click)="toggleIn(selectedLengths, l)">{{ l }}</button>
+      <button class="filter-pill tag" [class.active]="favoritesOnly"
+              (click)="favoritesOnly = !favoritesOnly; currentPage = 1">♥ Favorites only</button>
+    </div>
   </div>
 
   <div class="filter-group" *ngIf="allGenres.length">
@@ -44,16 +73,13 @@
   </div>
 </div>
 
-<!-- Playtime tabs -->
+<!-- Status chips -->
 <div class="tab-bar">
-  <button class="tab" [class.active]="playtimeFilter === 'all'" (click)="setPlaytimeFilter('all')">
+  <button class="tab" [class.active]="selectedStatuses.size === 0" (click)="selectedStatuses.clear(); onFilterChange()">
     All <span class="tab-count">{{ allCount }}</span>
   </button>
-  <button class="tab" [class.active]="playtimeFilter === 'played'" (click)="setPlaytimeFilter('played')">
-    ▶ Played <span class="tab-count">{{ playedCount }}</span>
-  </button>
-  <button class="tab" [class.active]="playtimeFilter === 'notPlayed'" (click)="setPlaytimeFilter('notPlayed')">
-    ☐ Backlog <span class="tab-count">{{ notPlayedCount }}</span>
+  <button *ngFor="let s of statuses" class="tab" [class.active]="selectedStatuses.has(s)" (click)="toggleIn(selectedStatuses, s)">
+    {{ s }} <span class="tab-count">{{ statusCount(s) }}</span>
   </button>
 </div>
 
@@ -62,7 +88,7 @@
   <span class="results-count">{{ filtered.length }} game{{ filtered.length !== 1 ? 's' : '' }}</span>
 </div>
 
-<p class="error-msg" *ngIf="error">{{ error }}</p>
+<p class="error-msg" *ngIf="error">{{ error }} <button *ngIf="loadFailed" class="btn-ghost" (click)="loadGames()">Reload</button></p>
 
 <!-- Loading skeletons -->
 <div class="games-grid" *ngIf="loading">
@@ -74,12 +100,24 @@
   <app-game-card
     *ngFor="let game of paginated; trackBy: trackById"
     [game]="game"
-    (delete)="deleteGame($event)">
+    (edit)="editingGame = $event"
+    (delete)="deletingGame = $event"
+    (favoriteToggled)="toggleFavorite($event)">
   </app-game-card>
 
-  <div class="empty-state" *ngIf="filtered.length === 0">
+  <div class="empty-state" *ngIf="filtered.length === 0 && !loadFailed">
     <div class="empty-state-icon">🎮</div>
-    <p>No games match your filters.</p>
+    <ng-container *ngIf="games.length === 0; else noMatch">
+      <p>Your library is empty. Add a game or import your Steam library.</p>
+      <div class="empty-actions">
+        <button class="btn-primary add-btn" (click)="showForm = true">+ Add Game</button>
+        <button class="btn-ghost add-btn" routerLink="/steam">Import from Steam</button>
+      </div>
+    </ng-container>
+    <ng-template #noMatch>
+      <p>No games match your filters. Clear them to see your whole library.</p>
+      <button class="btn-ghost add-btn" (click)="clearFilters()">Clear all filters</button>
+    </ng-template>
   </div>
 </div>
 
@@ -92,3 +130,12 @@
           (click)="currentPage = p">{{ p }}</button>
   <button class="btn-page" [disabled]="currentPage === totalPages" (click)="currentPage = currentPage + 1">›</button>
 </div>
+
+<app-game-edit-dialog *ngIf="editingGame" [game]="editingGame" (saved)="saved()" (cancelled)="editingGame = null"></app-game-edit-dialog>
+
+<app-confirm-dialog *ngIf="deletingGame"
+  [title]="'Delete ' + (deletingGame | gameTitle) + '?'"
+  message="This removes it from your library, Now Playing and recommendations."
+  confirmLabel="Delete"
+  (confirmed)="confirmDelete()"
+  (cancelled)="deletingGame = null"></app-confirm-dialog>

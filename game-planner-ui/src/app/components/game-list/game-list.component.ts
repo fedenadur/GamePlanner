@@ -1,6 +1,16 @@
 import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { Game, GameService } from '../../services/game.service';
+import { loadError } from '../../shared/messages';
 import { genreMeta } from '../../shared/genre-meta';
+import { JOURNAL_STATUSES, statusColor, SELECTABLE_DEVICES, STORE_LABELS, DEVICE_LABELS } from '../../shared/mvp-constants';
+
+export type LengthBucket = 'Short' | 'Medium' | 'Long' | 'Unknown';
+
+// Same boundaries as the backend GameKnowledge.LengthBucket; lengthHours comes from the API (HLTB, else estimate).
+export function lengthBucket(lengthHours: number | null | undefined): LengthBucket {
+  if (lengthHours == null || lengthHours <= 0) return 'Unknown';
+  return lengthHours < 10 ? 'Short' : lengthHours <= 30 ? 'Medium' : 'Long';
+}
 
 @Component({
     selector: 'app-game-list',
@@ -13,12 +23,26 @@ export class GameListComponent implements OnInit {
   games: Game[] = [];
   loading = false;
   error = '';
+  loadFailed = false;
   showForm = false;
 
   filterTitle = '';
   selectedGenres = new Set<string>();
   selectedTags   = new Set<string>();
-  playtimeFilter: 'all' | 'played' | 'notPlayed' = 'all';
+  selectedStatuses = new Set<string>();
+  selectedStores   = new Set<string>();
+  selectedDevices  = new Set<string>();
+  selectedLengths  = new Set<LengthBucket>();
+  favoritesOnly = false;
+
+  readonly statuses = JOURNAL_STATUSES;
+  readonly devices = SELECTABLE_DEVICES;
+  readonly deviceLabels = DEVICE_LABELS;
+  readonly storeLabels = STORE_LABELS;
+  readonly lengths: LengthBucket[] = ['Short', 'Medium', 'Long', 'Unknown'];
+
+  editingGame: Game | null = null;
+  deletingGame: Game | null = null;
 
   pageSize = 14;
   currentPage = 1;
@@ -31,9 +55,11 @@ export class GameListComponent implements OnInit {
 
   loadGames() {
     this.loading = true;
+    this.error = '';
+    this.loadFailed = false;
     this.gameService.getGames().subscribe({
       next: (data) => { this.games = data; this.loading = false; },
-      error: () => { this.error = 'Could not load games. Is the API running?'; this.loading = false; }
+      error: () => { this.error = loadError('your games'); this.loadFailed = true; this.loading = false; }
     });
   }
 
@@ -59,22 +85,21 @@ export class GameListComponent implements OnInit {
     this.currentPage = 1;
   }
 
-  get filtered(): Game[] {
+  private matches(g: Game, ignoreStatus = false): boolean {
     const title = this.filterTitle.toLowerCase().trim();
+    return (!title || g.name.toLowerCase().includes(title))
+      && (this.selectedGenres.size === 0 || [...this.selectedGenres].every(gen => g.genres.includes(gen)))
+      && (this.selectedTags.size === 0 || [...this.selectedTags].every(t => g.tags.includes(t)))
+      && (ignoreStatus || this.selectedStatuses.size === 0 || this.selectedStatuses.has(g.status))
+      && (this.selectedStores.size === 0 || this.selectedStores.has(g.store))
+      && (this.selectedDevices.size === 0 || g.playableDevices.length === 0
+          || g.playableDevices.some(d => this.selectedDevices.has(d)))
+      && (this.selectedLengths.size === 0 || this.selectedLengths.has(lengthBucket(g.lengthHours)))
+      && (!this.favoritesOnly || g.isFavorite);
+  }
 
-    return this.games.filter(g => {
-      const matchTitle    = !title || g.name.toLowerCase().includes(title);
-      const matchGenre    = this.selectedGenres.size === 0
-        || [...this.selectedGenres].every(gen => g.genres.includes(gen));
-      const matchTag      = this.selectedTags.size === 0
-        || [...this.selectedTags].every(t => g.tags.includes(t));
-      const hours         = g.playtimeHours ?? 0;
-      const matchPlaytime =
-        this.playtimeFilter === 'all'      ? true :
-        this.playtimeFilter === 'played'   ? hours > 0 :
-                                             hours === 0;
-      return matchTitle && matchGenre && matchTag && matchPlaytime;
-    });
+  get filtered(): Game[] {
+    return this.games.filter(g => this.matches(g));
   }
 
   get totalPages(): number {
@@ -91,41 +116,61 @@ export class GameListComponent implements OnInit {
   }
 
   get hasActiveFilters(): boolean {
-    return !!this.filterTitle || this.selectedGenres.size > 0
-      || this.selectedTags.size > 0 || this.playtimeFilter !== 'all';
+    return !!this.filterTitle || this.selectedGenres.size > 0 || this.selectedTags.size > 0
+      || this.selectedStatuses.size > 0 || this.selectedStores.size > 0 || this.selectedDevices.size > 0
+      || this.selectedLengths.size > 0 || this.favoritesOnly;
   }
 
-  private get filteredBySearch(): Game[] {
-    const title = this.filterTitle.toLowerCase().trim();
-    return this.games.filter(g => {
-      const matchTitle = !title || g.name.toLowerCase().includes(title);
-      const matchGenre = this.selectedGenres.size === 0
-        || [...this.selectedGenres].every(gen => g.genres.includes(gen));
-      const matchTag   = this.selectedTags.size === 0
-        || [...this.selectedTags].every(t => g.tags.includes(t));
-      return matchTitle && matchGenre && matchTag;
-    });
+  get allStores(): string[] {
+    return Array.from(new Set(this.games.map(g => g.store).filter(s => !!s))).sort();
   }
 
-  get allCount(): number       { return this.filteredBySearch.length; }
-  get playedCount(): number    { return this.filteredBySearch.filter(g => g.playtimeHours > 0).length; }
-  get notPlayedCount(): number { return this.filteredBySearch.filter(g => g.playtimeHours === 0).length; }
+  statusColor = statusColor;
+
+  get allCount(): number { return this.games.filter(g => this.matches(g, true)).length; }
+
+  statusCount(status: string): number {
+    return this.games.filter(g => g.status === status && this.matches(g, true)).length;
+  }
+
+  toggleIn<T>(set: Set<T>, value: T) {
+    set.has(value) ? set.delete(value) : set.add(value);
+    this.currentPage = 1;
+  }
 
   trackById(_: number, game: Game) { return game.id; }
 
   onFilterChange() { this.currentPage = 1; }
 
-  setPlaytimeFilter(f: 'all' | 'played' | 'notPlayed') {
-    this.playtimeFilter = f;
-    this.currentPage = 1;
-  }
-
   clearFilters() {
     this.filterTitle = '';
     this.selectedGenres.clear();
     this.selectedTags.clear();
-    this.playtimeFilter = 'all';
+    this.selectedStatuses.clear();
+    this.selectedStores.clear();
+    this.selectedDevices.clear();
+    this.selectedLengths.clear();
+    this.favoritesOnly = false;
     this.currentPage = 1;
+  }
+
+  toggleFavorite(game: Game) {
+    const next = !game.isFavorite;
+    this.gameService.setFavorite(game.id, next).subscribe({
+      next: () => { game.isFavorite = next; },
+      error: () => { this.error = 'Could not update favorite. Please try again.'; }
+    });
+  }
+
+  saved() {
+    this.editingGame = null;
+    this.loadGames();
+  }
+
+  confirmDelete() {
+    const game = this.deletingGame;
+    this.deletingGame = null;
+    if (game) this.deleteGame(game.id);
   }
 
   deleteGame(id: number) {

@@ -11,6 +11,9 @@ public class IgdbService(IHttpClientFactory httpFactory, IConfiguration config, 
     private const string GamesUrl       = "https://api.igdb.com/v4/games";
     private const string ScreenshotsUrl = "https://api.igdb.com/v4/screenshots";
     private const string ArtworksUrl    = "https://api.igdb.com/v4/artworks";
+    private const string ExternalGamesUrl = "https://api.igdb.com/v4/external_games";
+
+    public const int ImagePageSize = 500;
 
     private string? _cachedToken;
     private DateTime _tokenExpiry = DateTime.MinValue;
@@ -65,7 +68,7 @@ public class IgdbService(IHttpClientFactory httpFactory, IConfiguration config, 
     public async Task<IgdbGame?> SearchGameAsync(string name, CancellationToken ct)
     {
         var escaped = name.Replace("\"", "\\\"");
-        var query = $"search \"{escaped}\"; fields name,genres.name,themes.name,player_perspectives.name,game_modes.name,aggregated_rating,aggregated_rating_count,first_release_date,updated_at; limit 3;";
+        var query = $"search \"{escaped}\"; fields name,genres.name,themes.name,player_perspectives.name,game_modes.name,aggregated_rating,aggregated_rating_count,first_release_date,updated_at; limit 10;";
         var results = await PostQueryAsync(query, ct);
         return results.FirstOrDefault(r =>
             string.Equals(r.Name, name, StringComparison.OrdinalIgnoreCase))
@@ -93,6 +96,13 @@ public class IgdbService(IHttpClientFactory httpFactory, IConfiguration config, 
         return results.FirstOrDefault();
     }
 
+    public async Task<List<IgdbExternalGame>> FetchExternalGamesBySteamAppIdAsync(int steamAppId, CancellationToken ct)
+    {
+        // external_game_source = 1 is Steam; uid is a string, so it must be quoted.
+        var query = $"fields uid,game; where uid = \"{steamAppId}\" & external_game_source = 1 & game != null; sort game asc; limit 5;";
+        return await PostQueryAsync<IgdbExternalGame>(ExternalGamesUrl, query, ct);
+    }
+
     public async Task<IgdbGame?> SearchCoverByNameAsync(string name, CancellationToken ct)
     {
         var escaped = name.Replace("\"", "\\\"");
@@ -111,17 +121,17 @@ public class IgdbService(IHttpClientFactory httpFactory, IConfiguration config, 
         return await PostQueryAsync(query, ct);
     }
 
-    public async Task<List<IgdbImage>> FetchScreenshotsByGameIdsAsync(IEnumerable<long> igdbIds, CancellationToken ct)
+    public async Task<List<IgdbImage>> FetchScreenshotsByGameIdsAsync(IEnumerable<long> igdbIds, int offset, CancellationToken ct)
     {
         var ids   = string.Join(",", igdbIds);
-        var query = $"fields id,image_id,url,width,height,game; where game = ({ids}); limit 500;";
+        var query = $"fields id,image_id,url,width,height,game; where game = ({ids}); sort id asc; limit {ImagePageSize}; offset {offset};";
         return await PostQueryAsync<IgdbImage>(ScreenshotsUrl, query, ct);
     }
 
-    public async Task<List<IgdbImage>> FetchArtworksByGameIdsAsync(IEnumerable<long> igdbIds, CancellationToken ct)
+    public async Task<List<IgdbImage>> FetchArtworksByGameIdsAsync(IEnumerable<long> igdbIds, int offset, CancellationToken ct)
     {
         var ids   = string.Join(",", igdbIds);
-        var query = $"fields id,image_id,url,width,height,game; where game = ({ids}); limit 500;";
+        var query = $"fields id,image_id,url,width,height,game; where game = ({ids}); sort id asc; limit {ImagePageSize}; offset {offset};";
         return await PostQueryAsync<IgdbImage>(ArtworksUrl, query, ct);
     }
 

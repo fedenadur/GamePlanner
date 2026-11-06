@@ -1,4 +1,5 @@
 using GamePlanner.API.Context;
+using GamePlanner.API.Domain;
 using GamePlanner.API.Entities;
 using GamePlanner.API.Services;
 using Microsoft.EntityFrameworkCore;
@@ -33,7 +34,7 @@ public class GameSyncManager(
 
         logger.LogInformation("Starting enrichment for {Total} games with missing metadata.", total);
 
-        int offset = 0;
+        int lastId = 0;
         int processed = 0;
         int failedCount = 0;
         var failedNames = new List<string>();
@@ -41,14 +42,13 @@ public class GameSyncManager(
         while (!ct.IsCancellationRequested)
         {
             var batch = await db.Games
-                .Where(g => g.IsActive &&
+                .Where(g => g.IsActive && g.Id > lastId &&
                     (!g.Genres.Any() || !g.Tags.Any() || !g.Themes.Any()
                      || !g.PlayerPerspectives.Any() || !g.GameModes.Any()
                      || g.AggregatedRating == null || g.FirstReleaseDate == null
                      || g.IGDBId == null))
-                .Select(g => new { g.Id, g.IGDBId, g.Name, g.IGDBUpdatedAt })
+                .Select(g => new { g.Id, g.IGDBId, g.SteamAppId, g.Name, g.IGDBUpdatedAt })
                 .OrderBy(g => g.Id)
-                .Skip(offset)
                 .Take(BatchSize)
                 .ToListAsync(ct);
 
@@ -57,7 +57,7 @@ public class GameSyncManager(
             foreach (var item in batch)
             {
                 ct.ThrowIfCancellationRequested();
-                var ok = await EnrichGameAsync(item.Id, item.IGDBId, item.Name, item.IGDBUpdatedAt, ct, force);
+                var ok = await EnrichGameAsync(item.Id, item.IGDBId, item.SteamAppId, item.Name, item.IGDBUpdatedAt, ct, force);
                 if (!ok)
                 {
                     failedCount++;
@@ -70,7 +70,7 @@ public class GameSyncManager(
             logger.LogInformation("Progress: {Processed}/{Total} games processed.", processed, total);
 
             if (batch.Count < BatchSize) break;
-            offset += BatchSize;
+            lastId = batch[^1].Id;
         }
 
         logger.LogInformation("Enrichment sync complete. {Processed} games processed.", processed);
@@ -82,18 +82,39 @@ public class GameSyncManager(
         return (failedCount, detail.Length > 480 ? detail[..480] : detail);
     }
 
-    private async Task<bool> EnrichGameAsync(int id, long? igdbId, string name, DateTime? storedUpdatedAt, CancellationToken ct, bool force = false)
+    private async Task<bool> EnrichGameAsync(int id, long? igdbId, int? steamAppId, string name, DateTime? storedUpdatedAt, CancellationToken ct, bool force = false)
     {
         try
         {
-            var result = igdbId.HasValue
-                ? await igdb.FetchEnrichmentByIdAsync(igdbId.Value, ct)
-                : await igdb.SearchGameAsync(name, ct);
+            IgdbGame? result;
+            if (igdbId.HasValue)
+            {
+                result = await igdb.FetchEnrichmentByIdAsync(igdbId.Value, ct);
+            }
+            else
+            {
+                result = null;
+
+                // Match order for an unmatched row: Steam mapping (lowest IGDB game id) -> exact name -> first hit
+                if (steamAppId.HasValue)
+                {
+                    var mappings = await igdb.FetchExternalGamesBySteamAppIdAsync(steamAppId.Value, ct);
+                    var mapped = mappings.Where(m => m.Game.HasValue).OrderBy(m => m.Game).Select(m => m.Game).FirstOrDefault();
+                    if (mapped.HasValue)
+                    {
+                        result = await igdb.FetchEnrichmentByIdAsync(mapped.Value, ct);
+                        logger.LogInformation("Matched '{Name}' to IGDB {IgdbId} via Steam AppId {SteamAppId}.", name, mapped.Value, steamAppId.Value);
+                    }
+                }
+
+                result ??= await igdb.SearchGameAsync(name, ct);
+            }
 
             if (result is null) return true;
 
             var igdbUpdatedAt = DateTimeOffset.FromUnixTimeSeconds(result.UpdatedAt).UtcDateTime;
-            if (!force && storedUpdatedAt.HasValue && igdbUpdatedAt <= storedUpdatedAt.Value)
+            // The stored stamp belongs to the stored IGDBId only
+            if (!force && igdbId.HasValue && storedUpdatedAt.HasValue && igdbUpdatedAt <= storedUpdatedAt.Value)
             {
                 logger.LogDebug("'{Name}' is up-to-date (IGDB updated_at unchanged). Skipping.", name);
                 return true;

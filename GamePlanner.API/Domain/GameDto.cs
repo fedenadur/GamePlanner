@@ -13,6 +13,15 @@ public class GameDto
     public string? CoverImageUrl { get; set; }
     public double PlaytimeHours { get; set; }
     public string Source { get; set; } = "Manual";
+    public string Store { get; set; } = "Other";
+    public bool IsFavorite { get; set; }
+    public List<string> PlayableDevices { get; set; } = [];
+    public string Status { get; set; } = JournalStatuses.Backlog;
+    public double LoggedHours { get; set; }
+    public int SessionCount { get; set; }
+    public double TotalHours { get; set; }
+    public int? ReleaseYear { get; set; }
+    public double? LengthHours { get; set; }
 }
 
 public class GameDetailDto : GameDto
@@ -33,6 +42,7 @@ public class CreateGameRequest
     public List<string> Genres { get; set; } = [];
     public int EstimatedMinutes { get; set; }
     public List<string> Tags { get; set; } = [];
+    public string Store { get; set; } = Stores.Other;
 }
 
 public class UpdateGameRequest
@@ -41,6 +51,15 @@ public class UpdateGameRequest
     public List<string> Genres { get; set; } = [];
     public int EstimatedMinutes { get; set; }
     public List<string> Tags { get; set; } = [];
+    public string Store { get; set; } = Stores.Other;
+    public List<string> PlayableDevices { get; set; } = [];
+    public bool IsFavorite { get; set; }
+    public string? CoverImageUrl { get; set; }
+}
+
+public class SetFavoriteRequest
+{
+    public bool IsFavorite { get; set; }
 }
 
 public class IgdbSearchResultDto
@@ -59,4 +78,5 @@ public class CreateGameFromIgdbRequest
     public int EstimatedMinutes { get; set; }
     public string? CoverUrl { get; set; }
     public List<string> Genres { get; set; } = [];
+    public string Store { get; set; } = Stores.Other;
 }

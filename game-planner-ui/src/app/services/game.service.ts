@@ -15,6 +15,15 @@ export interface Game {
   coverImageUrl?: string;
   playtimeHours: number;
   source: string;
+  store: string;
+  isFavorite: boolean;
+  playableDevices: string[];
+  status: string;
+  loggedHours: number;
+  sessionCount: number;
+  totalHours: number;
+  releaseYear?: number | null;
+  lengthHours?: number | null;
 }
 
 export interface GameDetail extends Game {
@@ -33,6 +42,18 @@ export interface CreateGameRequest {
   genres: string[];
   estimatedMinutes: number;
   tags: string[];
+  store?: string;
+}
+
+export interface UpdateGameRequest {
+  name: string;
+  genres: string[];
+  estimatedMinutes: number;
+  tags: string[];
+  store: string;
+  playableDevices: string[];
+  isFavorite: boolean;
+  coverImageUrl?: string | null;
 }
 
 export interface IgdbSearchResult {
@@ -49,31 +70,7 @@ export interface CreateGameFromIgdbRequest {
   estimatedMinutes: number;
   coverUrl?: string;
   genres: string[];
-}
-
-export interface SessionRequest {
-  availableMinutes: number;
-  mood: string;
-}
-
-export interface SessionRecommendation {
-  game: Game | null;
-  isExactMatch: boolean;
-  message: string;
-}
-
-export interface SessionPlannerRequest {
-  playedStatus: string;
-  mood:         string;
-  duration:     string;
-  perspective:  string;
-  gameModes:    string[];
-  gameLength:   string;
-}
-
-export interface SessionPlannerResult {
-  games: Game[];
-  message: string;
+  store?: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -94,6 +91,14 @@ export class GameService {
     return this.http.post(`${this.api}/games`, request);
   }
 
+  updateGame(id: number, request: UpdateGameRequest): Observable<any> {
+    return this.http.put(`${this.api}/games/${id}`, request);
+  }
+
+  setFavorite(id: number, isFavorite: boolean): Observable<any> {
+    return this.http.put(`${this.api}/games/${id}/favorite`, { isFavorite });
+  }
+
   deleteGame(id: number): Observable<any> {
     return this.http.delete(`${this.api}/games/${id}`);
   }
@@ -106,17 +111,10 @@ export class GameService {
     return this.http.post(`${this.api}/games/from-igdb`, request);
   }
 
-  getRecommendation(request: SessionRequest): Observable<SessionRecommendation> {
-    return this.http.post<SessionRecommendation>(`${this.api}/session/recommend`, request);
-  }
-
-  planSession(request: SessionPlannerRequest): Observable<SessionPlannerResult> {
-    return this.http.post<SessionPlannerResult>(`${this.api}/session/plan`, request);
-  }
-
-  getGameImages(type = 'screenshot', igdbId?: number | null): Observable<GameImage[]> {
+  getGameImages(type = 'screenshot', igdbId?: number | null, gameId?: number | null): Observable<GameImage[]> {
     const params: Record<string, string | number> = { type };
     if (igdbId != null) params['igdbId'] = igdbId;
+    if (gameId != null) params['gameId'] = gameId;
     return this.http.get<GameImage[]>(`${this.api}/gameimages`, { params });
   }
 

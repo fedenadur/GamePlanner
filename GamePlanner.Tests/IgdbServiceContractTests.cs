@@ -74,7 +74,7 @@ public class IgdbServiceContractTests
         var (igdb, handler, _) = Build();
 
         await igdb.SearchMultipleAsync("Celeste", CancellationToken.None);
-        await igdb.FetchScreenshotsByGameIdsAsync([1942], CancellationToken.None);
+        await igdb.FetchScreenshotsByGameIdsAsync([1942], 0, CancellationToken.None);
 
         Assert.NotEmpty(handler.Requests);
         foreach (var request in handler.Requests)
@@ -131,10 +131,80 @@ public class IgdbServiceContractTests
     {
         var (igdb, handler, _) = Build();
 
-        await igdb.FetchScreenshotsByGameIdsAsync([1942], CancellationToken.None);
+        await igdb.FetchScreenshotsByGameIdsAsync([1942], 0, CancellationToken.None);
 
         var query = Assert.Single(handler.Requests, r => r.Uri.Host == "api.igdb.com");
         Assert.Equal("https://api.igdb.com/v4/screenshots", query.Uri.ToString());
         Assert.Contains("where game = (1942)", query.Body);
+        Assert.Contains("sort id asc;", query.Body);
+        Assert.Contains("limit 500;", query.Body);
+        Assert.Contains("offset 0;", query.Body);
+    }
+
+    [Fact]
+    public async Task FetchArtworks_SendsTheRequestedOffset()
+    {
+        var (igdb, handler, _) = Build();
+
+        await igdb.FetchArtworksByGameIdsAsync([1942], 500, CancellationToken.None);
+
+        var query = Assert.Single(handler.Requests, r => r.Uri.Host == "api.igdb.com");
+        Assert.Equal("https://api.igdb.com/v4/artworks", query.Uri.ToString());
+        Assert.Contains("where game = (1942)", query.Body);
+        Assert.Contains("offset 500;", query.Body);
+    }
+
+    [Fact]
+    public async Task FetchExternalGamesBySteamAppId_QueriesSteamSourceWithQuotedUid()
+    {
+        var (igdb, handler, _) = Build();
+
+        await igdb.FetchExternalGamesBySteamAppIdAsync(400, CancellationToken.None);
+
+        var query = Assert.Single(handler.Requests, r => r.Uri.Host == "api.igdb.com");
+        Assert.Equal(HttpMethod.Post, query.Method);
+        Assert.Equal("https://api.igdb.com/v4/external_games", query.Uri.ToString());
+        Assert.Contains("uid = \"400\"", query.Body);
+        Assert.Contains("external_game_source = 1", query.Body);
+        Assert.Contains("game != null", query.Body);
+        Assert.Contains("sort game asc;", query.Body);
+        Assert.Contains("limit 5;", query.Body);
+        Assert.DoesNotContain("category", query.Body);
+    }
+
+    [Fact]
+    public async Task FetchExternalGamesBySteamAppId_DeserializesStringUidAndGameId()
+    {
+        var (igdb, _, _) = Build(r => IsTokenHost(r)
+            ? Json($$"""{"access_token":"{{AccessToken}}","expires_in":3600}""")
+            : Json("""[{"id":1,"uid":"400","game":900},{"id":2,"uid":"400","game":71}]"""));
+
+        var rows = await igdb.FetchExternalGamesBySteamAppIdAsync(400, CancellationToken.None);
+
+        Assert.Equal(2, rows.Count);
+        Assert.All(rows, r => Assert.Equal("400", r.Uid));
+        Assert.Equal(new long?[] { 900, 71 }, rows.Select(r => r.Game));
+    }
+
+    [Fact]
+    public async Task FetchExternalGamesBySteamAppId_ReturnsEmpty_WhenUnmapped()
+    {
+        var (igdb, _, _) = Build();
+
+        var rows = await igdb.FetchExternalGamesBySteamAppIdAsync(400, CancellationToken.None);
+
+        Assert.Empty(rows);
+    }
+
+    [Fact]
+    public async Task SearchGame_AsksForTenResults()
+    {
+        var (igdb, handler, _) = Build();
+
+        await igdb.SearchGameAsync("Portal", CancellationToken.None);
+
+        var query = Assert.Single(handler.Requests, r => r.Uri.Host == "api.igdb.com");
+        Assert.StartsWith("search \"Portal\"", query.Body);
+        Assert.Contains("limit 10;", query.Body);
     }
 }

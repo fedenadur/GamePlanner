@@ -20,22 +20,22 @@ export class SidebarComponent {
   @Output() closed = new EventEmitter<void>();
 
   mainNavItems: NavItem[] = [
-    { label: 'My Games',        icon: '🎮', route: '/games' },
-    { label: 'Now Playing',     icon: '🕹️', route: '/now-playing' },
-    { label: 'Session Planner', icon: '📅', route: '/planner' },
-    { label: 'Calendar',        icon: '🗓️', route: '/calendar' },
-    { label: 'Tracked Games',   icon: '🔔', route: '/tracked-games' },
-    { label: 'Backlog',         icon: '📋', route: '/backlog-prioritizer' },
-    { label: 'Journal',         icon: '📖', route: '/journal' },
-    { label: 'Stats',           icon: '📊', route: '/stats' },
+    { label: 'Home',         icon: '🏠', route: '/dashboard' },
+    { label: 'Now Playing',  icon: '🕹️', route: '/now-playing' },
+    { label: 'What to Play', icon: '🎲', route: '/what-to-play' },
+    { label: 'My Games',     icon: '🎮', route: '/games' },
+    { label: 'Journal',      icon: '📖', route: '/journal' },
+    { label: 'Calendar',     icon: '🗓️', route: '/calendar' },
+    { label: 'Stats',        icon: '📊', route: '/stats' },
   ];
 
-  utilNavItems: NavItem[] = [
-    { label: 'Steam Import', icon: '📥', route: '/steam' },
-    { label: 'Workers',      icon: '⚙️', route: '/workers' },
+  adminNavItems: NavItem[] = [
+    { label: 'Workers', icon: '⚙️', route: '/workers' },
   ];
 
   constructor(public auth: AuthService, public profile: ProfileService) {}
+
+  get showAdmin(): boolean { return this.auth.isAdmin(); }
 
   close() { this.closed.emit(); }
 

@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Primitives;
@@ -19,16 +20,13 @@ namespace GamePlanner.Tests;
 /// <summary>
 /// Steam OpenID trust-boundary tests (D-09): S1 null-email token issuance, S2 return_to binding,
 /// S3 fail-closed error handling, S4 strict assertion field checks. Facts that create a probe Steam
-/// user touch the dev database (fake SteamId prefix 7656119, deleted in finally); the owner's row is never read.
+/// user touch GamePlannerDB_Test (fake SteamId prefix 7656119, deleted in finally); the owner's row is never read.
 /// </summary>
+[Collection(TestDatabase.CollectionName)]
 public class SteamAuthServiceTests(ApiFactory factory) : IClassFixture<ApiFactory>
 {
     private const string CallbackUrl = "https://localhost:7174/api/auth/steam/callback";
     private const string ValidSteamReply = "ns:http://specs.openid.net/auth/2.0\nis_valid:true\n";
-
-    private static string ConnectionString =>
-        Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")
-        ?? "Server=localhost;Database=GamePlannerDB;Trusted_Connection=True;TrustServerCertificate=True;";
 
     private static string FakeSteamId()
     {
@@ -55,7 +53,7 @@ public class SteamAuthServiceTests(ApiFactory factory) : IClassFixture<ApiFactor
 
     private static async Task DeleteUserBySteamIdAsync(string steamId)
     {
-        await using var conn = new SqlConnection(ConnectionString);
+        await using var conn = new SqlConnection(TestDatabase.ConnectionString);
         await conn.OpenAsync();
         await conn.ExecuteAsync("DELETE FROM Users WHERE SteamId = @steamId", new { steamId });
     }
@@ -157,7 +155,7 @@ public class SteamAuthServiceTests(ApiFactory factory) : IClassFixture<ApiFactor
             })
             .Build();
 
-        var db = new GamePlannerDbContext(new DbContextOptionsBuilder<GamePlannerDbContext>().UseSqlServer(ConnectionString).Options);
+        var db = new GamePlannerDbContext(new DbContextOptionsBuilder<GamePlannerDbContext>().UseSqlServer(TestDatabase.ConnectionString).Options);
         var http = new StubHttpClientFactory(handler);
         var auth = new AuthService(db, config, NullLogger<AuthService>.Instance);
         var steam = new SteamService(http, config, NullLogger<SteamService>.Instance);
@@ -363,6 +361,24 @@ public class SteamAuthServiceTests(ApiFactory factory) : IClassFixture<ApiFactor
         {
             await DeleteUserBySteamIdAsync(steamId);
         }
+    }
+
+    // ── D-25: the in-process API host never reaches the owner's database ────
+
+    [Fact]
+    public void ApiHost_NeverReachesTheOwnerDatabase()
+    {
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<GamePlannerDbContext>();
+        var efCatalog = new SqlConnectionStringBuilder(db.Database.GetConnectionString()).InitialCatalog;
+        var cfgCatalog = new SqlConnectionStringBuilder(
+            scope.ServiceProvider.GetRequiredService<IConfiguration>().GetConnectionString("DefaultConnection")).InitialCatalog;
+
+        Assert.Equal(efCatalog, cfgCatalog);
+        Assert.NotEqual("GamePlannerDB", efCatalog);
+        Assert.True(
+            efCatalog.EndsWith("_Test", StringComparison.OrdinalIgnoreCase) || efCatalog == TestDatabase.UnconfiguredCatalog,
+            $"API host catalog '{efCatalog}' is neither a _Test database nor {TestDatabase.UnconfiguredCatalog}");
     }
 
     // ── Controller-level failure redirects ──────────────────────────────────

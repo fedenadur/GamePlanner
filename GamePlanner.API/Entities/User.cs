@@ -10,6 +10,7 @@ public class User
     public string? DisplayName     { get; set; }
     public string? ProfileImageUrl { get; set; }
     public bool    IsActive        { get; set; } = true;
+    public bool    IsAdmin         { get; set; }
     public DateTime CreatedAt      { get; set; } = DateTime.UtcNow;
 
     public List<Game> Games { get; set; } = [];

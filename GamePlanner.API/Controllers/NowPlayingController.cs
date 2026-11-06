@@ -19,25 +19,31 @@ public class NowPlayingController(NowPlayingManager manager) : ControllerBase
         return Ok(await manager.GetSlotsAsync(userId.Value));
     }
 
-    [HttpPut("{slot:int}")]
-    public async Task<IActionResult> SetSlot(int slot, [FromBody] SetNowPlayingRequest request)
+    [HttpPut("{device}")]
+    public async Task<IActionResult> Start(string device, [FromBody] StartNowPlayingRequest request)
     {
-        if (slot < 0 || slot > 2) return BadRequest("Slot must be 0, 1, or 2.");
         var userId = GetUserId();
         if (userId is null) return Unauthorized();
-        await manager.SetSlotAsync(userId.Value, slot, request.GameId);
-        return NoContent();
+        return ToActionResult(await manager.StartAsync(userId.Value, device, request));
     }
 
-    [HttpDelete("{slot:int}")]
-    public async Task<IActionResult> ClearSlot(int slot)
+    [HttpPost("{device}/remove")]
+    public async Task<IActionResult> Remove(string device, [FromBody] RemoveNowPlayingRequest request)
     {
-        if (slot < 0 || slot > 2) return BadRequest("Slot must be 0, 1, or 2.");
         var userId = GetUserId();
         if (userId is null) return Unauthorized();
-        await manager.ClearSlotAsync(userId.Value, slot);
-        return NoContent();
+        return ToActionResult(await manager.RemoveAsync(userId.Value, device, request));
     }
+
+    private IActionResult ToActionResult(NowPlayingResult result) => result switch
+    {
+        NowPlayingResult.Ok                => NoContent(),
+        NowPlayingResult.GameNotFound      => NotFound(),
+        NowPlayingResult.SlotEmpty         => NotFound(),
+        NowPlayingResult.SlotOccupied      => Conflict(new { code = "slot_occupied" }),
+        NowPlayingResult.GameOnOtherDevice => Conflict(new { code = "game_on_other_device" }),
+        _                                  => BadRequest()
+    };
 
     private int? GetUserId()
     {

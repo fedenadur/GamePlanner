@@ -16,6 +16,12 @@ export class StatsDashboardComponent implements OnInit {
   constructor(private statsService: StatsService) {}
 
   ngOnInit(): void {
+    this.load();
+  }
+
+  load() {
+    this.error = false;
+    this.loading = true;
     this.statsService.getDashboard().subscribe({
       next: d => { this.data = d; this.loading = false; },
       error: () => { this.error = true; this.loading = false; }

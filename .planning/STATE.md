@@ -1,19 +1,20 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
-status: Awaiting next milestone
-stopped_at: Completed 05-06-PLAN.md
-last_updated: "2026-10-27T20:39:04.994Z"
-last_activity: 2026-10-27
-last_activity_desc: Milestone v1.0 completed and archived
+milestone: v1.1
+milestone_name: Cleanup + Platform Analysis
+current_phase: 7
+current_phase_name: Steam Login Hardening
+status: planning
+stopped_at: Completed 06-06-PLAN.md
+last_updated: "2026-11-05T18:18:30.253Z"
+last_activity: 2026-11-05
+last_activity_desc: Phase 06 complete, transitioned to Phase 7
 progress:
   total_phases: 5
-  completed_phases: 5
-  total_plans: 23
-  completed_plans: 23
-current_phase: 05
-current_phase_name: regression-testing-full-stack-verification
+  completed_phases: 1
+  total_plans: 6
+  completed_plans: 6
+  percent: 20
 ---
 
 # Project State
@@ -22,21 +23,23 @@ current_phase_name: regression-testing-full-stack-verification
 
 See: .planning/PROJECT.md (updated 2026-10-27)
 
-**Core value:** Close the concrete security and reliability gaps already identified in the codebase (credential handling, CORS/rate limiting, resource leaks, missing audit trail) without breaking existing functionality. (v1.0 — achieved)
-**Current focus:** Planning next milestone
+**Core value:** Close the backlog left after v1.0 (data, auth and UI todos plus in-progress work) and decide, with evidence, whether other game stores can be integrated like Steam. (v1.1, from REQUIREMENTS.md; PROJECT.md Core Value still states the achieved v1.0 value)
+**Current focus:** Phase 06 — game-images-metadata
 
 ## Current Position
 
-Phase: Milestone v1.0 complete
-Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-10-27 — Milestone v1.0 completed and archived
+Phase: 7 — Steam Login Hardening
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-11-05 — Phase 06 complete, transitioned to Phase 7
+
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 23
+- Total plans completed: 29
 - Average duration: - min
 - Total execution time: 0 hours
 
@@ -49,6 +52,7 @@ Last activity: 2026-10-27 — Milestone v1.0 completed and archived
 | 03 | 3 | - | - |
 | 04 | 3 | - | - |
 | 05 | 6 | - | - |
+| 06 | 6 | - | - |
 
 **Recent Trend:**
 
@@ -83,6 +87,11 @@ Last activity: 2026-10-27 — Milestone v1.0 completed and archived
 | Phase 05 P04 | ~35min | 2 tasks | 5 files |
 | Phase 05 P05 | ~30min | 3 tasks | 6 files |
 | Phase 05 P06 | ~20min | 5 tasks | 8 files |
+| Phase 06 P01 | 10min | 3 tasks | 11 files |
+| Phase 06 P03 | 12 min | 2 tasks | 6 files |
+| Phase 06 P04 | 12 min | 3 tasks | 7 files |
+| Phase 06 P05 | 65min | 3 tasks | 3 files |
+| Phase 06 P06 | continuation | 3 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -90,13 +99,42 @@ Last activity: 2026-10-27 — Milestone v1.0 completed and archived
 
 Full decision log for v1.0 is in PROJECT.md Key Decisions and the archived phase summaries (`.planning/milestones/v1.0-phases/`).
 
+v1.1 roadmap decisions:
+
+- [v1.1 roadmap]: Phase 6 owns the uncommitted WIP (`GameImageManager.cs` for IMG-02, `game-detail` lightbox for UI-01). It starts by reviewing and committing that work, not rewriting it.
+- [v1.1 roadmap]: Phase 8 (manual playtime) depends on Phase 6 because both edit the `game-detail` component.
+- [v1.1 roadmap]: UI-04 (type scale) runs in Phase 9, after the Phase 6 and Phase 8 UI changes, so the consolidated scale covers them.
+- [v1.1 roadmap]: Numbered SQL scripts take the next free number when each phase runs. 39 is free now; expected order is 39 Portal IGDBId fix (Phase 6), 40 `UQ_Users_Email` filtered index (Phase 7), 41 playtime write SP (Phase 8).
+- [v1.1 roadmap]: PLAT-01..03 are already complete (commits 408c1ea, 865eea1). Phase 10's remaining work is PLAT-04: record the confirmed recommendation in PROJECT.md Key Decisions.
+- [Phase 06]: Phase 06-01: cover sync fetches every NULL cover once per run (D-01 no timestamp skip, D-02 Id cursor, D-28 per-row retry of failed batch); images sync before covers
+- [Phase 06]: Phase 06-01: all DB tests and ApiFactory pinned to GamePlannerDB_Test (D-18/D-23/D-25); env var must be exported in the same Bash call as dotnet test
+- [Phase 06]: 06-03: GET /api/gameimages gameId filter (user-scoped) replaces igdbId read on game-detail; Escape closes lightbox; lightbox e2e authored, run in 06-06
+- [Phase 06]: 06-04 D-09 split: IgdbService returns raw external_games rows, GameSyncManager picks the lowest mapped game id; freshness skip only for rows with an IGDBId; sync loop uses an Id cursor
+- [Phase 06]: 06-02: Portal IGDB id is 71 (Valve 2007) via Steam external_games mapping; script 39 authored and dry-run proven, owner applies it
+- [Phase 06]: 06-02: Portal IGDBId corrected 14546 -> 71 via guarded, reversible Database/39_FixPortalIgdbId.sql (raw UPDATE/DELETE, convention exemption approved); owner applied in SSMS 2026-11-05 and re-verified read-only; 48 D-07 suspects logged, none changed
+- [Phase 06]: Plan 06-05 live proof passed after owner-approved restart: SC1 rests on REPRO_OK (repro row 108276), matcher assigned exactly the previewed ids, Dark Messiah siblings share IGDB 2369 with identical image sets, Portal re-derived as 2007 Valve (PORTAL_OK); no retry needed
+- [Phase 06]: Owner confirmed Portal and Dark Messiah pages (D-26); release date is not exposed by the UI, tracked as a separate todo; folded IMG-01 and Portal todos closed after SUITE_EXIT=0
+
 ### Pending Todos
 
-4 minor todos in `.planning/todos/pending/` — deferred at v1.0 close (see Deferred Items).
+5 todos in `.planning/todos/pending/`, all scheduled as v1.1 requirements. Move each to done when its phase completes:
+
+- `2026-10-24-cover-skipped-when-igdbupdatedat-set` → IMG-01 (Phase 6)
+- `2026-10-24-portal-igdbid-wrong-match` → IMG-03 (Phase 6)
+- `2026-10-24-steam-openid-followups` → AUTH-03..06 (Phase 7)
+- `2026-10-27-manual-playtime-entry` → PLAY-01..02 (Phase 8)
+- `2026-10-24-ui-copy-and-type-scale-cleanup` → UI-02..04 (Phase 9)
 
 ### Blockers/Concerns
 
-None.
+- Until Phase 6 commits it, the IMG-02/UI-01 WIP exists only in the working tree. Avoid stash, checkout or reset operations that would discard working-tree changes.
+- The IMG-03 and AUTH-03 SQL scripts change live data and the schema. The owner applies them manually in SSMS, and IMG-03 needs the owner's go-ahead first.
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 261027-qhu | fix 404 al ejecutar SteamPlaytimeSyncWorker desde Workers | 2026-10-27 | ba7bc88 | [261027-qhu-fix-404-al-ejecutar-steamplaytimesyncwor](./quick/261027-qhu-fix-404-al-ejecutar-steamplaytimesyncwor/) |
 
 ## Deferred Items
 
@@ -109,12 +147,15 @@ Items acknowledged and deferred at milestone close on 2026-10-27:
 | todo | 2026-10-24-steam-openid-followups | pending | v1.0 close |
 | todo | 2026-10-24-ui-copy-and-type-scale-cleanup | pending | v1.0 close |
 
+All four are now scheduled in v1.1 (Phases 6, 7 and 9). See Pending Todos above.
+
 ## Session Continuity
 
-Last session: 2026-10-24T22:18:15.714Z
-Stopped at: Completed 05-06-PLAN.md
+Last session: 2026-11-05T18:12:12.432Z
+Stopped at: Completed 06-06-PLAN.md
 Resume file: None
 
 ## Operator Next Steps
 
-- Start the next milestone with /gsd-new-milestone
+- Review `.planning/ROADMAP.md` (v1.1 Phases 6-10)
+- Start Phase 6 with /gsd-discuss-phase 6 (then /gsd-plan-phase 6). Phase 6 has a UI hint, so /gsd-ui-phase 6 is available for the lightbox work

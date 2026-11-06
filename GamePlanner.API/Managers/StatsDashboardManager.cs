@@ -1,5 +1,6 @@
 using GamePlanner.API.Context;
 using GamePlanner.API.Domain;
+using GamePlanner.API.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace GamePlanner.API.Managers;
@@ -10,26 +11,27 @@ public class StatsDashboardManager(GamePlannerDbContext db)
     {
         // Load all user games with genres and journal entries in two queries
         var games = await db.Games
-            .Where(g => g.UserId == userId)
+            .Where(g => g.IsActive && g.UserId == userId)
             .Include(g => g.Genres)
             .ToListAsync();
 
         var journal = await db.GameJournalEntries
-            .Where(j => j.UserId == userId)
+            .Where(j => j.UserId == userId && j.Game.IsActive)
             .Include(j => j.Game)
             .ToListAsync();
 
-        var gameIds = games.Select(g => g.Id).ToHashSet();
+        var sessions = await GameLibraryEnrichment.LoadSessionTotalsAsync(db, userId);
+        double HoursOf(Game g) => PlaytimeCalculator.TotalHours(g.PlaytimeHours, sessions.GetValueOrDefault(g.Id).Hours);
 
         // Journal lookups
         var journalByGame  = journal.ToDictionary(j => j.GameId);
-        var finishedEntries = journal.Where(j => j.Status == "Finished").ToList();
-        var playingEntries  = journal.Where(j => j.Status == "Playing").ToList();
-        var backlogEntries  = journal.Where(j => j.Status == "Backlog").ToList();
+        var finishedEntries = journal.Where(j => j.Status == JournalStatuses.Finished).ToList();
+        var playingEntries  = journal.Where(j => j.Status == JournalStatuses.Playing).ToList();
+        var backlogEntries  = journal.Where(j => j.Status == JournalStatuses.Backlog).ToList();
 
-        // Games with no journal entry = never played
-        var gamesWithJournal = journal.Select(j => j.GameId).ToHashSet();
-        var neverPlayed = games.Count(g => !gamesWithJournal.Contains(g.Id));
+        bool IsNeverPlayed(Game g) =>
+            PlaytimeCalculator.IsNeverPlayed(HoursOf(g), journalByGame.GetValueOrDefault(g.Id)?.Status);
+        var neverPlayed = games.Count(IsNeverPlayed);
 
         // Library
         var library = new LibraryStatsDto
@@ -42,19 +44,19 @@ public class StatsDashboardManager(GamePlannerDbContext db)
         };
 
         // Time
-        var totalHours    = games.Sum(g => g.PlaytimeHours);
-        var gamesWithTime = games.Where(g => g.PlaytimeHours > 0).ToList();
+        var totalHours    = games.Sum(HoursOf);
+        var gamesWithTime = games.Where(g => HoursOf(g) > 0).ToList();
         var avgHours      = gamesWithTime.Count > 0
-            ? gamesWithTime.Average(g => g.PlaytimeHours)
+            ? gamesWithTime.Average(HoursOf)
             : 0;
-        var mostPlayed    = games.MaxBy(g => g.PlaytimeHours);
+        var mostPlayed    = games.MaxBy(HoursOf);
 
         var time = new TimeStatsDto
         {
             TotalPlaytimeHours   = Math.Round(totalHours, 1),
             AveragePlaytimeHours = Math.Round(avgHours, 1),
             MostPlayedGame       = mostPlayed?.Name,
-            MostPlayedGameHours  = Math.Round(mostPlayed?.PlaytimeHours ?? 0d, 1)
+            MostPlayedGameHours  = Math.Round(mostPlayed is null ? 0d : HoursOf(mostPlayed), 1)
         };
 
         // Completion
@@ -95,10 +97,10 @@ public class StatsDashboardManager(GamePlannerDbContext db)
         };
 
         // Genres by count
-        var allGenres = games.SelectMany(g => g.Genres.Select(gr => new { gr.Name, g.PlaytimeHours }));
+        var allGenres = games.SelectMany(g => g.Genres.Select(gr => new { gr.Name, Hours = HoursOf(g) }));
         var genreGroups = allGenres
             .GroupBy(x => x.Name)
-            .Select(g => new { Genre = g.Key, Count = g.Count(), Hours = g.Sum(x => x.PlaytimeHours) })
+            .Select(g => new { Genre = g.Key, Count = g.Count(), Hours = g.Sum(x => x.Hours) })
             .ToList();
 
         var genreStats = new GenreStatsDto
@@ -128,12 +130,12 @@ public class StatsDashboardManager(GamePlannerDbContext db)
 
         // Hidden gem: finished, rating >= 8, playtime <= 10h
         var hiddenGem = finishedEntries
-            .Where(j => j.UserRating >= 8 && j.Game.PlaytimeHours <= 10)
+            .Where(j => j.UserRating >= 8 && HoursOf(j.Game) <= 10)
             .MaxBy(j => j.UserRating);
 
         // Oldest unplayed game
         var oldestUnplayed = games
-            .Where(g => !gamesWithJournal.Contains(g.Id) && g.FirstReleaseDate.HasValue)
+            .Where(g => IsNeverPlayed(g) && g.FirstReleaseDate.HasValue)
             .MinBy(g => g.FirstReleaseDate);
 
         var highlights = new HighlightsDto

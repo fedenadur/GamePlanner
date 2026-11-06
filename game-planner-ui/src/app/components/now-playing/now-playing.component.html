@@ -3,76 +3,63 @@
   <div class="page-header">
     <div>
       <h1>Now Playing</h1>
-      <p class="subtitle">Track up to 3 games you're currently playing</p>
+      <p class="subtitle">One active game per device</p>
     </div>
-    <span class="slot-count" *ngIf="!loadingSlots">{{ filledCount }} / {{ MAX_SLOTS }}</span>
   </div>
 
-  <div *ngIf="error" class="error-msg">{{ error }}</div>
+  <p class="sub-note" *ngIf="!loadingSlots && isGeneralOnly">
+    Using a single General slot. Add your devices in <a routerLink="/profile">Profile</a>.
+  </p>
 
-  <!-- Shelf skeleton -->
-  <div class="shelf-wrapper" *ngIf="loadingSlots">
-    <div class="shelf-slots">
-      <div class="shelf-slot empty skeleton-slot" *ngFor="let _ of [0,1,2]"></div>
+  <div *ngIf="error || gamesError" class="error-msg">{{ error || gamesError }}</div>
+  <button *ngIf="error || gamesError" type="button" class="btn" (click)="retry()">Reload</button>
+
+  <div class="slots" *ngIf="!loadingSlots">
+    <div class="slot" *ngFor="let slot of slots">
+      <div class="dev"><b>{{ deviceIcons[slot.device] }} {{ deviceLabels[slot.device] ?? slot.device }}</b></div>
+
+      <ng-container *ngIf="slot.game as game; else emptySlot">
+        <div class="row">
+          <img *ngIf="game.coverImageUrl" class="cover" [src]="game.coverImageUrl" [alt]="game.name" />
+          <div *ngIf="!game.coverImageUrl" class="cover">{{ game.name }}</div>
+          <div class="meta">
+            <div class="name">{{ game | gameTitle }}</div>
+            <span class="pill" *ngIf="game.genres?.length">{{ game.genres[0] }}</span>
+            <span class="pill" *ngIf="game.store">{{ storeLabels[game.store] ?? game.store }}</span><br>
+            <ng-container *ngIf="slot.playingSince">Playing since {{ slot.playingSince | date:'d MMM' }}<br></ng-container>
+            <ng-container *ngIf="game.playtimeHours > 0 || game.loggedHours > 0">
+              <ng-container *ngIf="game.playtimeHours > 0">Steam: {{ game.playtimeHours }} h</ng-container>
+              <ng-container *ngIf="game.playtimeHours > 0 && game.loggedHours > 0"> · </ng-container>
+              <ng-container *ngIf="game.loggedHours > 0">Logged: {{ game.loggedHours }} h</ng-container>
+            </ng-container>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn p" (click)="logFor = slot" [disabled]="saving">+ Log session</button>
+          <button class="btn" (click)="openFinish(slot)" [disabled]="saving">Finish / remove</button>
+          <button class="btn" (click)="openPicker(slot.device)" [disabled]="saving" title="Replace with another game">Switch</button>
+        </div>
+        <div class="sessions" *ngIf="slot.recentSessions?.length">
+          <div *ngFor="let s of slot.recentSessions">{{ s.playedOn | date:'d MMM' }} · {{ s.hours }} h<ng-container *ngIf="s.note"> — "{{ s.note }}"</ng-container></div>
+        </div>
+      </ng-container>
+
+      <ng-template #emptySlot>
+        <div class="empty">
+          <span class="plus">＋</span>
+          <button class="btn p" (click)="openPicker(slot.device)" [disabled]="saving">Pick a game</button>
+          <a class="rec" [routerLink]="['/what-to-play']" [queryParams]="{ device: slot.device }">or get a recommendation</a>
+        </div>
+      </ng-template>
     </div>
-    <div class="shelf-board"></div>
   </div>
 
-  <!-- Shelf -->
-  <div class="shelf-wrapper" *ngIf="!loadingSlots">
-    <div class="shelf-slots">
-
-      <div
-        *ngFor="let game of nowPlaying; let i = index"
-        class="shelf-slot"
-        [class.filled]="game !== null"
-        [class.empty]="game === null"
-      >
-        <!-- Filled slot -->
-        <ng-container *ngIf="game !== null">
-          <div class="game-spine"></div>
-
-          <div class="game-case">
-            <img
-              *ngIf="game.coverImageUrl"
-              [src]="game.coverImageUrl"
-              [alt]="game.name"
-              class="cover-img"
-            />
-            <div *ngIf="!game.coverImageUrl" class="cover-placeholder">
-              <span class="cover-icon">🎮</span>
-            </div>
-            <div class="game-gloss"></div>
-            <button class="remove-btn" (click)="removeGame(i)">
-              <svg class="remove-icon" viewBox="0 0 14 14" xmlns="http://www.w3.org/2000/svg">
-                <line x1="2" y1="2" x2="12" y2="12"/>
-                <line x1="12" y1="2" x2="2" y2="12"/>
-              </svg>
-              <span class="remove-label">Remove</span>
-            </button>
-          </div>
-
-          <div class="game-info">
-            <span class="game-name">{{ game.name }}</span>
-            <span class="game-genres" *ngIf="game.genres?.length">{{ game.genres[0] }}</span>
-          </div>
-        </ng-container>
-
-        <!-- Empty slot -->
-        <ng-container *ngIf="game === null">
-          <button class="add-slot-btn" (click)="openPicker(i)" [disabled]="saving">
-            <span class="add-icon">+</span>
-            <span class="add-label">Add game</span>
-          </button>
-        </ng-container>
-      </div>
-
-    </div>
-    <div class="shelf-board"></div>
+  <div class="slots" *ngIf="loadingSlots">
+    <div class="slot" style="height: 200px"></div>
   </div>
 
   <!-- Picker modal -->
-  <div class="picker-backdrop" *ngIf="pickerOpenForSlot !== null" (click)="closePicker()">
+  <div class="picker-backdrop" *ngIf="pickerDevice !== null" (click)="closePicker()">
     <div class="picker-modal" (click)="$event.stopPropagation()">
       <div class="picker-header">
         <span class="picker-title">Pick a game</span>
@@ -86,10 +73,15 @@
         [(ngModel)]="pickerSearch"
         autofocus
       />
+      <label class="picker-check">
+        <input type="checkbox" [(ngModel)]="showFinishedAndDropped" /> Show finished and dropped
+      </label>
 
       <div class="picker-list" *ngIf="!loadingGames">
-        <div *ngIf="pickerGames.length === 0" class="picker-empty">
-          {{ pickerSearch ? 'No games match your search.' : 'No more games available.' }}
+        <div *ngIf="gamesError" class="picker-empty error-msg">{{ gamesError }} <button type="button" class="btn" (click)="refreshGames()">Reload</button></div>
+        <div *ngIf="!gamesError && pickerGames.length === 0" class="picker-empty">
+          {{ pickerSearch ? 'No games match your search. Clear it or add the game in' : 'No more games available. Add games in' }}
+          <a routerLink="/games" (click)="closePicker()">My Games</a>.
         </div>
         <button
           *ngFor="let g of pickerGames; trackBy: trackById"
@@ -99,7 +91,7 @@
           <img *ngIf="g.coverImageUrl" [src]="g.coverImageUrl" [alt]="g.name" class="picker-thumb" />
           <div *ngIf="!g.coverImageUrl" class="picker-thumb picker-thumb-placeholder">🎮</div>
           <div class="picker-item-info">
-            <span class="picker-item-name">{{ g.name }}</span>
+            <span class="picker-item-name">{{ g | gameTitle }}</span>
             <span class="picker-item-genre" *ngIf="g.genres?.length">{{ g.genres.join(', ') }}</span>
           </div>
         </button>
@@ -108,5 +100,18 @@
       <div class="picker-loading" *ngIf="loadingGames">Loading library…</div>
     </div>
   </div>
+
+  <app-finish-game-dialog
+    *ngIf="finishFor"
+    [gameName]="finishFor.game! | gameTitle"
+    (chosen)="onFinishChosen($event)"
+    (cancelled)="onFinishCancelled()"></app-finish-game-dialog>
+
+  <app-log-session-dialog
+    *ngIf="logFor"
+    [gameName]="logFor.game! | gameTitle"
+    [device]="logFor.device"
+    (saved)="onSessionSaved($event)"
+    (cancelled)="logFor = null"></app-log-session-dialog>
 
 </div>

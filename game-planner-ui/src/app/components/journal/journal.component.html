@@ -35,16 +35,17 @@
 
   <!-- States -->
   <div class="journal-loading" *ngIf="loading">Loading…</div>
-  <p class="journal-error" *ngIf="error">{{ error }}</p>
+  <p class="journal-error" *ngIf="error">{{ error }} <button type="button" class="btn-go" (click)="load()">Reload</button></p>
 
-  <div class="journal-empty" *ngIf="!loading && entries.length === 0">
+  <div class="journal-empty" *ngIf="!loading && !error && entries.length === 0">
     <span class="empty-icon">📖</span>
-    <p>No entries yet. Open a game and log it!</p>
-    <a routerLink="/games" class="btn-go">Browse Games</a>
+    <p>No entries yet. Start a game in Now Playing and it shows up here.</p>
+    <a routerLink="/now-playing" class="btn-go">Go to Now Playing</a>
   </div>
 
   <div class="no-results" *ngIf="!loading && entries.length > 0 && filtered.length === 0">
     No games match your filter.
+    <button type="button" class="btn-go" (click)="clearFilters()">Clear filter</button>
   </div>
 
   <!-- Grid -->
@@ -84,7 +85,8 @@
     autofocus
   />
   <div class="picker-loading" *ngIf="pickerLoading">Loading…</div>
-  <div class="picker-empty" *ngIf="!pickerLoading && pickerFiltered.length === 0">
+  <div class="picker-empty journal-error" *ngIf="pickerError">{{ pickerError }} <button type="button" class="btn-go" (click)="openPicker()">Reload</button></div>
+  <div class="picker-empty" *ngIf="!pickerLoading && !pickerError && pickerFiltered.length === 0">
     No games available.
     <a routerLink="/games" (click)="closePicker()">Browse your library</a>.
   </div>
@@ -92,7 +94,7 @@
     <div *ngFor="let g of pickerFiltered" class="picker-item" (click)="pickGame(g)">
       <img *ngIf="g.coverImageUrl" [src]="g.coverImageUrl" class="picker-cover" [alt]="g.name" />
       <div *ngIf="!g.coverImageUrl" class="picker-cover picker-cover--ph">🎮</div>
-      <span class="picker-name">{{ g.name }}</span>
+      <span class="picker-name">{{ g | gameTitle }}</span>
     </div>
   </div>
 </div>
@@ -163,6 +165,7 @@
       {{ editSaving ? 'Saving…' : 'Save' }}
     </button>
     <span class="save-ok" *ngIf="editSaved">Saved!</span>
+    <span class="journal-error" *ngIf="editError">{{ editError }}</span>
     <span class="days-badge" *ngIf="daysToFinish != null">{{ daysToFinish }}d to finish</span>
     <button class="btn-delete" (click)="deleteEdit()" [disabled]="editDeleting">
       {{ editDeleting ? '…' : 'Remove' }}

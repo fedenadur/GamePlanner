@@ -44,8 +44,8 @@ export class AuthService {
     const token = this.getToken();
     if (!token) return false;
     try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload.exp * 1000 > Date.now();
+      const payload = this.decodePayload(token);
+      return payload['exp'] * 1000 > Date.now();
     } catch {
       return false;
     }
@@ -55,11 +55,26 @@ export class AuthService {
     const token = this.getToken();
     if (!token) return null;
     try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload['steamId'] ?? null;
+      return this.decodePayload(token)['steamId'] ?? null;
     } catch {
       return null;
     }
+  }
+
+  isAdmin(): boolean {
+    const token = this.getToken();
+    if (!token) return false;
+    try {
+      const role = this.decodePayload(token)['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
+      return Array.isArray(role) ? role.includes('Admin') : role === 'Admin';
+    } catch {
+      return false;
+    }
+  }
+
+  private decodePayload(token: string): Record<string, any> {
+    const b64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    return JSON.parse(atob(b64.padEnd(Math.ceil(b64.length / 4) * 4, '=')));
   }
 
   exchangeSteamCode(code: string): Observable<AuthResponse> {

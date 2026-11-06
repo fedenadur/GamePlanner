@@ -1,5 +1,7 @@
-import { Component, OnInit, HostListener, ChangeDetectionStrategy } from '@angular/core';
-import { Router } from '@angular/router';
+import { loadError } from '../../shared/messages';
+import { Component, OnDestroy, OnInit, HostListener, ChangeDetectionStrategy } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { CalendarService, CalendarData, CalendarGame, CalendarFilters } from '../../services/calendar.service';
 import { TrackedGamesService } from '../../services/tracked-games.service';
 
@@ -18,7 +20,9 @@ const HOT_THRESHOLD = 100;
     changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false
 })
-export class CalendarComponent implements OnInit {
+export class CalendarComponent implements OnInit, OnDestroy {
+  private querySub?: Subscription;
+  tab: 'releases' | 'tracked' = 'releases';
   mode: 'month' | 'week' = 'month';
 
   today         = new Date();
@@ -30,6 +34,7 @@ export class CalendarComponent implements OnInit {
   cells: CalendarCell[] = [];
   loading = false;
   error   = '';
+  trackError = '';
 
   // Filters
   titleFilter         = '';
@@ -60,10 +65,22 @@ export class CalendarComponent implements OnInit {
   constructor(
     private calendarService: CalendarService,
     private trackedGamesService: TrackedGamesService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) {}
 
-  ngOnInit() { this.load(); }
+  ngOnInit() {
+    this.querySub = this.route.queryParamMap.subscribe(q => {
+      this.tab = q.get('tab') === 'tracked' ? 'tracked' : 'releases';
+    });
+    this.load();
+  }
+
+  ngOnDestroy() { this.querySub?.unsubscribe(); }
+
+  setTab(t: 'releases' | 'tracked') {
+    this.router.navigate([], { relativeTo: this.route, queryParams: { tab: t === 'tracked' ? 'tracked' : null }, queryParamsHandling: 'merge', replaceUrl: true });
+  }
 
   get isViewingToday(): boolean {
     if (this.mode === 'month')
@@ -83,6 +100,20 @@ export class CalendarComponent implements OnInit {
     const startStr = this.weekStartDate.toLocaleDateString('default', { month: 'short', day: 'numeric' });
     const endStr   = weekEnd.toLocaleDateString('default', { month: 'short', day: 'numeric', year: 'numeric' });
     return `${startStr} – ${endStr}`;
+  }
+
+  get hasFilters(): boolean {
+    return !!(this.genreFilter || this.hypeMinFilter || this.ownedOnly || this.favoriteGenresOnly);
+  }
+
+  get isEmpty(): boolean { return this.gamesWithDates().length === 0; }
+
+  clearServerFilters() {
+    this.genreFilter = '';
+    this.hypeMinFilter = 0;
+    this.ownedOnly = false;
+    this.favoriteGenresOnly = false;
+    this.load();
   }
 
   get topAnticipated(): { game: CalendarGame; date: Date }[] {
@@ -220,7 +251,7 @@ export class CalendarComponent implements OnInit {
         this.showAllThisWeek = false;
         this.loading = false;
       },
-      error: () => { this.error = 'Failed to load calendar.'; this.loading = false; }
+      error: () => { this.error = loadError('the calendar'); this.loading = false; }
     });
   }
 
@@ -262,15 +293,17 @@ export class CalendarComponent implements OnInit {
   toggleTrack(game: CalendarGame) {
     if (this.trackingInProgress) return;
     this.trackingInProgress = true;
+    this.trackError = '';
     const obs = game.isTracked
       ? this.trackedGamesService.untrack(game.igdbId)
       : this.trackedGamesService.track(game.igdbId);
     obs.subscribe({
       next: () => {
         game.isTracked = !game.isTracked;
+        this.trackError = '';
         this.trackingInProgress = false;
       },
-      error: () => { this.trackingInProgress = false; }
+      error: () => { this.trackingInProgress = false; this.trackError = 'Could not update tracking. Try again.'; }
     });
   }
 

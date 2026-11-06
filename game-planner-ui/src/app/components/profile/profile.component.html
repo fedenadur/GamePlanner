@@ -18,6 +18,11 @@
     </div>
   </div>
 
+  <div class="load-error" *ngIf="profileError || settingsError">
+    <span class="error-msg">{{ profileError }} {{ settingsError }}</span>
+    <button type="button" class="btn-ghost" (click)="reload()">Reload</button>
+  </div>
+
   <!-- Form card -->
   <div class="card profile-form">
     <h2>Account details</h2>
@@ -59,6 +64,81 @@
               (click)="save()">
         {{ loading ? 'Saving...' : 'Save changes' }}
       </button>
+    </div>
+  </div>
+
+  <!-- Devices card -->
+  <div class="card profile-form">
+    <h2>My devices</h2>
+
+    <div class="chip-row">
+      <button type="button" class="chip" *ngFor="let d of selectableDevices"
+              [class.chip-on]="devices.includes(d)" (click)="toggleDevice(d)">
+        {{ deviceIcons[d] }} {{ deviceLabels[d] }}
+      </button>
+    </div>
+
+    <ol class="device-order" *ngIf="devices.length">
+      <li *ngFor="let d of devices; let i = index">
+        <span class="device-rank">{{ i + 1 }}</span>
+        <span class="device-name">{{ deviceIcons[d] }} {{ deviceLabels[d] }}</span>
+        <button type="button" class="arrow-btn" aria-label="Move up" [disabled]="i === 0" (click)="moveDevice(i, -1)">↑</button>
+        <button type="button" class="arrow-btn" aria-label="Move down" [disabled]="i === devices.length - 1" (click)="moveDevice(i, 1)">↓</button>
+      </li>
+    </ol>
+
+    <div class="form-footer">
+      <div class="status-msgs">
+        <p class="success-msg" *ngIf="devicesSaved">Saved</p>
+        <p class="error-msg" *ngIf="devicesError">{{ devicesError }}</p>
+      </div>
+      <button class="btn-primary save-btn" [disabled]="devicesSaving" (click)="saveDevices()">Save</button>
+    </div>
+  </div>
+
+  <!-- Preferences card -->
+  <div class="card profile-form">
+    <h2>Preferences</h2>
+
+    <div class="fields">
+      <div class="field-group">
+        <label class="field-label">Favorite genres</label>
+        <div class="chip-row">
+          <button type="button" class="chip" *ngFor="let g of genres"
+                  [class.chip-on]="favoriteGenres.includes(g)"
+                  [disabled]="isGenreDisabled('favorite', g)" (click)="toggleGenre('favorite', g)">{{ g }}</button>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Genres to avoid</label>
+        <div class="chip-row">
+          <button type="button" class="chip chip-avoid" *ngFor="let g of genres"
+                  [class.chip-on]="avoidGenres.includes(g)"
+                  [disabled]="isGenreDisabled('avoid', g)" (click)="toggleGenre('avoid', g)">{{ g }}</button>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label" for="maxHours">Max game length (hours)</label>
+        <input id="maxHours" type="number" min="1" [(ngModel)]="maxGameHours" (ngModelChange)="prefsSaved = false" placeholder="No limit" />
+      </div>
+
+      <div class="field-group" *ngFor="let grp of preferenceGroups">
+        <label class="field-label">{{ grp.label }}</label>
+        <div class="segmented">
+          <button type="button" *ngFor="let o of preferenceOptions"
+                  [class.seg-on]="$any(this)[grp.key] === o" (click)="setPreference(grp.key, o)">{{ o }}</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-footer">
+      <div class="status-msgs">
+        <p class="success-msg" *ngIf="prefsSaved">Saved</p>
+        <p class="error-msg" *ngIf="prefsError">{{ prefsError }}</p>
+      </div>
+      <button class="btn-primary save-btn" [disabled]="prefsSaving" (click)="savePreferences()">Save</button>
     </div>
   </div>
 

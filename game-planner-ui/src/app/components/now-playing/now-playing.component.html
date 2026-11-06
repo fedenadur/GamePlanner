@@ -11,8 +11,8 @@
     Using a single General slot. Add your devices in <a routerLink="/profile">Profile</a>.
   </p>
 
-  <div *ngIf="error" class="error-msg">{{ error }}</div>
-  <button *ngIf="error" type="button" class="btn" (click)="retry()">Reload</button>
+  <div *ngIf="error || gamesError" class="error-msg">{{ error || gamesError }}</div>
+  <button *ngIf="error || gamesError" type="button" class="btn" (click)="retry()">Reload</button>
 
   <div class="slots" *ngIf="!loadingSlots">
     <div class="slot" *ngFor="let slot of slots">
@@ -78,7 +78,7 @@
       </label>
 
       <div class="picker-list" *ngIf="!loadingGames">
-        <div *ngIf="gamesError" class="picker-empty error-msg">{{ gamesError }}</div>
+        <div *ngIf="gamesError" class="picker-empty error-msg">{{ gamesError }} <button type="button" class="btn" (click)="refreshGames()">Reload</button></div>
         <div *ngIf="!gamesError && pickerGames.length === 0" class="picker-empty">
           {{ pickerSearch ? 'No games match your search. Clear it or add the game in' : 'No more games available. Add games in' }}
           <a routerLink="/games" (click)="closePicker()">My Games</a>.

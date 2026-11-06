@@ -62,6 +62,8 @@
 
 <p class="error-msg" *ngIf="error">{{ error }} <button type="button" class="empty-btn" (click)="load()">Reload</button></p>
 
+<p class="error-msg" *ngIf="trackError">{{ trackError }}</p>
+
 <div class="calendar-empty" *ngIf="!loading && !error && isEmpty">
   <ng-container *ngIf="hasFilters; else noReleases">
     No releases match these filters.

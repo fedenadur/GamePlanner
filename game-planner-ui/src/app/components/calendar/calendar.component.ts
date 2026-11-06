@@ -34,6 +34,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
   cells: CalendarCell[] = [];
   loading = false;
   error   = '';
+  trackError = '';
 
   // Filters
   titleFilter         = '';
@@ -292,15 +293,17 @@ export class CalendarComponent implements OnInit, OnDestroy {
   toggleTrack(game: CalendarGame) {
     if (this.trackingInProgress) return;
     this.trackingInProgress = true;
+    this.trackError = '';
     const obs = game.isTracked
       ? this.trackedGamesService.untrack(game.igdbId)
       : this.trackedGamesService.track(game.igdbId);
     obs.subscribe({
       next: () => {
         game.isTracked = !game.isTracked;
+        this.trackError = '';
         this.trackingInProgress = false;
       },
-      error: () => { this.trackingInProgress = false; this.error = 'Could not update tracking. Try again.'; }
+      error: () => { this.trackingInProgress = false; this.trackError = 'Could not update tracking. Try again.'; }
     });
   }
 

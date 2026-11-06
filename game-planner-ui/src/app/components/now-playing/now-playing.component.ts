@@ -163,7 +163,7 @@ export class NowPlayingComponent implements OnInit {
     });
   }
 
-  private refreshGames() {
+  refreshGames() {
     this.gameService.getGames().subscribe({
       next: (data) => { this.allGames = data; this.gamesError = ''; },
       error: () => { this.gamesError = loadError('your library'); }

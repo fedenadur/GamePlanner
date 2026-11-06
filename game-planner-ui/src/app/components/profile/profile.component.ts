@@ -47,24 +47,35 @@ export class ProfileComponent implements OnInit {
   prefsSaving = false;
   prefsSaved  = false;
   prefsError  = '';
-  loadFailed  = '';
+  profileError  = '';
+  settingsError = '';
 
   constructor(private profileService: ProfileService, private settings: UserSettingsService) {}
 
   ngOnInit() {
     this.loadSettings();
 
+    this.loadProfile();
+  }
+
+  loadProfile() {
+    this.profileError = '';
     const p = this.profileService.snapshot;
     if (p) this.populate(p);
     else this.profileService.load().subscribe({
       next: p => this.populate(p),
-      error: () => this.loadFailed = loadError('your profile')
+      error: () => this.profileError = loadError('your profile')
     });
   }
 
+  reload() {
+    if (this.profileError) this.loadProfile();
+    if (this.settingsError) this.loadSettings();
+  }
+
   loadSettings() {
-    this.loadFailed = '';
-    const failed = () => { this.loadFailed = loadError('your profile settings'); };
+    this.settingsError = '';
+    const failed = () => { this.settingsError = loadError('your profile settings'); };
     this.settings.getDevices().subscribe({
       next: r => { this.devices = [...r.devices]; this.savedDevices = [...r.devices]; },
       error: failed

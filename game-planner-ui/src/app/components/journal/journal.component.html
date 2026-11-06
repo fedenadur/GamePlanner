@@ -85,7 +85,7 @@
     autofocus
   />
   <div class="picker-loading" *ngIf="pickerLoading">Loading…</div>
-  <div class="picker-empty journal-error" *ngIf="pickerError">{{ pickerError }}</div>
+  <div class="picker-empty journal-error" *ngIf="pickerError">{{ pickerError }} <button type="button" class="btn-go" (click)="openPicker()">Reload</button></div>
   <div class="picker-empty" *ngIf="!pickerLoading && !pickerError && pickerFiltered.length === 0">
     No games available.
     <a routerLink="/games" (click)="closePicker()">Browse your library</a>.

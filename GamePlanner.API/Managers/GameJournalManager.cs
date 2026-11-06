@@ -14,7 +14,7 @@ public class GameJournalManager(GamePlannerDbContext db, IConfiguration config)
     public async Task<List<GameJournalEntryDto>> GetJournalAsync(int userId)
     {
         var entries = await db.GameJournalEntries
-            .Where(j => j.UserId == userId)
+            .Where(j => j.UserId == userId && j.Game.IsActive)
             .Include(j => j.Game)
             .OrderByDescending(j => j.UpdatedAt)
             .ToListAsync();
@@ -33,6 +33,9 @@ public class GameJournalManager(GamePlannerDbContext db, IConfiguration config)
 
     public async Task<bool> UpsertAsync(int userId, int gameId, UpsertJournalRequest req)
     {
+        if (req.Status is null || !JournalStatuses.All.Contains(req.Status)) throw new ArgumentException("Invalid status.");
+        if (req.UserRating is < 1 or > 10) throw new ArgumentException("Rating must be between 1 and 10.");
+
         var p = new DynamicParameters(new
         {
             UserId         = userId,

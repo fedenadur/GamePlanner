@@ -35,7 +35,11 @@ public class GameJournalController(GameJournalManager manager) : ControllerBase
     {
         var userId = GetUserId();
         if (userId is null) return Unauthorized();
-        if (!await manager.UpsertAsync(userId.Value, gameId, request)) return NotFound();
+        try
+        {
+            if (!await manager.UpsertAsync(userId.Value, gameId, request)) return NotFound();
+        }
+        catch (ArgumentException ex) { return BadRequest(new { message = ex.Message }); }
         return CreatedAtAction(nameof(GetEntry), new { gameId }, null);
     }
 
@@ -45,7 +49,11 @@ public class GameJournalController(GameJournalManager manager) : ControllerBase
     {
         var userId = GetUserId();
         if (userId is null) return Unauthorized();
-        if (!await manager.UpsertAsync(userId.Value, gameId, request)) return NotFound();
+        try
+        {
+            if (!await manager.UpsertAsync(userId.Value, gameId, request)) return NotFound();
+        }
+        catch (ArgumentException ex) { return BadRequest(new { message = ex.Message }); }
         return NoContent();
     }
 

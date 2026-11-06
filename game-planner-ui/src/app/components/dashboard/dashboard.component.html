@@ -51,7 +51,7 @@
             </div>
             <div class="continue-info-compact">
               <div class="continue-name">{{ g | gameTitle }}</div>
-              <div class="continue-detail">{{ g.playtimeHours | number:'1.0-1' }}h<ng-container *ngIf="deviceByGameId.get(g.id) as dev"> · {{ deviceLabel(dev) }}</ng-container></div>
+              <div class="continue-detail">{{ g.totalHours | number:'1.0-1' }}h<ng-container *ngIf="deviceByGameId.get(g.id) as dev"> · {{ deviceLabel(dev) }}</ng-container></div>
             </div>
           </a>
         </div>

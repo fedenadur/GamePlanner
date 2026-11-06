@@ -60,14 +60,17 @@ public class DashboardManager(
             .Include(g => g.Genres)
             .ToListAsync();
 
-        var journal = await db.GameJournalEntries
-            .Where(j => j.UserId == userId)
-            .ToListAsync();
+        var statusByGame = await db.GameJournalEntries
+            .Where(j => j.UserId == userId && j.Game.IsActive)
+            .ToDictionaryAsync(j => j.GameId, j => j.Status);
+        var sessions = await GameLibraryEnrichment.LoadSessionTotalsAsync(db, userId);
+        double HoursOf(Entities.Game g) => PlaytimeCalculator.TotalHours(g.PlaytimeHours, sessions.GetValueOrDefault(g.Id).Hours);
+        string? JournalStatusOf(Entities.Game g) => statusByGame.GetValueOrDefault(g.Id);
 
-        var gamesWithJournal = journal.Select(j => j.GameId).ToHashSet();
-        var backlogCount     = journal.Count(j => j.Status == "Backlog");
-        var completedCount   = journal.Count(j => j.Status == "Finished");
-        var unplayedCount    = games.Count(g => !gamesWithJournal.Contains(g.Id));
+        // A game without a journal entry is Backlog
+        var backlogCount   = games.Count(g => (JournalStatusOf(g) ?? JournalStatuses.Backlog) == JournalStatuses.Backlog);
+        var completedCount = games.Count(g => JournalStatusOf(g) == JournalStatuses.Finished);
+        var unplayedCount  = games.Count(g => PlaytimeCalculator.IsNeverPlayed(HoursOf(g), JournalStatusOf(g)));
 
         var completionDenominator = backlogCount + completedCount;
         var completionRate = completionDenominator > 0
@@ -83,8 +86,8 @@ public class DashboardManager(
         };
 
         // Quick Stats
-        var totalPlaytime = games.Sum(g => g.PlaytimeHours);
-        var mostPlayed    = games.MaxBy(g => g.PlaytimeHours);
+        var totalPlaytime = games.Sum(HoursOf);
+        var mostPlayed    = games.MaxBy(HoursOf);
         var favoriteGenre = games
             .SelectMany(g => g.Genres.Select(gr => gr.Name))
             .GroupBy(name => name)
@@ -97,7 +100,7 @@ public class DashboardManager(
             TotalOwned         = games.Count,
             TotalPlaytimeHours = Math.Round(totalPlaytime, 1),
             FavoriteGenre      = favoriteGenre,
-            MostPlayedGame     = mostPlayed?.PlaytimeHours > 0 ? mostPlayed.Name : null
+            MostPlayedGame     = mostPlayed is not null && HoursOf(mostPlayed) > 0 ? mostPlayed.Name : null
         };
 
         return new DashboardDto

@@ -52,5 +52,7 @@ public static class JournalStatuses
     public const string Dropped   = "Dropped";
     public const string Replaying = "Replaying";
 
+    public static readonly IReadOnlyList<string> All = [Backlog, Playing, Finished, Paused, Dropped, Replaying];
+
     public static bool IsActive(string status) => status is Playing or Replaying;
 }

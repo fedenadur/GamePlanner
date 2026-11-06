@@ -29,9 +29,8 @@ public class StatsDashboardManager(GamePlannerDbContext db)
         var playingEntries  = journal.Where(j => j.Status == JournalStatuses.Playing).ToList();
         var backlogEntries  = journal.Where(j => j.Status == JournalStatuses.Backlog).ToList();
 
-        // Never played = no hours at all and still Backlog (no journal entry counts as Backlog)
         bool IsNeverPlayed(Game g) =>
-            HoursOf(g) == 0 && journalByGame.GetValueOrDefault(g.Id)?.Status is null or JournalStatuses.Backlog;
+            PlaytimeCalculator.IsNeverPlayed(HoursOf(g), journalByGame.GetValueOrDefault(g.Id)?.Status);
         var neverPlayed = games.Count(IsNeverPlayed);
 
         // Library

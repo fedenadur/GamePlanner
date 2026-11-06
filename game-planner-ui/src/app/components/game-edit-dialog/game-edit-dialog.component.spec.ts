@@ -16,6 +16,20 @@ function make(over: Partial<Game> = {}) {
 }
 
 describe('GameEditDialogComponent', () => {
+  it('sends an empty cover when the user clears a stored cover', () => {
+    const { svc, cmp } = make({ coverImageUrl: 'https://img/x.jpg' });
+    cmp.coverImageUrl = '   ';
+    cmp.save();
+    expect(svc.updateGame.calls.mostRecent().args[1].coverImageUrl).toBe('');
+  });
+
+  it('sends the trimmed cover URL', () => {
+    const { svc, cmp } = make();
+    cmp.coverImageUrl = ' https://img/y.jpg ';
+    cmp.save();
+    expect(svc.updateGame.calls.mostRecent().args[1].coverImageUrl).toBe('https://img/y.jpg');
+  });
+
   it('maps hours to minutes and genres from comma text', () => {
     const { svc, cmp } = make();
     cmp.hours = 2.5;

@@ -79,7 +79,8 @@ export class GameEditDialogComponent implements OnInit {
       store: this.store,
       playableDevices: this.sameAsDefault(this.store) ? [] : [...this.selectedDevices],
       isFavorite: this.isFavorite,
-      coverImageUrl: this.coverImageUrl.trim() || null
+      // '' clears a stored cover (sp_UpdateGame keeps the cover only when it gets NULL)
+      coverImageUrl: this.coverImageUrl.trim()
     }).subscribe({
       next: () => { this.saving = false; this.saved.emit(); },
       error: () => { this.saving = false; this.error = 'Could not save changes. Please try again.'; }

@@ -23,6 +23,7 @@ export interface Game {
   sessionCount: number;
   totalHours: number;
   releaseYear?: number | null;
+  lengthHours?: number | null;
 }
 
 export interface GameDetail extends Game {

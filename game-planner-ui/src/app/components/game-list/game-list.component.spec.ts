@@ -1,7 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { NEVER, of, throwError } from 'rxjs';
 import { Game, GameService } from '../../services/game.service';
-import { GameListComponent } from './game-list.component';
+import { GameListComponent, lengthBucket } from './game-list.component';
 
 describe('GameListComponent delete failure', () => {
   let svc: jasmine.SpyObj<GameService>;
@@ -49,10 +49,10 @@ describe('GameListComponent filters', () => {
     const svc = jasmine.createSpyObj<GameService>('GameService', ['getGames']);
     cmp = new GameListComponent(svc);
     cmp.games = [
-      game({ id: 1, name: 'A', status: 'Playing', store: 'Steam', playableDevices: ['PC'], estimatedMinutes: 300 }),
-      game({ id: 2, name: 'B', status: 'Finished', store: 'Epic', playableDevices: ['Switch'], estimatedMinutes: 1800, isFavorite: true }),
-      game({ id: 3, name: 'C', status: 'Backlog', store: 'Steam', playableDevices: [], estimatedMinutes: 0 }),
-      game({ id: 4, name: 'D', status: 'Backlog', store: 'GOG', playableDevices: ['PC', 'Xbox'], estimatedMinutes: 1801 })
+      game({ id: 1, name: 'A', status: 'Playing', store: 'Steam', playableDevices: ['PC'], lengthHours: 5 }),
+      game({ id: 2, name: 'B', status: 'Finished', store: 'Epic', playableDevices: ['Switch'], lengthHours: 30, isFavorite: true }),
+      game({ id: 3, name: 'C', status: 'Backlog', store: 'Steam', playableDevices: [], lengthHours: null }),
+      game({ id: 4, name: 'D', status: 'Backlog', store: 'GOG', playableDevices: ['PC', 'Xbox'], lengthHours: 30.02 })
     ];
   });
 
@@ -73,7 +73,7 @@ describe('GameListComponent filters', () => {
     expect(names()).toEqual(['B', 'C']);
   });
 
-  it('length Unknown matches games with estimatedMinutes 0', () => {
+  it('length filter uses lengthHours; unknown length matches only Unknown or no filter', () => {
     cmp.selectedLengths.add('Unknown');
     expect(names()).toEqual(['C']);
     cmp.selectedLengths.clear();
@@ -85,6 +85,21 @@ describe('GameListComponent filters', () => {
     cmp.selectedLengths.clear();
     cmp.selectedLengths.add('Short');
     expect(names()).toEqual(['A']);
+    cmp.selectedLengths.add('Medium');
+    cmp.selectedLengths.add('Long');
+    expect(names()).toEqual(['A', 'B', 'D']);
+  });
+
+  it('length buckets: 10 h and 30 h are Medium; estimatedMinutes alone is ignored', () => {
+    expect(lengthBucket(9.9)).toBe('Short');
+    expect(lengthBucket(10)).toBe('Medium');
+    expect(lengthBucket(30)).toBe('Medium');
+    expect(lengthBucket(30.5)).toBe('Long');
+    expect(lengthBucket(null)).toBe('Unknown');
+    expect(lengthBucket(undefined)).toBe('Unknown');
+    cmp.games = [game({ id: 9, name: 'Steam placeholder', estimatedMinutes: 60, lengthHours: null })];
+    cmp.selectedLengths.add('Short');
+    expect(names()).toEqual([]);
   });
 
   it('favorites only', () => {

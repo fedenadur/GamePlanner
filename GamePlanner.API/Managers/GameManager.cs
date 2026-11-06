@@ -29,8 +29,9 @@ public class GameManager(GamePlannerDbContext db, IConfiguration config)
 
         var journal = await GameLibraryEnrichment.LoadJournalStatusesAsync(db, userId, games.Select(g => g.Id).ToList());
         var sessions = await GameLibraryEnrichment.LoadSessionTotalsAsync(db, userId);
+        var hltb = await GameLibraryEnrichment.LoadHltbMainStoryAsync(db, games);
 
-        return games.Select(g => GameLibraryEnrichment.ToLibraryDto(g, journal, sessions)).ToList();
+        return games.Select(g => GameLibraryEnrichment.ToLibraryDto(g, journal, sessions, hltb)).ToList();
     }
 
     public async Task<GameDto?> GetByIdAsync(int id, int userId)
@@ -48,7 +49,8 @@ public class GameManager(GamePlannerDbContext db, IConfiguration config)
 
         var journal = await GameLibraryEnrichment.LoadJournalStatusesAsync(db, userId, [game.Id]);
         var sessions = await GameLibraryEnrichment.LoadSessionTotalsAsync(db, userId, [game.Id]);
-        return GameLibraryEnrichment.ToLibraryDto(game, journal, sessions);
+        var hltb = await GameLibraryEnrichment.LoadHltbMainStoryAsync(db, [game]);
+        return GameLibraryEnrichment.ToLibraryDto(game, journal, sessions, hltb);
     }
 
     public async Task<GameDetailDto?> GetDetailAsync(int id, int userId)
@@ -74,7 +76,8 @@ public class GameManager(GamePlannerDbContext db, IConfiguration config)
 
         var journal = await GameLibraryEnrichment.LoadJournalStatusesAsync(db, userId, [game.Id]);
         var sessions = await GameLibraryEnrichment.LoadSessionTotalsAsync(db, userId, [game.Id]);
-        var base_ = GameLibraryEnrichment.ToLibraryDto(game, journal, sessions);
+        var lengths = await GameLibraryEnrichment.LoadHltbMainStoryAsync(db, [game]);
+        var base_ = GameLibraryEnrichment.ToLibraryDto(game, journal, sessions, lengths);
 
         return new GameDetailDto
         {
@@ -97,6 +100,7 @@ public class GameManager(GamePlannerDbContext db, IConfiguration config)
             SessionCount       = base_.SessionCount,
             TotalHours         = base_.TotalHours,
             ReleaseYear        = base_.ReleaseYear,
+            LengthHours        = base_.LengthHours,
             IGDBId             = game.IGDBId,
             SteamAppId         = game.SteamAppId,
             SteamUrl           = game.SteamAppId.HasValue

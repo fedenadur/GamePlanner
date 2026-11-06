@@ -5,9 +5,9 @@ namespace GamePlanner.API.Mapping;
 
 public static class GameMapping
 {
-    public static GameDto ToDto(this Game game) => game.ToDto(JournalStatuses.Backlog, 0, 0);
+    public static GameDto ToDto(this Game game) => game.ToDto(JournalStatuses.Backlog, 0, 0, null);
 
-    public static GameDto ToDto(this Game game, string status, double loggedHours, int sessionCount) => new()
+    public static GameDto ToDto(this Game game, string status, double loggedHours, int sessionCount, double? hltbMainStory) => new()
     {
         Id             = game.Id,
         Name           = game.Name,
@@ -29,6 +29,7 @@ public static class GameMapping
         LoggedHours        = loggedHours,
         SessionCount       = sessionCount,
         TotalHours         = PlaytimeCalculator.TotalHours(game.PlaytimeHours, loggedHours),
-        ReleaseYear        = game.FirstReleaseDate?.Year
+        ReleaseYear        = game.FirstReleaseDate?.Year,
+        LengthHours        = GameLength.Hours(game.SteamAppId, game.EstimatedMinutes, hltbMainStory)
     };
 }

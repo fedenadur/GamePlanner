@@ -6,10 +6,10 @@ import { JOURNAL_STATUSES, statusColor, SELECTABLE_DEVICES, STORE_LABELS, DEVICE
 
 export type LengthBucket = 'Short' | 'Medium' | 'Long' | 'Unknown';
 
-export function lengthBucket(estimatedMinutes: number | null | undefined): LengthBucket {
-  if (!estimatedMinutes || estimatedMinutes <= 0) return 'Unknown';
-  const hours = estimatedMinutes / 60;
-  return hours < 10 ? 'Short' : hours <= 30 ? 'Medium' : 'Long';
+// Same boundaries as the backend GameKnowledge.LengthBucket; lengthHours comes from the API (HLTB, else estimate).
+export function lengthBucket(lengthHours: number | null | undefined): LengthBucket {
+  if (lengthHours == null || lengthHours <= 0) return 'Unknown';
+  return lengthHours < 10 ? 'Short' : lengthHours <= 30 ? 'Medium' : 'Long';
 }
 
 @Component({
@@ -94,7 +94,7 @@ export class GameListComponent implements OnInit {
       && (this.selectedStores.size === 0 || this.selectedStores.has(g.store))
       && (this.selectedDevices.size === 0 || g.playableDevices.length === 0
           || g.playableDevices.some(d => this.selectedDevices.has(d)))
-      && (this.selectedLengths.size === 0 || this.selectedLengths.has(lengthBucket(g.estimatedMinutes)))
+      && (this.selectedLengths.size === 0 || this.selectedLengths.has(lengthBucket(g.lengthHours)))
       && (!this.favoritesOnly || g.isFavorite);
   }
 

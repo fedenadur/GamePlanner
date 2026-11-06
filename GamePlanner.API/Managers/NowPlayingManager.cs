@@ -40,6 +40,7 @@ public class NowPlayingManager(GamePlannerDbContext db, IConfiguration config)
         var gameIds = rows.Select(r => r.GameId).ToList();
         var journal = await GameLibraryEnrichment.LoadJournalStatusesAsync(db, userId, gameIds);
         var totals = await GameLibraryEnrichment.LoadSessionTotalsAsync(db, userId, gameIds);
+        var hltb = await GameLibraryEnrichment.LoadHltbMainStoryAsync(db, rows.Select(r => r.Game).ToList());
         var sessions = await db.PlaySessions
             .Where(s => s.UserId == userId && gameIds.Contains(s.GameId))
             .OrderByDescending(s => s.PlayedOn).ThenByDescending(s => s.Id)
@@ -55,7 +56,7 @@ public class NowPlayingManager(GamePlannerDbContext db, IConfiguration config)
             return new NowPlayingSlotDto
             {
                 Device       = device,
-                Game         = row is null ? null : GameLibraryEnrichment.ToLibraryDto(row.Game, journal, totals),
+                Game         = row is null ? null : GameLibraryEnrichment.ToLibraryDto(row.Game, journal, totals, hltb),
                 PlayingSince = row?.AddedAt,
                 RecentSessions = row is null ? [] : sessions.Where(s => s.GameId == row.GameId).Take(3).ToList()
             };

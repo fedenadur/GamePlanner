@@ -230,4 +230,35 @@ public class GameLibraryTests
         }
         finally { await MvpTestData.CleanupAsync(prefix); }
     }
+
+    [Fact]
+    public async Task GetAll_LengthHours_HltbThenEstimate_SteamPlaceholderUnknown()
+    {
+        var prefix = NewPrefix();
+        try
+        {
+            var user = await MvpTestData.CreateUserAsync(prefix);
+            var withHltb = await MvpTestData.CreateGameAsync(user, prefix + "hltb", estimatedMinutes: 60);
+            var placeholder = await MvpTestData.CreateGameAsync(user, prefix + "placeholder", estimatedMinutes: 60);
+            var manual = await MvpTestData.CreateGameAsync(user, prefix + "manual", estimatedMinutes: 600);
+            var appId = Random.Shared.Next(900_000_000, 999_999_999);
+            await ExecAsync("UPDATE Games SET SteamAppId = @appId WHERE Id = @withHltb", new { appId, withHltb });
+            await ExecAsync("UPDATE Games SET SteamAppId = @other WHERE Id = @placeholder", new { other = appId - 1, placeholder });
+            await ExecAsync("INSERT INTO GamesHLTB (Name, SteamAppId, MainStoryHours) VALUES (@n, @appId, 12)", new { n = prefix + "x", appId });
+
+            var manager = CreateManager();
+            var all = await manager.GetAllAsync(user);
+
+            Assert.Equal(12, all.Single(g => g.Id == withHltb).LengthHours);
+            Assert.Null(all.Single(g => g.Id == placeholder).LengthHours);
+            Assert.Equal(10, all.Single(g => g.Id == manual).LengthHours);
+            Assert.Equal(12, (await manager.GetDetailAsync(withHltb, user))!.LengthHours);
+            Assert.Null((await manager.GetByIdAsync(placeholder, user))!.LengthHours);
+        }
+        finally
+        {
+            await ExecAsync("DELETE FROM GamesHLTB WHERE Name LIKE @p", new { p = prefix + "%" });
+            await MvpTestData.CleanupAsync(prefix);
+        }
+    }
 }

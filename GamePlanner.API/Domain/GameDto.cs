@@ -21,6 +21,7 @@ public class GameDto
     public int SessionCount { get; set; }
     public double TotalHours { get; set; }
     public int? ReleaseYear { get; set; }
+    public double? LengthHours { get; set; }
 }
 
 public class GameDetailDto : GameDto

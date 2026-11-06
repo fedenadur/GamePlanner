@@ -147,8 +147,10 @@ public class WhatToPlayManagerTests
             var bySteam = await MvpTestData.CreateGameAsync(user, prefix + "steamgame");
             var byName = await MvpTestData.CreateGameAsync(user, prefix + "namegame");
             var byEstimate = await MvpTestData.CreateGameAsync(user, prefix + "estimate", estimatedMinutes: 90);
+            var placeholder = await MvpTestData.CreateGameAsync(user, prefix + "placeholder", estimatedMinutes: 60);
             var appId = Random.Shared.Next(900_000_000, 999_999_999);
             await ExecAsync("UPDATE Games SET SteamAppId = @appId WHERE Id = @bySteam", new { appId, bySteam });
+            await ExecAsync("UPDATE Games SET SteamAppId = @other WHERE Id = @placeholder", new { other = appId - 1, placeholder });
             await ExecAsync("INSERT INTO GamesHLTB (Name, SteamAppId, MainStoryHours) VALUES (@n, @appId, 12)", new { n = prefix + "other", appId });
             await ExecAsync("INSERT INTO GamesHLTB (Name, MainStoryHours) VALUES (@n, 7)", new { n = prefix + "NAMEGAME" });
 
@@ -157,6 +159,7 @@ public class WhatToPlayManagerTests
             Assert.Equal(12, results.Single(r => r.GameId == bySteam).LengthHours);
             Assert.Equal(7, results.Single(r => r.GameId == byName).LengthHours);
             Assert.Equal(1.5, results.Single(r => r.GameId == byEstimate).LengthHours);
+            Assert.Null(results.Single(r => r.GameId == placeholder).LengthHours);
         }
         finally
         {

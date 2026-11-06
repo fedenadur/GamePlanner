@@ -22,10 +22,10 @@ export class SidebarComponent {
   mainNavItems: NavItem[] = [
     { label: 'My Games',        icon: '🎮', route: '/games' },
     { label: 'Now Playing',     icon: '🕹️', route: '/now-playing' },
-    { label: 'Session Planner', icon: '📅', route: '/planner' },
+    { label: 'Session Planner', icon: '📅', route: '/what-to-play' },
     { label: 'Calendar',        icon: '🗓️', route: '/calendar' },
     { label: 'Tracked Games',   icon: '🔔', route: '/tracked-games' },
-    { label: 'Backlog',         icon: '📋', route: '/backlog-prioritizer' },
+    { label: 'Backlog',         icon: '📋', route: '/what-to-play' },
     { label: 'Journal',         icon: '📖', route: '/journal' },
     { label: 'Stats',           icon: '📊', route: '/stats' },
   ];

@@ -72,31 +72,6 @@ export interface CreateGameFromIgdbRequest {
   store?: string;
 }
 
-export interface SessionRequest {
-  availableMinutes: number;
-  mood: string;
-}
-
-export interface SessionRecommendation {
-  game: Game | null;
-  isExactMatch: boolean;
-  message: string;
-}
-
-export interface SessionPlannerRequest {
-  playedStatus: string;
-  mood:         string;
-  duration:     string;
-  perspective:  string;
-  gameModes:    string[];
-  gameLength:   string;
-}
-
-export interface SessionPlannerResult {
-  games: Game[];
-  message: string;
-}
-
 @Injectable({ providedIn: 'root' })
 export class GameService {
   private api = `${environment.apiUrl}/api`;
@@ -133,14 +108,6 @@ export class GameService {
 
   createGameFromIgdb(request: CreateGameFromIgdbRequest): Observable<any> {
     return this.http.post(`${this.api}/games/from-igdb`, request);
-  }
-
-  getRecommendation(request: SessionRequest): Observable<SessionRecommendation> {
-    return this.http.post<SessionRecommendation>(`${this.api}/session/recommend`, request);
-  }
-
-  planSession(request: SessionPlannerRequest): Observable<SessionPlannerResult> {
-    return this.http.post<SessionPlannerResult>(`${this.api}/session/plan`, request);
   }
 
   getGameImages(type = 'screenshot', igdbId?: number | null, gameId?: number | null): Observable<GameImage[]> {

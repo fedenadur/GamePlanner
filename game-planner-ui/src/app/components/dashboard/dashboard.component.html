@@ -9,7 +9,7 @@
       <p class="hero-sub">Ready to play?</p>
     </div>
     <div class="hero-actions">
-      <a routerLink="/planner" class="btn btn-primary">Session Planner</a>
+      <a routerLink="/what-to-play" class="btn btn-primary">Session Planner</a>
       <a routerLink="/games"   class="btn btn-ghost">Backlog</a>
       <a routerLink="/steam"   class="btn btn-ghost">Import Steam</a>
     </div>
@@ -106,7 +106,7 @@
     <article class="card card-tonight-full">
       <header class="card-head">
         <h2>Tonight's Pick</h2>
-        <a routerLink="/backlog-prioritizer" class="card-link">More →</a>
+        <a routerLink="/what-to-play" class="card-link">More →</a>
       </header>
       <div class="card-body tonight-full-body">
         <div *ngIf="!data.tonightRecommendation" class="empty-mini">No recommendation yet.</div>
@@ -152,7 +152,7 @@
         </div>
         <div class="backlog-actions">
           <button class="btn btn-ghost">Browse by Genre</button>
-          <a routerLink="/planner" class="btn btn-primary">Start New Session</a>
+          <a routerLink="/what-to-play" class="btn btn-primary">Start New Session</a>
           <a routerLink="/steam" class="btn btn-ghost">Import More</a>
         </div>
       </div>

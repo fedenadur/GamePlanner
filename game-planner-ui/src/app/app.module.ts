@@ -7,7 +7,7 @@ import { AuthInterceptor } from './interceptors/auth.interceptor';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { GameListComponent } from './components/game-list/game-list.component';
-import { SessionPlannerComponent } from './components/session-planner/session-planner.component';
+import { WhatToPlayComponent } from './components/what-to-play/what-to-play.component';
 import { SteamImportComponent } from './components/steam-import/steam-import.component';
 import { GameCardComponent } from './components/game-card/game-card.component';
 import { LoginComponent } from './components/login/login.component';
@@ -17,7 +17,6 @@ import { WorkersComponent } from './components/workers/workers.component';
 import { GameDetailComponent } from './components/game-detail/game-detail.component';
 import { CalendarComponent } from './components/calendar/calendar.component';
 import { NowPlayingComponent } from './components/now-playing/now-playing.component';
-import { BacklogPrioritizerComponent } from './components/backlog-prioritizer/backlog-prioritizer.component';
 import { ClickOutsideDirective } from './directives/click-outside.directive';
 import { IgdbSearchModalComponent } from './components/igdb-search-modal/igdb-search-modal.component';
 import { JournalComponent } from './components/journal/journal.component';
@@ -34,7 +33,7 @@ import { ConfirmDialogComponent } from './components/confirm-dialog/confirm-dial
         AppComponent,
         SidebarComponent,
         GameListComponent,
-        SessionPlannerComponent,
+        WhatToPlayComponent,
         SteamImportComponent,
         GameCardComponent,
         LoginComponent,
@@ -44,7 +43,6 @@ import { ConfirmDialogComponent } from './components/confirm-dialog/confirm-dial
         GameDetailComponent,
         CalendarComponent,
         NowPlayingComponent,
-        BacklogPrioritizerComponent,
         ClickOutsideDirective,
         IgdbSearchModalComponent,
         JournalComponent,

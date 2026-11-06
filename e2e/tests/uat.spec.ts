@@ -76,7 +76,7 @@ test.describe.serial('GamePlanner UAT', () => {
 
     test('empty state: a filter matching nothing shows the empty copy', async ({ page }) => {
       await filterGames(page, `uat-nomatch-${ts}`);
-      await expect(page.getByText('No games match your filters.', { exact: true })).toBeVisible();
+      await expect(page.getByText('No games match your filters. Clear them to see your whole library.', { exact: true })).toBeVisible();
     });
 
     test('add a game through IGDB search', async ({ page }) => {
@@ -125,19 +125,30 @@ test.describe.serial('GamePlanner UAT', () => {
       await page.goto('/now-playing');
       await expect(page.getByRole('heading', { name: 'Now Playing' })).toBeVisible();
 
-      await page.locator('button.add-slot-btn').first().click();
+      // Only an empty slot is used; a slot held by another game is never touched.
+      await page.locator('.slot .empty').first().getByRole('button', { name: 'Pick a game' }).click();
       await page.getByPlaceholder('Search your library…').fill(uatName);
       await page.locator('.picker-item', { hasText: uatName }).click();
 
-      const slot = page.locator('.shelf-slot.filled', { hasText: uatName });
+      const slot = page.locator('.slot', { hasText: uatName });
       await expect(slot).toBeVisible();
-      await slot.locator('.remove-btn').click();
-      await expect(page.locator('.shelf-slot.filled', { hasText: uatName })).toHaveCount(0);
+      await slot.getByRole('button', { name: 'Finish / remove' }).click();
+      await page.getByRole('button', { name: 'Just remove, keep status' }).click();
+      await expect(page.locator('.slot', { hasText: uatName })).toHaveCount(0);
     });
 
     test('journal: add an entry with notes and delete it', async ({ page }) => {
       await page.goto('/journal');
       await expect(page.getByRole('heading', { name: 'My Journal' })).toBeVisible();
+
+      // Placing the game in Now Playing already created its Playing entry: remove it so the picker offers the game.
+      const existing = page.locator('.game-tile', { hasText: uatName });
+      await expect(page.locator('.games-grid, .journal-empty').first()).toBeVisible();
+      if (await existing.count()) {
+        await existing.click();
+        await page.locator('.edit-footer .btn-delete').click();
+        await expect(existing).toHaveCount(0);
+      }
 
       await page.getByRole('button', { name: '+ Add Entry' }).click();
       await page.getByPlaceholder('Search your library…').fill(uatName);
@@ -156,21 +167,22 @@ test.describe.serial('GamePlanner UAT', () => {
       await expect(page.locator('.game-tile', { hasText: uatName })).toHaveCount(0);
     });
 
-    test('session planner returns only games from the UAT library', async ({ request }) => {
+    test('What to Play returns only games from the UAT library', async ({ request }) => {
       const a = api(request);
       const ownRes = await a.get('/api/games');
       expect(ownRes.status()).toBe(200);
       const own = new Set(((await ownRes.json()) as { id: number }[]).map(g => g.id));
       expect(own.has(gameId)).toBeTruthy();
 
-      const res = await request.post(`${API}/api/session/plan`, {
+      const { devices } = (await (await a.get('/api/profile/devices')).json()) as { devices: string[] };
+      const res = await request.post(`${API}/api/what-to-play`, {
         headers: bearer(),
-        data: { playedStatus: 'all', mood: '', duration: '', perspective: '', gameModes: [], gameLength: '' },
+        data: { device: devices[0] ?? 'General', sessionTime: 'Any', gameLength: 'Any', genres: [], modes: [], strategy: 'Default' },
       });
       expect(res.status()).toBe(200);
-      const plan = (await res.json()) as { games: { id: number }[] };
-      for (const g of plan.games) {
-        expect(own.has(g.id), `planner returned game ${g.id} outside the UAT library`).toBeTruthy();
+      const plan = (await res.json()) as { results: { gameId: number }[] };
+      for (const g of plan.results) {
+        expect(own.has(g.gameId), `What to Play returned game ${g.gameId} outside the UAT library`).toBeTruthy();
       }
     });
 
@@ -339,67 +351,14 @@ test.describe.serial('GamePlanner UAT', () => {
     });
   });
 
+  // The UAT account is a regular user (IsAdmin = 0), so workers are only checked for denial here.
+  // The admin-only "Run now" flows (GameSync, GameImageSync, GameHLTBSync, SteamPlaytimeSync) need an admin
+  // account and are not covered by this suite; the non-admin denial is also in daily-flow.spec.ts.
   test.describe('workers', () => {
-    interface WorkerRow { name: string; status: string; lastRunAt: string | null; lastError: string | null }
-
-    async function worker(request: APIRequestContext, name: string): Promise<WorkerRow> {
-      const res = await request.get(`${API}/api/worker`, { headers: bearer() });
-      expect(res.status()).toBe(200);
-      const row = ((await res.json()) as WorkerRow[]).find(w => w.name === name);
-      expect(row, `worker ${name} missing from GET /api/worker`).toBeTruthy();
-      return row!;
-    }
-
-    // The API serialises LastRunAt as UTC without an offset.
-    const asUtc = (s: string): number => Date.parse(/[zZ]|[+-]dd:dd$/.test(s) ? s : `${s}Z`);
-
-    for (const name of ['GameSyncWorker', 'GameImageSyncWorker', 'GameHLTBSyncWorker']) {
-      test(`${name}: Run now completes without error`, async ({ page, request }) => {
-        test.setTimeout(16 * 60_000);
-        const requested: string[] = [];
-        page.on('request', r => requested.push(r.url()));
-
-        await page.goto('/workers');
-        await expect(page.getByRole('heading', { name: 'Workers' })).toBeVisible();
-        const card = page.locator('.worker-card').filter({
-          has: page.locator('.worker-name', { hasText: new RegExp(`^${name}$`) }),
-        });
-        await expect(card).toBeVisible();
-
-        await expect.poll(async () => (await worker(request, name)).status, {
-          timeout: 15 * 60_000, intervals: [2_000],
-        }).not.toBe('Running');
-        const before = (await worker(request, name)).lastRunAt;
-
-        await card.getByRole('button', { name: /Run now/ }).click();
-
-        await expect.poll(async () => {
-          const w = await worker(request, name);
-          return w.lastRunAt !== before && w.status !== 'Running';
-        }, { timeout: 15 * 60_000, intervals: [2_000] }).toBe(true);
-
-        const after = await worker(request, name);
-        expect(after.status).toBe('Completed');
-        expect(after.lastError).toBeNull();
-        expect(requested.filter(u => u.includes('force=true'))).toEqual([]);
-      });
-    }
-
-    // Still asserts the restart-initiated run (recorded D-04 deviation, decision of 2026-10-24);
-    // a run-now trigger for this worker was added later in quick task 261027-qhu.
-    test('SteamPlaytimeSyncWorker restart-initiated run (accepted D-04 deviation, 05-06 Task 2)', async ({ request }) => {
-      await expect.poll(async () => (await worker(request, 'SteamPlaytimeSyncWorker')).status, {
-        timeout: 5 * 60_000, intervals: [2_000],
-      }).not.toBe('Running');
-
-      const w = await worker(request, 'SteamPlaytimeSyncWorker');
-      expect(w.status).toBe('Completed');
-      expect(w.lastError).toBeNull();
-      expect(w.lastRunAt).not.toBeNull();
-      const floor = process.env.UAT_API_STARTED_AT
-        ? Date.parse(process.env.UAT_API_STARTED_AT)
-        : Date.now() - 24 * 60 * 60 * 1000;
-      expect(asUtc(w.lastRunAt!)).toBeGreaterThanOrEqual(floor);
+    test('non-admin API calls to workers are forbidden', async ({ request }) => {
+      expect((await request.get(`${API}/api/worker`, { headers: bearer() })).status()).toBe(403);
+      const run = await request.post(`${API}/api/worker/GameSyncWorker/run`, { headers: bearer() });
+      expect(run.status()).toBe(403);
     });
   });
 });

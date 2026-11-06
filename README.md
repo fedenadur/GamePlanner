@@ -6,7 +6,7 @@ Personal game-tracking web app: manage your library, see what to play next, trac
 
 Requirements: .NET 8 SDK, Node.js 14+ with npm, SQL Server (2019+ or Express), Chrome (for e2e).
 
-1. **Database.** In SSMS, run the scripts in `Database/` one by one in numeric order: `01` to `42` (`17b_AlterImportJobs_AddSteamId.sql` goes right after `17`). Scripts `40_MvpSchema.sql`, `41_MvpDataMigration.sql` and `42_MvpProcedures.sql` are the MVP: schema, migration of existing data, and the new stored procedures. New migrations take the next free number and are applied by hand.
+1. **Database.** In SSMS, run the scripts in `Database/` one by one in numeric order: `01` to `43` (`17b_AlterImportJobs_AddSteamId.sql` goes right after `17`). Scripts `40_MvpSchema.sql`, `41_MvpDataMigration.sql`, `42_MvpProcedures.sql` and `43_SteamImportStore.sql` are the MVP: schema, migration of existing data, the new stored procedures, and Store = Steam for Steam imports. New migrations take the next free number and are applied by hand.
 2. **Secrets** (not stored in the repo). In development, from `GamePlanner.API/`:
    ```bash
    dotnet user-secrets set "IGDB:ClientId" "..."

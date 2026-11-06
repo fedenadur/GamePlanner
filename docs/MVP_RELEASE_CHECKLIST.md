@@ -18,9 +18,10 @@ Branch `feat/mvp-now-playing`. Spec: `docs/superpowers/specs/2026-11-05-mvp-now-
 
 | Suite | Command | Result |
 |-------|---------|--------|
-| Backend | `dotnet test GamePlanner.Tests` (against `GamePlannerDB_Test`) | 223 passed, 0 failed, 0 skipped, 223 total (20 s) |
-| Frontend | `npx ng test --watch=false --browsers=ChromeHeadless` | 89 of 89 SUCCESS |
-| E2E | `cd e2e && npx playwright test` (API on :7174 and UI on :4200 against `GamePlannerDB`, as the UAT user) | 19 passed, 0 failed (17.4 s) |
+| Backend | `dotnet test GamePlanner.Tests` (against `GamePlannerDB_Test`, rebuilt with scripts 01-43) | 246 passed, 0 failed, 0 skipped, 246 total (20 s) |
+| Frontend | `npx ng test --watch=false --browsers=ChromeHeadless` | 99 of 99 SUCCESS |
+| Frontend build | `npx ng build` | succeeds (existing initial-bundle budget warning) |
+| E2E | `cd e2e && npx playwright test` (API on :7174 and UI on :4200 against `GamePlannerDB`, as the UAT user) | 19 passed, 0 failed (17.4 s); not re-run after the final review fixes |
 
 The E2E run includes `daily flow` (devices PC and Steam Deck, top pick on Steam Deck, 1,5 h session with a note, finish with 4 stars = rating 8, Journal shows Finished, game detail lists the session, What to Play no longer offers the game, cleanup and device restore; every cleanup call is checked and a failure fails the run) and `non-admin cannot see workers`.
 
@@ -42,7 +43,7 @@ Cleanup verification (fix round 1): user 17's devices were set to `[]` through t
 - The lightbox e2e fixture triggers `GameImageSyncWorker` when no game with 2+ screenshots exists; that needs an admin and would fail for the UAT user. It passed in the run above because a fixture game already existed.
 - The e2e suite writes to the owner database as the UAT user (cleanup in `afterAll`); it needs the API and UI running.
 - Phase 7 (Steam login hardening) is independent of the MVP and still pending.
-- Not checked in this release: a manual walk-through of every screen on narrow widths, and applying scripts 40-42 on a database built from zero (the owner database already has them; the test database is rebuilt from all scripts by `scripts/build-test-db.ps1` and the backend suite ran against it).
+- Not checked in this release: a manual walk-through of every screen on narrow widths, and applying scripts 40-43 on a database built from zero (the owner database already has them; the test database is rebuilt from all scripts by `scripts/build-test-db.ps1` and the backend suite ran against it).
 
 ## Deferred (spec section 3, non-goals)
 
@@ -54,7 +55,8 @@ Cleanup verification (fix round 1): user 17's devices were set to `[]` through t
 
 ## How to run
 
-1. Apply `Database/01` to `42` in order in SSMS (see `README.md`).
+1. Apply `Database/01` to `43` in order in SSMS (see `README.md`). `43_SteamImportStore.sql` makes Steam imports get Store = Steam.
+   - **Owner step:** the owner database `GamePlannerDB` already has 01-42; apply `43_SteamImportStore.sql` to it in SSMS (it was only applied to `GamePlannerDB_Test`).
 2. Set the four secrets (`dotnet user-secrets` or environment variables).
 3. `cd GamePlanner.API && dotnet run --launch-profile https`; `cd game-planner-ui && npm start`.
 4. To use Workers: `UPDATE Users SET IsAdmin = 1 WHERE Id = <id>;` and sign in again.

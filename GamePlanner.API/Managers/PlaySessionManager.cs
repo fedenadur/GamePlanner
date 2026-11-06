@@ -19,7 +19,17 @@ public class PlaySessionManager(GamePlannerDbContext db, IConfiguration config)
         if (hours < 0.1m || hours > 24m) throw new ArgumentException("Hours must be between 0.1 and 24.");
         if (r.Note is { Length: > MaxNoteLength }) throw new ArgumentException("Note must be 1000 characters or less.");
         if (r.PlayedOn?.Date > DateTime.UtcNow.Date) throw new ArgumentException("Date cannot be in the future.");
-        if (r.Device is null || (r.Device != DeviceTypes.General && !DeviceTypes.IsSelectable(r.Device))) throw new ArgumentException("Unknown device.");
+    }
+
+    // The device must be one of the user's devices, or General when the user has none.
+    // keepDevice: an edited session may keep the device it already has, even if the user removed it since.
+    private async Task ValidateDeviceAsync(int userId, string? device, string? keepDevice = null)
+    {
+        if (device is null) throw new ArgumentException("Unknown device.");
+        if (device == keepDevice) return;
+        var devices = await db.UserDevices.Where(d => d.UserId == userId).Select(d => d.Device).ToListAsync();
+        var valid = devices.Count == 0 ? device == DeviceTypes.General : devices.Contains(device);
+        if (!valid) throw new ArgumentException("Unknown device.");
     }
 
     private static DynamicParameters ToParameters(int userId, LogSessionRequest r)
@@ -49,6 +59,7 @@ public class PlaySessionManager(GamePlannerDbContext db, IConfiguration config)
     public async Task<int?> LogAsync(int userId, int gameId, LogSessionRequest request)
     {
         Validate(request);
+        await ValidateDeviceAsync(userId, request.Device);
         var p = ToParameters(userId, request);
         p.Add("GameId", gameId);
 
@@ -62,6 +73,9 @@ public class PlaySessionManager(GamePlannerDbContext db, IConfiguration config)
     public async Task<bool> UpdateAsync(int userId, int id, LogSessionRequest request)
     {
         Validate(request);
+        var current = await db.PlaySessions.Where(s => s.Id == id && s.UserId == userId).Select(s => s.Device).FirstOrDefaultAsync();
+        if (current is null) return false;
+        await ValidateDeviceAsync(userId, request.Device, current);
         var p = ToParameters(userId, request);
         p.Add("Id", id);
 

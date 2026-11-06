@@ -127,12 +127,30 @@ describe('GameDetailComponent play sessions', () => {
     expect(cmp.logDevices).toBeNull();
   });
 
-  it('+ Log session offers user devices plus General otherwise', () => {
+  it('+ Log session offers the user devices otherwise', () => {
     const { cmp } = buildComponent();
     cmp.ngOnInit();
     cmp.openLog();
-    expect(cmp.logDevices).toEqual(['PC', 'Switch', 'General']);
+    expect(cmp.logDevices).toEqual(['PC', 'Switch']);
+    expect(cmp.logDevice).toBe('PC');
     expect(cmp.logOpen).toBeTrue();
+  });
+
+  it('+ Log session offers only General when the user has no devices', () => {
+    const { cmp, settings } = buildComponent();
+    settings.getDevices.and.returnValue(of({ devices: [] }));
+    cmp.ngOnInit();
+    cmp.openLog();
+    expect(cmp.logDevices).toEqual(['General']);
+  });
+
+  it('+ Log session shows the load error and stays closed when devices fail to load', () => {
+    const { cmp, settings } = buildComponent();
+    settings.getDevices.and.returnValue(throwError(() => new Error('x')));
+    cmp.ngOnInit();
+    cmp.openLog();
+    expect(cmp.logOpen).toBeFalse();
+    expect(cmp.sessionsError).toBe('Could not load your devices. Check that the API is running, then reload.');
   });
 
   it('logs a session with the chosen device then refreshes', () => {

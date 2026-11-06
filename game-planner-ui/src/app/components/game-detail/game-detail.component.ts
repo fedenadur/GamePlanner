@@ -227,8 +227,9 @@ export class GameDetailComponent implements OnInit, OnDestroy {
       return;
     }
     this.settingsService.getDevices().subscribe({
-      next: (r) => { this.logDevices = [...r.devices, 'General']; this.logDevice = this.logDevices[0]; this.logOpen = true; },
-      error: () => { this.logDevices = ['General']; this.logDevice = 'General'; this.logOpen = true; }
+      // General is only valid when the user has no devices (the API rejects it otherwise).
+      next: (r) => { this.logDevices = r.devices.length ? r.devices : ['General']; this.logDevice = this.logDevices[0]; this.logOpen = true; },
+      error: () => { this.sessionsError = loadError('your devices'); }
     });
   }
 

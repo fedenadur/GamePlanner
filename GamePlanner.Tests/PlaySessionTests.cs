@@ -1,7 +1,11 @@
 // CONVENTION EXEMPTION (owner decision D-23): arrange/assert helpers use direct SQL against the _Test database.
+using System.Security.Claims;
 using Dapper;
+using GamePlanner.API.Controllers;
 using GamePlanner.API.Domain;
 using GamePlanner.API.Managers;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 
 namespace GamePlanner.Tests;
@@ -10,6 +14,14 @@ namespace GamePlanner.Tests;
 public class PlaySessionTests
 {
     private static string NewPrefix() => $"{MvpTestData.Prefix}ps-{Guid.NewGuid():N}-";
+
+    // A user with the default devices, so PC and SteamDeck sessions are valid.
+    private static async Task<int> CreateUserAsync(string prefix)
+    {
+        var user = await MvpTestData.CreateUserAsync(prefix);
+        await MvpTestData.SetDevicesAsync(user, DeviceTypes.PC, DeviceTypes.SteamDeck);
+        return user;
+    }
 
     private static PlaySessionManager CreateManager() =>
         new(TestDatabase.CreateContext(), TestDatabase.CreateConfig());
@@ -29,7 +41,7 @@ public class PlaySessionTests
         var prefix = NewPrefix();
         try
         {
-            var user = await MvpTestData.CreateUserAsync(prefix);
+            var user = await CreateUserAsync(prefix);
             var game = await MvpTestData.CreateGameAsync(user, prefix + "g");
             await using (var conn = new SqlConnection(TestDatabase.ConnectionString))
                 await conn.ExecuteAsync(
@@ -52,7 +64,7 @@ public class PlaySessionTests
         var prefix = NewPrefix();
         try
         {
-            var user = await MvpTestData.CreateUserAsync(prefix);
+            var user = await CreateUserAsync(prefix);
             var game = await MvpTestData.CreateGameAsync(user, prefix + "g");
 
             await CreateManager().LogAsync(user, game, Req());
@@ -68,8 +80,8 @@ public class PlaySessionTests
         var prefix = NewPrefix();
         try
         {
-            var owner = await MvpTestData.CreateUserAsync(prefix);
-            var intruder = await MvpTestData.CreateUserAsync(prefix);
+            var owner = await CreateUserAsync(prefix);
+            var intruder = await CreateUserAsync(prefix);
             var game = await MvpTestData.CreateGameAsync(owner, prefix + "g");
 
             Assert.Null(await CreateManager().LogAsync(intruder, game, Req()));
@@ -86,7 +98,7 @@ public class PlaySessionTests
         var prefix = NewPrefix();
         try
         {
-            var user = await MvpTestData.CreateUserAsync(prefix);
+            var user = await CreateUserAsync(prefix);
             var game = await MvpTestData.CreateGameAsync(user, prefix + "g");
 
             var ex = await Assert.ThrowsAsync<ArgumentException>(() => CreateManager().LogAsync(user, game, Req((decimal)hours)));
@@ -101,7 +113,7 @@ public class PlaySessionTests
         var prefix = NewPrefix();
         try
         {
-            var user = await MvpTestData.CreateUserAsync(prefix);
+            var user = await CreateUserAsync(prefix);
             var game = await MvpTestData.CreateGameAsync(user, prefix + "g");
             var manager = CreateManager();
 
@@ -112,7 +124,73 @@ public class PlaySessionTests
             var device = await Assert.ThrowsAsync<ArgumentException>(() => manager.LogAsync(user, game, Req(device: "Nope")));
             Assert.Equal("Unknown device.", device.Message);
 
-            Assert.NotNull(await manager.LogAsync(user, game, Req(device: DeviceTypes.General)));
+            var general = await Assert.ThrowsAsync<ArgumentException>(() => manager.LogAsync(user, game, Req(device: DeviceTypes.General)));
+            Assert.Equal("Unknown device.", general.Message);
+        }
+        finally { await MvpTestData.CleanupAsync(prefix); }
+    }
+
+    [Fact]
+    public async Task Log_DeviceNotOwned_Rejected_GeneralOnlyWithoutDevices()
+    {
+        var prefix = NewPrefix();
+        try
+        {
+            var user = await CreateUserAsync(prefix);
+            var game = await MvpTestData.CreateGameAsync(user, prefix + "g");
+            var manager = CreateManager();
+
+            var notOwned = await Assert.ThrowsAsync<ArgumentException>(() => manager.LogAsync(user, game, Req(device: DeviceTypes.Switch)));
+            Assert.Equal("Unknown device.", notOwned.Message);
+
+            var noDevices = await MvpTestData.CreateUserAsync(prefix);
+            var other = await MvpTestData.CreateGameAsync(noDevices, prefix + "h");
+            await Assert.ThrowsAsync<ArgumentException>(() => manager.LogAsync(noDevices, other, Req(device: DeviceTypes.PC)));
+            Assert.NotNull(await manager.LogAsync(noDevices, other, Req(device: DeviceTypes.General)));
+            Assert.Equal(1, await ScalarAsync<int>("SELECT COUNT(*) FROM PlaySessions WHERE UserId IN (@user, @noDevices)", new { user, noDevices }));
+        }
+        finally { await MvpTestData.CleanupAsync(prefix); }
+    }
+
+    [Fact]
+    public async Task Update_KeepsRemovedDevice_ButCannotMoveToAnotherUnownedDevice()
+    {
+        var prefix = NewPrefix();
+        try
+        {
+            var user = await CreateUserAsync(prefix);
+            var game = await MvpTestData.CreateGameAsync(user, prefix + "g");
+            var manager = CreateManager();
+            var id = (await manager.LogAsync(user, game, Req(1, DeviceTypes.SteamDeck)))!.Value;
+            await MvpTestData.SetDevicesAsync(user, DeviceTypes.PC);
+
+            Assert.True(await manager.UpdateAsync(user, id, Req(2, DeviceTypes.SteamDeck)));
+            await Assert.ThrowsAsync<ArgumentException>(() => manager.UpdateAsync(user, id, Req(2, DeviceTypes.Xbox)));
+            Assert.True(await manager.UpdateAsync(user, id, Req(3, DeviceTypes.PC)));
+        }
+        finally { await MvpTestData.CleanupAsync(prefix); }
+    }
+
+    [Fact]
+    public async Task Controller_UnownedDevice_Returns400()
+    {
+        var prefix = NewPrefix();
+        try
+        {
+            var user = await CreateUserAsync(prefix);
+            var game = await MvpTestData.CreateGameAsync(user, prefix + "g");
+            var controller = new PlaySessionsController(CreateManager())
+            {
+                ControllerContext = new ControllerContext
+                {
+                    HttpContext = new DefaultHttpContext
+                    {
+                        User = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, user.ToString())], "test"))
+                    }
+                }
+            };
+
+            Assert.IsType<BadRequestObjectResult>(await controller.Log(game, Req(device: DeviceTypes.Mobile)));
         }
         finally { await MvpTestData.CleanupAsync(prefix); }
     }
@@ -123,7 +201,7 @@ public class PlaySessionTests
         var prefix = NewPrefix();
         try
         {
-            var user = await MvpTestData.CreateUserAsync(prefix);
+            var user = await CreateUserAsync(prefix);
             var game = await MvpTestData.CreateGameAsync(user, prefix + "g", steamHours: 42);
 
             await CreateManager().LogAsync(user, game, Req(3));
@@ -139,7 +217,7 @@ public class PlaySessionTests
         var prefix = NewPrefix();
         try
         {
-            var user = await MvpTestData.CreateUserAsync(prefix);
+            var user = await CreateUserAsync(prefix);
             var game = await MvpTestData.CreateGameAsync(user, prefix + "g");
             var manager = CreateManager();
             var id = (await manager.LogAsync(user, game, Req(1)))!.Value;
@@ -162,8 +240,8 @@ public class PlaySessionTests
         var prefix = NewPrefix();
         try
         {
-            var owner = await MvpTestData.CreateUserAsync(prefix);
-            var intruder = await MvpTestData.CreateUserAsync(prefix);
+            var owner = await CreateUserAsync(prefix);
+            var intruder = await CreateUserAsync(prefix);
             var game = await MvpTestData.CreateGameAsync(owner, prefix + "g");
             var manager = CreateManager();
             var id = (await manager.LogAsync(owner, game, Req()))!.Value;
@@ -181,7 +259,7 @@ public class PlaySessionTests
         var prefix = NewPrefix();
         try
         {
-            var user = await MvpTestData.CreateUserAsync(prefix);
+            var user = await CreateUserAsync(prefix);
             var game = await MvpTestData.CreateGameAsync(user, prefix + "g");
             var manager = CreateManager();
             await manager.LogAsync(user, game, Req());
@@ -199,7 +277,7 @@ public class PlaySessionTests
         var prefix = NewPrefix();
         try
         {
-            var user = await MvpTestData.CreateUserAsync(prefix);
+            var user = await CreateUserAsync(prefix);
             await MvpTestData.SetDevicesAsync(user, DeviceTypes.PC);
             var game = await MvpTestData.CreateGameAsync(user, prefix + "g");
             var manager = CreateManager();
@@ -227,7 +305,7 @@ public class PlaySessionTests
         var prefix = NewPrefix();
         try
         {
-            var user = await MvpTestData.CreateUserAsync(prefix);
+            var user = await CreateUserAsync(prefix);
             var game = await MvpTestData.CreateGameAsync(user, prefix + "g");
             var manager = CreateManager();
             var id = (await manager.LogAsync(user, game, Req(1)))!.Value;
@@ -245,7 +323,7 @@ public class PlaySessionTests
         var prefix = NewPrefix();
         try
         {
-            var user = await MvpTestData.CreateUserAsync(prefix);
+            var user = await CreateUserAsync(prefix);
             var game = await MvpTestData.CreateGameAsync(user, prefix + "g");
             var manager = CreateManager();
             var id = (await manager.LogAsync(user, game, Req(1)))!.Value;
@@ -263,7 +341,7 @@ public class PlaySessionTests
         var prefix = NewPrefix();
         try
         {
-            var user = await MvpTestData.CreateUserAsync(prefix);
+            var user = await CreateUserAsync(prefix);
             var game = await MvpTestData.CreateGameAsync(user, prefix + "g");
             var manager = CreateManager();
             var recent = DateTime.UtcNow.Date.AddDays(-1);
@@ -281,7 +359,7 @@ public class PlaySessionTests
         var prefix = NewPrefix();
         try
         {
-            var user = await MvpTestData.CreateUserAsync(prefix);
+            var user = await CreateUserAsync(prefix);
             var game = await MvpTestData.CreateGameAsync(user, prefix + "g");
             var manager = CreateManager();
             var older = DateTime.UtcNow.Date.AddDays(-5);
@@ -305,7 +383,7 @@ public class PlaySessionTests
         var prefix = NewPrefix();
         try
         {
-            var user = await MvpTestData.CreateUserAsync(prefix);
+            var user = await CreateUserAsync(prefix);
             var game = await MvpTestData.CreateGameAsync(user, prefix + "g");
             var task = CreateManager().LogAsync(user, game, Req((decimal)hours));
             if (accepted) Assert.NotNull(await task);
@@ -320,7 +398,7 @@ public class PlaySessionTests
         var prefix = NewPrefix();
         try
         {
-            var user = await MvpTestData.CreateUserAsync(prefix);
+            var user = await CreateUserAsync(prefix);
             var game = await MvpTestData.CreateGameAsync(user, prefix + "g");
             var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
                 CreateManager().LogAsync(user, game, new LogSessionRequest { Device = null!, Hours = 1 }));

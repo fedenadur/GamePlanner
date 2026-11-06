@@ -33,8 +33,8 @@ v1.1 closes the backlog left after v1.0 and settles, with evidence, whether anot
 
 - [x] **Phase 6: Game Images & Metadata** - Land the uncommitted image/lightbox work, then make sure every game gets its cover, screenshots and correct IGDB match (completed 2026-11-05)
 - [ ] **Phase 7: Steam Login Hardening** - Any number of first-time Steam users can log in, and the OpenID round trip is browser-bound, rate limited and safe against double submits
-- [ ] **Phase 8: Manual Playtime** - User can record hours Steam can't sync, and Steam sync never lowers them
-- [ ] **Phase 9: UI Copy & Type Scale** - Error and empty states give a next step, and the stylesheet uses one smaller type scale
+- [~] **Phase 8: Manual Playtime** - Superseded by MVP (play sessions): hours are logged as separate play sessions, so PLAY-02 no longer applies
+- [~] **Phase 9: UI Copy & Type Scale** - Absorbed by MVP Task 17 (actionable empty/error states and a single type scale)
 - [ ] **Phase 10: Platform Recommendation** - Record which store to integrate next, based on the finished GOG/Epic/Xbox analysis
 
 ## Phase Details
@@ -82,6 +82,8 @@ Plans:
 
 ### Phase 8: Manual Playtime
 
+**Status**: Superseded by MVP (play sessions) — see `docs/superpowers/specs/2026-11-05-mvp-now-playing-recommender-design.md` (5.1). PLAY-01 is covered by play-session logging (hours are stored apart and never written to `PlaytimeHours`). PLAY-02 no longer applies: Steam playtime no longer shares a field with manually entered hours, so there is nothing for Steam to lower. The goal and criteria below are kept for history only.
+
 **Goal**: The user can record hours played for games Steam can't sync (family-shared or non-Steam), and Steam sync never lowers a value the user entered
 **Depends on**: Phase 6 (the game-detail WIP must be committed before the playtime field is added to the same component)
 **Requirements**: PLAY-01, PLAY-02
@@ -97,6 +99,8 @@ Plans:
 **UI hint**: yes
 
 ### Phase 9: UI Copy & Type Scale
+
+**Status**: Absorbed by MVP Task 17 (empty and error states with a next step, single type scale). The criteria below are the original ones and were not re-verified one by one against this phase; see `docs/MVP_RELEASE_CHECKLIST.md`.
 
 **Goal**: Error and empty states tell the user what to do next, and the app uses one consolidated type scale
 **Depends on**: Phase 8 (the type scale is consolidated after the Phase 6 lightbox and Phase 8 playtime UI land, so it covers them)
@@ -139,6 +143,6 @@ Phases execute in numeric order: 6 → 7 → 8 → 9 → 10
 | 5. Regression Testing & Full-Stack Verification | v1.0 | 6/6 | Complete | 2026-10-27 |
 | 6. Game Images & Metadata | v1.1 | 6/6 | Complete    | 2026-11-05 |
 | 7. Steam Login Hardening | v1.1 | 0/TBD | Not started | - |
-| 8. Manual Playtime | v1.1 | 0/TBD | Not started | - |
-| 9. UI Copy & Type Scale | v1.1 | 0/TBD | Not started | - |
+| 8. Manual Playtime | v1.1 | 0/TBD | Superseded by MVP (play sessions) | - |
+| 9. UI Copy & Type Scale | v1.1 | 0/TBD | Absorbed by MVP Task 17 | - |
 | 10. Platform Recommendation | v1.1 | 0/TBD | Not started | - |

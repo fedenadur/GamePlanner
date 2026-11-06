@@ -20,8 +20,10 @@
 
 ### Playtime (PLAY)
 
-- [ ] **PLAY-01**: User can enter or edit hours played for a game from the game-detail screen (persisted via stored procedure)
-- [ ] **PLAY-02**: Steam playtime sync only overwrites `PlaytimeHours` when Steam reports a higher value than the stored one (highest value wins)
+_Phase 8 was superseded by the MVP (play sessions): PLAY-01 is covered by session logging; PLAY-02 no longer applies because Steam playtime and manual hours no longer share `PlaytimeHours`._
+
+- [~] **PLAY-01**: User can enter or edit hours played for a game from the game-detail screen (persisted via stored procedure)
+- [~] **PLAY-02**: Steam playtime sync only overwrites `PlaytimeHours` when Steam reports a higher value than the stored one (highest value wins)
 
 ### Steam Auth (AUTH)
 
@@ -60,11 +62,11 @@
 | AUTH-04 | Phase 7 | Pending |
 | AUTH-05 | Phase 7 | Pending |
 | AUTH-06 | Phase 7 | Pending |
-| PLAY-01 | Phase 8 | Pending |
-| PLAY-02 | Phase 8 | Pending |
-| UI-02 | Phase 9 | Pending |
-| UI-03 | Phase 9 | Pending |
-| UI-04 | Phase 9 | Pending |
+| PLAY-01 | Phase 8 | Superseded by MVP (play sessions) |
+| PLAY-02 | Phase 8 | Superseded by MVP (no longer applies: Steam no longer shares a field with manual hours) |
+| UI-02 | Phase 9 | Absorbed by MVP Task 17 |
+| UI-03 | Phase 9 | Absorbed by MVP Task 17 |
+| UI-04 | Phase 9 | Absorbed by MVP Task 17 |
 | PLAT-01 | Phase 10 | Complete |
 | PLAT-02 | Phase 10 | Complete |
 | PLAT-03 | Phase 10 | Complete |

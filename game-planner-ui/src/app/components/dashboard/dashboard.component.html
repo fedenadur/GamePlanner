@@ -122,7 +122,7 @@
               <span *ngIf="t.mainStoryHours">{{ t.mainStoryHours | number:'1.0-0' }}h main</span>
             </p>
             <div class="action-buttons">
-              <button type="button" class="btn btn-primary" [disabled]="starting" (click)="startTonight()">▶ Start on {{ deviceLabel(firstDevice) }}</button>
+              <button type="button" class="btn btn-primary" *ngIf="devicesState !== 'error'" [disabled]="starting || devicesState !== 'ready'" (click)="startTonight()">▶ Start on {{ deviceLabel(firstDevice) }}</button>
               <a class="btn btn-ghost" [routerLink]="['/games', t.gameId]">View Details</a>
             </div>
             <p class="tonight-reason" *ngIf="startError">{{ startError }}</p>

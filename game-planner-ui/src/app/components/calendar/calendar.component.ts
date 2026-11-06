@@ -1,5 +1,6 @@
-import { Component, OnInit, HostListener, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnDestroy, OnInit, HostListener, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { CalendarService, CalendarData, CalendarGame, CalendarFilters } from '../../services/calendar.service';
 import { TrackedGamesService } from '../../services/tracked-games.service';
 
@@ -18,7 +19,8 @@ const HOT_THRESHOLD = 100;
     changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false
 })
-export class CalendarComponent implements OnInit {
+export class CalendarComponent implements OnInit, OnDestroy {
+  private querySub?: Subscription;
   tab: 'releases' | 'tracked' = 'releases';
   mode: 'month' | 'week' = 'month';
 
@@ -66,12 +68,15 @@ export class CalendarComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.tab = this.route.snapshot.queryParamMap.get('tab') === 'tracked' ? 'tracked' : 'releases';
+    this.querySub = this.route.queryParamMap.subscribe(q => {
+      this.tab = q.get('tab') === 'tracked' ? 'tracked' : 'releases';
+    });
     this.load();
   }
 
+  ngOnDestroy() { this.querySub?.unsubscribe(); }
+
   setTab(t: 'releases' | 'tracked') {
-    this.tab = t;
     this.router.navigate([], { relativeTo: this.route, queryParams: { tab: t === 'tracked' ? 'tracked' : null }, queryParamsHandling: 'merge', replaceUrl: true });
   }
 

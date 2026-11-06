@@ -21,6 +21,7 @@ export class DashboardComponent implements OnInit {
   error = false;
 
   readonly deviceLabels = DEVICE_LABELS;
+  devicesState: 'loading' | 'ready' | 'error' = 'loading';
   firstDevice = 'General';
   deviceByGameId = new Map<number, string>();
 
@@ -42,10 +43,15 @@ export class DashboardComponent implements OnInit {
       error: () => { this.error = true; this.loading = false; }
     });
     forkJoin({
-      devices: this.settings.getDevices().pipe(catchError(() => of({ devices: [] as string[] }))),
+      devices: this.settings.getDevices().pipe(catchError(() => of(null))),
       slots: this.nowPlaying.getSlots().pipe(catchError(() => of([])))
     }).subscribe(({ devices, slots }) => {
-      this.firstDevice = devices.devices[0] ?? 'General';
+      if (devices) {
+        this.firstDevice = devices.devices[0] ?? 'General';
+        this.devicesState = 'ready';
+      } else {
+        this.devicesState = 'error';
+      }
       this.deviceByGameId = new Map(slots.filter(s => s.game).map(s => [s.game!.id, s.device]));
     });
   }

@@ -1,4 +1,4 @@
-import { Component, OnInit, HostListener, ChangeDetectionStrategy } from '@angular/core';
+import { Component, Input, OnInit, HostListener, ChangeDetectionStrategy } from '@angular/core';
 import { Router } from '@angular/router';
 import { TrackedGamesService, TrackedGame } from '../../services/tracked-games.service';
 
@@ -19,6 +19,8 @@ interface DateGroup {
     standalone: false
 })
 export class TrackedGamesComponent implements OnInit {
+  @Input() embedded = false;
+
   groups:  DateGroup[] = [];
   loading  = true;
   error    = '';

@@ -1,5 +1,5 @@
 import { Component, OnInit, HostListener, ChangeDetectionStrategy } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { CalendarService, CalendarData, CalendarGame, CalendarFilters } from '../../services/calendar.service';
 import { TrackedGamesService } from '../../services/tracked-games.service';
 
@@ -19,6 +19,7 @@ const HOT_THRESHOLD = 100;
     standalone: false
 })
 export class CalendarComponent implements OnInit {
+  tab: 'releases' | 'tracked' = 'releases';
   mode: 'month' | 'week' = 'month';
 
   today         = new Date();
@@ -60,10 +61,19 @@ export class CalendarComponent implements OnInit {
   constructor(
     private calendarService: CalendarService,
     private trackedGamesService: TrackedGamesService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) {}
 
-  ngOnInit() { this.load(); }
+  ngOnInit() {
+    this.tab = this.route.snapshot.queryParamMap.get('tab') === 'tracked' ? 'tracked' : 'releases';
+    this.load();
+  }
+
+  setTab(t: 'releases' | 'tracked') {
+    this.tab = t;
+    this.router.navigate([], { relativeTo: this.route, queryParams: { tab: t === 'tracked' ? 'tracked' : null }, queryParamsHandling: 'merge', replaceUrl: true });
+  }
 
   get isViewingToday(): boolean {
     if (this.mode === 'month')

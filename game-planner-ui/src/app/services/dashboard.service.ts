@@ -10,7 +10,6 @@ export interface TonightRecommendation {
   coverImageUrl: string | null;
   reason: string | null;
   mainStoryHours: number | null;
-  aggregatedRating: number | null;
 }
 
 export interface UpcomingGameItem {

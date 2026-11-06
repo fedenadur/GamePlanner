@@ -13,8 +13,9 @@ import { NowPlayingComponent } from './components/now-playing/now-playing.compon
 import { JournalComponent } from './components/journal/journal.component';
 import { StatsDashboardComponent } from './components/stats-dashboard/stats-dashboard.component';
 import { DashboardComponent } from './components/dashboard/dashboard.component';
-import { TrackedGamesComponent } from './components/tracked-games/tracked-games.component';
 import { AuthGuard } from './guards/auth.guard';
+import { AdminGuard } from './guards/admin.guard';
+import { TrackedRedirectGuard } from './guards/tracked-redirect.guard';
 
 const routes: Routes = [
   { path: 'login',    component: LoginComponent },
@@ -25,13 +26,15 @@ const routes: Routes = [
   { path: 'what-to-play', component: WhatToPlayComponent, canActivate: [AuthGuard] },
   { path: 'steam',   component: SteamImportComponent,    canActivate: [AuthGuard] },
   { path: 'profile', component: ProfileComponent,        canActivate: [AuthGuard] },
-  { path: 'workers',    component: WorkersComponent,     canActivate: [AuthGuard] },
+  { path: 'workers',    component: WorkersComponent,     canActivate: [AuthGuard, AdminGuard] },
   { path: 'games/:id', component: GameDetailComponent,  canActivate: [AuthGuard] },
   { path: 'calendar',    component: CalendarComponent,    canActivate: [AuthGuard] },
   { path: 'now-playing',          component: NowPlayingComponent,          canActivate: [AuthGuard] },
   { path: 'journal',              component: JournalComponent,             canActivate: [AuthGuard] },
   { path: 'stats',                component: StatsDashboardComponent,      canActivate: [AuthGuard] },
-  { path: 'tracked-games',       component: TrackedGamesComponent,        canActivate: [AuthGuard] },
+  { path: 'planner',             redirectTo: 'what-to-play', pathMatch: 'full' },
+  { path: 'backlog-prioritizer', redirectTo: 'what-to-play', pathMatch: 'full' },
+  { path: 'tracked-games',       canActivate: [AuthGuard, TrackedRedirectGuard], children: [] },
 ];
 
 @NgModule({

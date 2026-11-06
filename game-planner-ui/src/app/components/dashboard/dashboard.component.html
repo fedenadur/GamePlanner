@@ -9,8 +9,8 @@
       <p class="hero-sub">Ready to play?</p>
     </div>
     <div class="hero-actions">
-      <a routerLink="/what-to-play" class="btn btn-primary">Session Planner</a>
-      <a routerLink="/games"   class="btn btn-ghost">Backlog</a>
+      <a routerLink="/what-to-play" class="btn btn-primary">What to Play</a>
+      <a routerLink="/now-playing" class="btn btn-ghost">Now Playing</a>
       <a routerLink="/steam"   class="btn btn-ghost">Import Steam</a>
     </div>
   </section>
@@ -50,7 +50,7 @@
             </div>
             <div class="continue-info-compact">
               <div class="continue-name">{{ g.name }}</div>
-              <div class="continue-detail">{{ g.playtimeHours | number:'1.0-1' }}h</div>
+              <div class="continue-detail">{{ g.playtimeHours | number:'1.0-1' }}h<ng-container *ngIf="deviceByGameId.get(g.id) as dev"> · {{ deviceLabel(dev) }}</ng-container></div>
             </div>
           </a>
         </div>
@@ -95,7 +95,7 @@
             <div class="upcoming-item-inline" *ngFor="let u of group.games">
               <span class="bullet">•</span>
               <span class="game-name">{{ u.name }}</span>
-              <span class="days-until">(in {{ daysUntil(u.releaseDate) }}d)</span>
+              <span class="days-until">({{ dayLabel(u.releaseDate) }})</span>
             </div>
           </div>
         </div>
@@ -110,8 +110,7 @@
       </header>
       <div class="card-body tonight-full-body">
         <div *ngIf="!data.tonightRecommendation" class="empty-mini">No recommendation yet.</div>
-        <a *ngIf="data.tonightRecommendation as t" class="tonight-full"
-           [routerLink]="['/games', t.gameId]">
+        <div *ngIf="data.tonightRecommendation as t" class="tonight-full">
           <div class="tonight-cover-lg">
             <img *ngIf="t.coverImageUrl" [src]="t.coverImageUrl" [alt]="t.name">
             <div *ngIf="!t.coverImageUrl" class="cover-fallback">{{ t.name[0] }}</div>
@@ -121,16 +120,22 @@
             <p class="tonight-reason" *ngIf="t.reason">{{ t.reason }}</p>
             <p class="tonight-meta">
               <span *ngIf="t.mainStoryHours">{{ t.mainStoryHours | number:'1.0-0' }}h main</span>
-              <span *ngIf="t.aggregatedRating">★ {{ t.aggregatedRating | number:'1.0-0' }}</span>
             </p>
             <div class="action-buttons">
-              <button class="btn btn-primary">Add to Session</button>
-              <button class="btn btn-ghost">View Details</button>
+              <button type="button" class="btn btn-primary" [disabled]="starting" (click)="startTonight()">▶ Start on {{ deviceLabel(firstDevice) }}</button>
+              <a class="btn btn-ghost" [routerLink]="['/games', t.gameId]">View Details</a>
             </div>
+            <p class="tonight-reason" *ngIf="startError">{{ startError }}</p>
           </div>
-        </a>
+        </div>
       </div>
     </article>
+
+    <app-finish-game-dialog
+      *ngIf="pendingStart"
+      [gameName]="finishGameName"
+      (chosen)="onFinishChosen($event)"
+      (cancelled)="onFinishCancelled()"></app-finish-game-dialog>
 
     <!-- Backlog Progress (Full Width) -->
     <article class="card card-backlog-full">

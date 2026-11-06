@@ -1,12 +1,12 @@
 import { Component, OnDestroy, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { HttpErrorResponse } from '@angular/common/http';
 import { Subject, Subscription, catchError, debounce, forkJoin, of, switchMap, timer } from 'rxjs';
 import { GameService } from '../../services/game.service';
 import { NowPlayingService } from '../../services/now-playing.service';
 import { UserSettingsService } from '../../services/user-settings.service';
 import { WhatToPlayResponse, WhatToPlayResult, WhatToPlayService } from '../../services/what-to-play.service';
 import { FinishChoice } from '../finish-game-dialog/finish-game-dialog.component';
+import { startOnDevice } from '../../shared/start-game';
 import { DEVICE_ICONS, DEVICE_LABELS } from '../../shared/mvp-constants';
 
 const DEBOUNCE_MS = 300;
@@ -185,37 +185,11 @@ export class WhatToPlayComponent implements OnInit, OnDestroy {
   start(r: WhatToPlayResult, choice?: FinishChoice) {
     this.error = '';
     this.starting = true;
-    const req = choice
-      ? { gameId: r.gameId, outgoingOutcome: choice.outcome, outgoingRating: choice.rating }
-      : { gameId: r.gameId };
-    this.nowPlaying.start(this.device, req).subscribe({
-      next: () => { this.starting = false; this.router.navigate(['/now-playing']); },
-      error: (err: HttpErrorResponse) => {
-        if (!choice && err.status === 409 && err.error?.code === 'slot_occupied') {
-          this.askToFinishCurrent(r);
-          return;
-        }
-        this.starting = false;
-        this.error = err.status === 409 && err.error?.code === 'game_on_other_device'
-          ? 'That game is already on another device.'
-          : 'Could not start the game. Try again.';
-      }
-    });
-  }
-
-  private askToFinishCurrent(next: WhatToPlayResult) {
-    this.nowPlaying.getSlots().subscribe({
-      next: slots => {
-        const current = slots.find(s => s.device === this.device)?.game;
-        this.starting = false;
-        if (current) {
-          this.pendingStart = next;
-          this.finishGameName = current.name;
-        } else {
-          this.start(next);
-        }
-      },
-      error: () => { this.starting = false; this.error = 'Could not start the game. Try again.'; }
+    startOnDevice(this.nowPlaying, this.device, r.gameId, choice).subscribe(res => {
+      this.starting = false;
+      if (res.kind === 'started') this.router.navigate(['/now-playing']);
+      else if (res.kind === 'finish-needed') { this.pendingStart = r; this.finishGameName = res.currentName; }
+      else this.error = res.message;
     });
   }
 

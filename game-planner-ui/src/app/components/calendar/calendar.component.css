@@ -718,3 +718,5 @@
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 .error-msg { color: var(--danger); font-size: 0.875rem; margin-bottom: 1rem; }
+
+.tab-switch { display: inline-flex; margin-bottom: 1rem; }

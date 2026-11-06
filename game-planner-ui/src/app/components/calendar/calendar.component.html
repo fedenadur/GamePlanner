@@ -1,3 +1,11 @@
+<div class="toggle-group tab-switch" role="tablist">
+  <button role="tab" [class.active]="tab === 'releases'" (click)="setTab('releases')">Releases</button>
+  <button role="tab" [class.active]="tab === 'tracked'" (click)="setTab('tracked')">Tracked</button>
+</div>
+
+<app-tracked-games *ngIf="tab === 'tracked'" [embedded]="true"></app-tracked-games>
+
+<ng-container *ngIf="tab === 'releases'">
 <div class="page-header">
   <div class="header-row">
     <h1>Upcoming Releases</h1>
@@ -246,3 +254,4 @@
     </div>
   </div>
 </div>
+</ng-container>

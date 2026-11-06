@@ -17,7 +17,6 @@ public class TonightRecommendationDto
     public string? CoverImageUrl { get; set; }
     public string? Reason        { get; set; }
     public double? MainStoryHours { get; set; }
-    public double? AggregatedRating { get; set; }
 }
 
 public class UpcomingGameDto
